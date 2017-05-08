@@ -1,0 +1,116 @@
+import logging
+import time
+
+from threading import Thread, Timer
+from queue import Queue
+
+from .events import Event, TickEvent
+
+class ExitEvent(Event):
+  """
+  A local event that instructs the main event loop to exit
+  """
+
+class EventBus:
+  """
+  The event bus handles delivery of in-system messages
+  """
+
+  def __init__(self):
+    self.logger = logging.getLogger('EventBus')
+    self.subscribers = []
+    self.queue = Queue()
+    self.mainThread = None
+    self.active = False
+
+    self.clockThread = None
+    self.clockTicks = 0
+
+  def subscribe(self, callback, order=5, events=None):
+    """
+    Subscribe a callback to the bus
+    """
+    self.subscribers.append((order, callback, events))
+    self.subscribers = sorted(self.subscribers, key=lambda x: x[0])
+
+  def unsubscribe(self, callback):
+    """
+    Remove a callback from the bus
+    """
+    for order, sub, events in self.subscribers:
+      if sub == callback:
+        self.subscribers.remove((order, sub, events))
+
+  def publish(self, event:Event):
+    """
+    Publish an event to all subscribers
+    """
+    self.logger.debug('Publishing \'%s\'' % str(event))
+    self.queue.put(event)
+
+  def start(self):
+    """
+    Start the event bus thread loop
+    """
+    self.logger.debug('Starting event bus')
+
+    # Start main thread
+    self.mainThread = Thread(target=self._loopthread, name='eventbus')
+    self.mainThread.start()
+
+    # Start clock thread
+    self.clockThread = Timer(1.0, self._clockthread)
+    self.clockThread.start()
+
+  def stop(self):
+    """
+    Gracefully stop the event bus thread loop
+    """
+    self.logger.debug('Stopping event bus')
+
+    self.logger.debug('Cancelling next tick event')
+    self.clockThread.cancel()
+
+    self.logger.debug('Waiting for queue to drain')
+    self.queue.join()
+
+    self.logger.debug('Posting the ExitEvent')
+    self.queue.put(ExitEvent())
+
+    self.logger.debug('Waiting for thread to exit')
+    self.mainThread.join()
+
+  def _clockthread(self):
+    """
+    Helper thread that dispatches a clock tick every second
+    """
+    self.clockTicks += 1
+    self.publish(TickEvent(self.clockTicks))
+
+    # Schedule next tick
+    self.clockThread = Timer(1.0, self._clockthread)
+    self.clockThread.start()
+
+  def _loopthread(self):
+    """
+    Main event bus thread that dispatches all events from a single thread
+    """
+    self.logger.debug('Event bus thread started')
+    while True:
+      event = self.queue.get()
+      if type(event) is ExitEvent:
+        self.queue.task_done()
+        break
+
+      for order, sub, events in self.subscribers:
+        try:
+          if events is None or any(map(lambda cls: isinstance(event, cls), events)):
+            sub(event)
+        except Exception as e:
+          self.logger.error('Exception while dispatching event %s' % event.name)
+          self.logger.exception(e)
+
+      # Mark task as done
+      self.queue.task_done()
+
+    self.logger.debug('Event bus thread exited')

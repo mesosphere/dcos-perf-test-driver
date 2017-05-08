@@ -1,0 +1,39 @@
+parameters:
+  - name: instances
+    desc: The number of instances
+
+metrics:
+  - name: dtime
+    desc: The deployment time
+
+# Policies are driving the evolvement of the parameters over time
+policies:
+  - class: policy.SingleDeploymentPolicy
+    parameters:
+      instances: 1
+
+
+# Channels establish the way the parameters are given to the applicataion
+channels:
+  - class: channel.CmdlineChannel
+    cmdline: sbt "project mesos-simulation" "run --master 127.0.0.1:5050"
+    cwd: /Users/icharala/Develop/marathon
+    atstart: yes
+
+  - class: channel.HTTPChannel
+    url: http://127.0.0.1:8080/v2/apps
+    verb: POST
+    body: |
+      {
+        "cmd": "sleep 1200",
+        "cpus": 1,
+        "mem": 128,
+        "disk": 0,
+        "instances": {{instances}},
+        "id": "test"
+      }
+
+# Observers extract events from the channel
+observers:
+  - class: observer.MarathonEventsObserver
+    url: http://127.0.0.1:8080/v2/events
