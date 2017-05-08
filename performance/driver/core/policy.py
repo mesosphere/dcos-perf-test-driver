@@ -34,11 +34,15 @@ class PolicyFSM(fsm.FSM, Configurable):
 
     if not 'End' in self.states:
       raise TypeError('A policy FSM must contain an \'End\' state')
-    if not 'Ready' in self.states:
-      raise TypeError('A policy FSM must contain a \'Ready\' state')
 
   def setParameter(self, name, value):
     """
     Set a value for a test parameter
     """
-    self.parameterBatch.setParameter(name, value)
+    return self.parameterBatch.setParameter(name, value)
+
+  def setParameters(self, parameters):
+    """
+    Set more than one parameter at once
+    """
+    return self.parameterBatch.setParameters(parameters)

@@ -1,4 +1,5 @@
 import time
+import uuid
 
 class Event:
   """
@@ -10,8 +11,9 @@ class Event:
   def __init__(self, traceid=None):
     self.name = type(self).__name__
     self.ts = time.time()
+
     if traceid is None:
-      self.traceids = []
+      self.traceids = [uuid.uuid4().hex]
     elif type(traceid) is tuple:
       self.traceids = list(traceid)
     elif type(traceid) is list:
@@ -25,11 +27,17 @@ class Event:
     """
     return traceid in self.traceids
 
+  def hasTraces(self, traceids):
+    """
+    Check if at least one of the given trace ids are in the traceids
+    """
+    return any(map(lambda traceid: traceid in self.traceids, traceids))
+
   def __str__(self):
     """
     Return a string representation of the event
     """
-    return self.name
+    return '%s[trace=%s]' % (self.name, ','.join(self.traceids))
 
 class StartEvent(Event):
   """

@@ -1,4 +1,5 @@
 import re
+import uuid
 MACRO = re.compile(r'{{(.+?)(\|.+)?}}')
 
 def toTemplate(obj):
@@ -13,6 +14,15 @@ def toTemplate(obj):
     return TemplateDict(obj)
 
   return obj
+
+class TemplateMethods:
+  """
+  Exposed methods to the template DSL
+  """
+
+  @staticmethod
+  def uuid():
+    return uuid.uuid4().hex
 
 class Template:
   """
@@ -55,10 +65,16 @@ class TemplateString(str, Template):
       if default:
         default = default[1:]
 
-      if name in props:
-        return str(props[name])
+      if name.endswith('()'):
+        func = name[0:-2]
+        if hasattr(TemplateMethods, func):
+          return getattr(TemplateMethods, func)()
+
       else:
-        return default
+        if name in props:
+          return str(props[name])
+
+      return default
 
     return MACRO.sub(repl, self)
 

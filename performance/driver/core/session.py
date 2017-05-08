@@ -35,6 +35,12 @@ class Session:
       self.logger.debug('Registered \'%s\' observer' % type(instance).__name__)
       self.observers.append(instance)
 
+    self.trackers = []
+    for policy in config.trackers():
+      instance = policy.instance(self.eventbus)
+      self.logger.debug('Registered \'%s\' tracker' % type(instance).__name__)
+      self.trackers.append(instance)
+
   def interrupt(self, signum, stackFrame):
     """
     Interrupt the tests and force exit
@@ -73,7 +79,7 @@ class Session:
     # Wait for all policies to end
     for policy in self.policies:
       policy.wait('End')
-    self.logger.info('All tests interrupted')
+    self.logger.info('All tests completed')
 
     # Send a teardown signal
     self.eventbus.publish(TeardownEvent())

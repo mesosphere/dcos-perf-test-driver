@@ -103,6 +103,12 @@ class RootConfig:
     """
     return map(lambda c: ComponentConfig(c, 'observers'), self.config.get('observers', []))
 
+  def trackers(self):
+    """
+    Return all trackers in the config and bind them to the event bus given
+    """
+    return map(lambda c: ComponentConfig(c, 'trackers'), self.config.get('trackers', []))
+
 class Configurable:
   """
   Base class that provides the configuration-fetching primitives to

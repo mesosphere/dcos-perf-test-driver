@@ -12,6 +12,14 @@ policies:
     parameters:
       instances: 1
 
+  # - class: policy.ChainedDeploymentPolicy
+  #   steps:
+  #     - instances: 1
+  #     - instances: 10
+  #     - instances: 50
+  #     - instances: 100
+  #     - instances: 500
+  #     - instances: 1000
 
 # Channels establish the way the parameters are given to the applicataion
 channels:
@@ -30,10 +38,30 @@ channels:
         "mem": 128,
         "disk": 0,
         "instances": {{instances}},
-        "id": "test"
+        "id": "{{uuid()}}"
       }
 
 # Observers extract events from the channel
 observers:
   - class: observer.MarathonEventsObserver
     url: http://127.0.0.1:8080/v2/events
+
+# Trackers receive events and extract metrics
+trackers:
+  - class: tracker.DurationTracker
+    metric: startTime
+    events:
+      start: HTTPRequestStartEvent
+      end: MarathonDeploymentSuccessEvent
+
+  - class: tracker.DurationTracker
+    metric: requestTime
+    events:
+      start: HTTPRequestStartEvent
+      end: HTTPResponseStartEvent
+
+  - class: tracker.DurationTracker
+    metric: deployTime
+    events:
+      start: HTTPResponseEndEvent
+      end: MarathonDeploymentSuccessEvent

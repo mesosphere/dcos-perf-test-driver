@@ -37,5 +37,3 @@ config = RootConfig(loadConfig('./config/scale-1-service.yaml'))
 session = Session(config)
 session.run()
 
-import json
-print(json.dumps(config.config, sort_keys=True, indent=2, separators=(',', ': ')))

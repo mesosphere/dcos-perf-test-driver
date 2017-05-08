@@ -80,7 +80,4 @@ class HTTPChannel(Channel):
 
     # Process response
     self.eventbus.publish(HTTPResponseEndEvent(url, self.activeRequest.text, self.activeRequest.headers, traceid=event.traceids))
-    print(self.activeRequest.text)
-    print(self.activeRequest.headers)
-
     self.activeRequest = None
