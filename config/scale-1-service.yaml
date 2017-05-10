@@ -1,6 +1,6 @@
 # The config section contains the general test configuration
 config:
-  runs: 2
+  runs: 10
   title: Deployment Times
 
   metrics:

@@ -22,7 +22,7 @@ class ParameterBatch:
     self.updateTraceid = uuid.uuid4().hex
 
     # Subscribe as a last handler in the event bus
-    eventBus.subscribe(self.handleEvent, order=1)
+    eventBus.subscribe(self.handleEvent, order=10)
 
   def handleEvent(self, event):
     """
@@ -43,7 +43,7 @@ class ParameterBatch:
       return
 
     # Dispatch parameter update
-    self.logger.info('Setting axis to %s' % json.dumps(self.parameters))
+    self.logger.info('Setting axis to %s' % json.dumps(parameters))
     self.eventBus.publish(
       ParameterUpdateEvent(
         parameters,

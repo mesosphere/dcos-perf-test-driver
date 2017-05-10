@@ -29,7 +29,7 @@ class ChainedDeploymentPolicy(PolicyFSM):
       """
       Initialize test cases and start deployment
       """
-      self.cases = self.getConfig('steps')
+      self.cases = list(self.getConfig('steps'))
       self.goto(ChainedDeploymentPolicy.Deploy)
 
   class Deploy(State):

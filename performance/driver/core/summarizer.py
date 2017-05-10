@@ -17,16 +17,19 @@ class SummarizerAxisTimeseries:
     """
     self.values.append((time.time(), value))
 
-class SummarizerAxisRun:
+class SummarizerAxis:
   """
-  A Summarizer axis run contains the timeseries for every metric
+  A Summarizer axis contains the timeseries for every metric
   """
 
-  def __init__(self, metrics):
+  def __init__(self, config, parameters, traceids):
+    self.config = config
+    self.parameters = dict(parameters)
+    self.traceids = list(traceids)
 
     # Generate timeseries classes
     self.timeseries = {}
-    for metric, config in metrics.items():
+    for metric, config in self.config.metrics.items():
       self.timeseries[metric] = SummarizerAxisTimeseries(metric, config)
 
   def push(self, metric, value):
@@ -38,32 +41,6 @@ class SummarizerAxisRun:
 
     # Collect value to the time series
     self.timeseries[metric].push(value)
-
-class SummarizerAxis:
-  """
-  A summarizer axis contains  one or more axis runs
-  """
-
-  def __init__(self, config, parameters, traceids):
-    self.config = config
-    self.parameters = dict(parameters)
-    self.traceids = list(traceids)
-    self.runs = []
-
-    # Start first run
-    self.startRun()
-
-  def push(self, metric, value):
-    """
-    Forward a parameter update to the current run
-    """
-    self.runs[0].push(metric, value)
-
-  def startRun(self):
-    """
-    Starts a new run
-    """
-    self.runs.insert(0, SummarizerAxisRun(self.config.metrics))
 
   def matches(self, parameters):
     """
@@ -85,7 +62,6 @@ class Summarizer:
     self.logger = logging.getLogger('Summarizer')
     self.eventbus = eventbus
     self.config = config
-    self.run = 0
     self.axes = []
     self.axisLookup = {}
 
@@ -93,37 +69,22 @@ class Summarizer:
     # and we track the traceids
     eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
 
-    # Every time we have a restart event we need to add another dimention to the
-    # existing axes
-    eventbus.subscribe(self.handleRestartEvent, events=(RestartEvent,))
-
   def collect(self):
     """
     Collect all values in a concentrated format
     """
     data = []
     for axis in self.axes:
-      ax_runs = []
-      for run in axis.runs:
-        ax_data = {}
-        for name, ts in run.timeseries.items():
-          ax_data[ts.name] = ts.values
-        ax_runs.append(ax_data)
+      ax_data = {}
+      for name, ts in axis.timeseries.items():
+        ax_data[ts.name] = ts.values
 
       data.append({
         "parameters": axis.parameters,
-        "runs": ax_runs
+        "values": ax_data
       })
 
     return data
-
-  def handleRestartEvent(self, event):
-    """
-    Create a new run dimention for every axis
-    """
-    self.logger.info('Creating new run')
-    for axis in self.axes:
-      axis.startRun()
 
   def handleParameterUpdateEvent(self, event):
     """
