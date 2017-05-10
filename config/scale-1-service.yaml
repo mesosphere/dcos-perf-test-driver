@@ -1,25 +1,32 @@
-parameters:
-  - name: instances
-    desc: The number of instances
+# The config section contains the general test configuration
+config:
+  runs: 2
+  title: Deployment Times
 
-metrics:
-  - name: dtime
-    desc: The deployment time
+  metrics:
+    - name: startTime
+      desc: The deployment time from HTTP request till the deployment success
+
+    - name: requestTime
+      desc: The deployment time from start to end
+
+    - name: deployTime
+      desc: The deployment time from start to end
+
+  parameters:
+    - name: instances
+      desc: The number of parameters
 
 # Policies are driving the evolvement of the parameters over time
 policies:
-  - class: policy.SingleDeploymentPolicy
-    parameters:
-      instances: 1
+  # - class: policy.SingleDeploymentPolicy
+  #   parameters:
+  #     instances: 1
 
-  # - class: policy.ChainedDeploymentPolicy
-  #   steps:
-  #     - instances: 1
-  #     - instances: 10
-  #     - instances: 50
-  #     - instances: 100
-  #     - instances: 500
-  #     - instances: 1000
+  - class: policy.ChainedDeploymentPolicy
+    steps:
+      - instances: 1
+      - instances: 2
 
 # Channels establish the way the parameters are given to the applicataion
 channels:

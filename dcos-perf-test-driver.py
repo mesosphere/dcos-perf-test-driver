@@ -7,7 +7,7 @@ from performance.driver.core.session import Session
 
 # Setup logging
 coloredlogs.install(
-    level='DEBUG',
+    level='INFO',
     fmt='%(levelname)7s %(asctime)s %(name)s: %(message)s',
     field_styles={
       'hostname': {'color': 'magenta'},
@@ -37,3 +37,6 @@ config = RootConfig(loadConfig('./config/scale-1-service.yaml'))
 session = Session(config)
 session.run()
 
+# Report
+import json
+print(json.dumps(session.summarizer.collect(), sort_keys=True, indent=4, separators=(',', ': ')))

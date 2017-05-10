@@ -1,5 +1,9 @@
+import re
 import time
 import uuid
+
+# Regex to strip ANSI sequences from the log lines
+ANSI_SEQUENCE = re.compile(r'\x1b[^m]*m')
 
 class Event:
   """
@@ -45,6 +49,12 @@ class StartEvent(Event):
   and the environment is ready, in order to start the policies.
   """
 
+class RestartEvent(StartEvent):
+  """
+  A restart event is dispatched in place of StartEvent when more than one
+  test loops has to be executed.
+  """
+
 class TeardownEvent(Event):
   """
   A teardown event is dispatched when all policies are completed and the
@@ -65,14 +75,6 @@ class TickEvent(Event):
     super().__init__(*args, **kwargs)
     self.count = count
 
-class ParameterDidUpdateEvent(Event):
-  """
-  A parameter has changed
-  """
-  def __init__(self, updateEvent, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    self.updateEvent = updateEvent
-
 class ParameterUpdateEvent(Event):
   """
   A parameter change request
@@ -83,11 +85,14 @@ class ParameterUpdateEvent(Event):
     self.oldParameters = oldParameters
     self.changes = changes
 
-  def getAck(self):
-    """
-    Return the acknowledgement event
-    """
-    return ParameterDidUpdateEvent(self, traceid=self.traceid)
+class MetricUpdateEvent(Event):
+  """
+  A metric has changed
+  """
+  def __init__(self, name, value, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.name = name
+    self.value = value
 
 class ObserverEvent(Event):
   """
@@ -111,7 +116,7 @@ class LogLineEvent(Event):
   """
   def __init__(self, line, source, kind=None, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.line = line
+    self.line = ANSI_SEQUENCE.sub('', line)
     self.source = source
     self.kind = kind
 

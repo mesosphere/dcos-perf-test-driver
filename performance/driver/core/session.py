@@ -2,8 +2,9 @@ import signal
 import logging
 
 from .eventbus import EventBus
-from .events import StartEvent, TeardownEvent, InterruptEvent
+from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent
 from .parameters import ParameterBatch
+from .summarizer import Summarizer
 
 class Session:
 
@@ -15,6 +16,7 @@ class Session:
     self.prevSigHandler = None
     self.eventbus = EventBus()
     self.parameters = ParameterBatch(self.eventbus)
+    self.summarizer = Summarizer(self.eventbus, config.general())
 
     # Instantiate components
     self.policies = []
@@ -37,7 +39,7 @@ class Session:
 
     self.trackers = []
     for policy in config.trackers():
-      instance = policy.instance(self.eventbus)
+      instance = policy.instance(self.eventbus, self.summarizer)
       self.logger.debug('Registered \'%s\' tracker' % type(instance).__name__)
       self.trackers.append(instance)
 
@@ -61,6 +63,9 @@ class Session:
     Entry point for the test session
     """
 
+    # Prepare the number of runs we have to loop through
+    runs = self.config.general().runs
+
     # Register an interrupt signal handler
     self.prevSigHandler = signal.signal(signal.SIGINT, self.interrupt)
 
@@ -76,10 +81,25 @@ class Session:
     # Dispatch the start event
     self.eventbus.publish(StartEvent())
 
-    # Wait for all policies to end
-    for policy in self.policies:
-      policy.wait('End')
-    self.logger.info('All tests completed')
+    # Repeat tests more than once
+    while runs > 0:
+
+      # Wait for all policies to end
+      for policy in self.policies:
+        policy.wait('End')
+      self.logger.info('All tests completed')
+
+      # If we have more policies to go, restart tests
+      runs -= 1
+      if runs > 0:
+
+        # Start all policies, effectively starting the tests
+        self.logger.info('Restarting tests')
+        for policy in self.policies:
+          policy.start()
+
+        # Dispatch the restart event
+        self.eventbus.publish(RestartEvent())
 
     # Send a teardown signal
     self.eventbus.publish(TeardownEvent())

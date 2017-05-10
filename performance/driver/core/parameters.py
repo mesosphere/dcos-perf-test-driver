@@ -1,3 +1,5 @@
+import logging
+import json
 import uuid
 
 from .events import ParameterUpdateEvent
@@ -13,13 +15,14 @@ class ParameterBatch:
     """
     Initialize the parameter batch
     """
+    self.logger = logging.getLogger('ParameterBatch')
     self.parameters = {}
     self.updates = []
     self.eventBus = eventBus
     self.updateTraceid = uuid.uuid4().hex
 
     # Subscribe as a last handler in the event bus
-    eventBus.subscribe(self.handleEvent, order=10)
+    eventBus.subscribe(self.handleEvent, order=1)
 
   def handleEvent(self, event):
     """
@@ -40,8 +43,14 @@ class ParameterBatch:
       return
 
     # Dispatch parameter update
+    self.logger.info('Setting axis to %s' % json.dumps(self.parameters))
     self.eventBus.publish(
-      ParameterUpdateEvent(parameters, self.parameters, batch, traceid=self.updateTraceid)
+      ParameterUpdateEvent(
+        parameters,
+        self.parameters,
+        batch,
+        traceid=self.updateTraceid
+      )
     )
 
     # Reset

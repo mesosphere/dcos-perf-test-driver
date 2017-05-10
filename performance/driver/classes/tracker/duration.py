@@ -43,6 +43,4 @@ class DurationTracker(Tracker):
 
           duration = event.ts - track.event.ts
           self.activeTracks.remove(track)
-          print("####################")
-          print("%s = %.2f" % (self.metric, duration))
-          print("####################")
+          self.trackMetric(self.metric, duration, event.traceids)

@@ -77,6 +77,26 @@ class ComponentConfig(dict):
     # Instantiate with the config class as first argument
     return classType(self, eventBus, *args, **kwargs)
 
+class GeneralConfig:
+  """
+  General configuration class contains the test-wide configuration parameters
+  """
+
+  def __init__(self, generalConfig):
+    # Process metrics
+    self.metrics = {}
+    for metric in generalConfig.get('metrics', []):
+      self.metrics[metric['name']] = metric
+
+    # Process parameters
+    self.parameters = {}
+    for parameter in generalConfig.get('parameters', []):
+      self.parameters[parameter['name']] = parameter
+
+    # Populate field defaults
+    self.runs = generalConfig.get('runs', 1)
+
+
 class RootConfig:
   """
   Root configuration section
@@ -108,6 +128,12 @@ class RootConfig:
     Return all trackers in the config and bind them to the event bus given
     """
     return map(lambda c: ComponentConfig(c, 'trackers'), self.config.get('trackers', []))
+
+  def general(self):
+    """
+    Return the general config section
+    """
+    return GeneralConfig(self.config.get('config', {}))
 
 class Configurable:
   """

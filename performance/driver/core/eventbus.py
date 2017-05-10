@@ -16,7 +16,7 @@ class EventBus:
   The event bus handles delivery of in-system messages
   """
 
-  def __init__(self):
+  def __init__(self, clockFrequency=1):
     self.logger = logging.getLogger('EventBus')
     self.subscribers = []
     self.queue = Queue()
@@ -25,6 +25,7 @@ class EventBus:
 
     self.clockThread = None
     self.clockTicks = 0
+    self.clickInterval = float(1) / clockFrequency
 
   def subscribe(self, callback, order=5, events=None):
     """
@@ -84,7 +85,7 @@ class EventBus:
     """
     Helper thread that dispatches a clock tick every second
     """
-    self.clockTicks += 1
+    self.clockTicks += self.clickInterval
     self.publish(TickEvent(self.clockTicks))
 
     # Schedule next tick
