@@ -6,6 +6,7 @@ from .events import ParameterUpdateEvent, RestartEvent
 class SummarizerAxisTimeseries:
   def __init__(self, name, config):
     """
+    This structure just keeps track of the value evolution over time
     """
     self.name = name
     self.config = config

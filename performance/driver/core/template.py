@@ -1,6 +1,20 @@
 import re
 import uuid
+
 MACRO = re.compile(r'{{(.+?)(\|.+)?}}')
+METHOD = re.compile(r'([\w_]+)\((.*)\)')
+
+class TemplateMethods:
+  """
+  Exposed methods to the template DSL
+  """
+
+  @staticmethod
+  def uuid(args):
+    """
+    uuid() method is generating a random ID
+    """
+    return uuid.uuid4().hex
 
 def toTemplate(obj):
   """
@@ -14,15 +28,6 @@ def toTemplate(obj):
     return TemplateDict(obj)
 
   return obj
-
-class TemplateMethods:
-  """
-  Exposed methods to the template DSL
-  """
-
-  @staticmethod
-  def uuid():
-    return uuid.uuid4().hex
 
 class Template:
   """
@@ -65,10 +70,11 @@ class TemplateString(str, Template):
       if default:
         default = default[1:]
 
-      if name.endswith('()'):
-        func = name[0:-2]
+      method = METHOD.match(name)
+      if method:
+        func = method.group(1)
         if hasattr(TemplateMethods, func):
-          return getattr(TemplateMethods, func)()
+          return getattr(TemplateMethods, func)(method.group(2))
 
       else:
         if name in props:

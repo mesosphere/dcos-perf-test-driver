@@ -21,7 +21,6 @@ class EventBus:
     self.subscribers = []
     self.queue = Queue()
     self.mainThread = None
-    self.active = False
 
     self.clockThread = None
     self.clockTicks = 0
@@ -46,6 +45,9 @@ class EventBus:
     """
     Publish an event to all subscribers
     """
+    if not isinstance(event, Event):
+      raise TypeError('You can only publish `Event` instances in the bus')
+
     self.logger.debug('Publishing \'%s\'' % str(event))
     self.queue.put(event)
 
@@ -60,7 +62,7 @@ class EventBus:
     self.mainThread.start()
 
     # Start clock thread
-    self.clockThread = Timer(1.0, self._clockthread)
+    self.clockThread = Timer(self.clickInterval, self._clockthread)
     self.clockThread.start()
 
   def stop(self):
@@ -71,6 +73,7 @@ class EventBus:
 
     self.logger.debug('Cancelling next tick event')
     self.clockThread.cancel()
+    self.clockThread.join()
 
     self.logger.debug('Waiting for queue to drain')
     self.queue.join()
@@ -80,6 +83,7 @@ class EventBus:
 
     self.logger.debug('Waiting for thread to exit')
     self.mainThread.join()
+    self.mainThread = None
 
   def _clockthread(self):
     """
@@ -89,7 +93,7 @@ class EventBus:
     self.publish(TickEvent(self.clockTicks))
 
     # Schedule next tick
-    self.clockThread = Timer(1.0, self._clockthread)
+    self.clockThread = Timer(self.clickInterval, self._clockthread)
     self.clockThread.start()
 
   def _loopthread(self):

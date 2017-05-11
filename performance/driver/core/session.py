@@ -73,7 +73,7 @@ class Session:
     self.eventbus.start()
 
     # Start all policies, effectively starting the tests
-    self.logger.info('Starting tests')
+    self.logger.info('Starting tests (%i run(s))' % runs)
     for policy in self.policies:
       policy.start()
     self.logger.debug('All policies are ready')
@@ -94,7 +94,7 @@ class Session:
       if runs > 0:
 
         # Start all policies, effectively starting the tests
-        self.logger.info('Restarting tests')
+        self.logger.info('Restarting tests (%i run(s) left)' % runs)
         for policy in self.policies:
           policy.start()
 
