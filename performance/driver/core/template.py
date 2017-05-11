@@ -116,16 +116,16 @@ class TemplateDict(dict, Template):
     """
     Replace every string item with a template string
     """
-    super().__init__(map(lambda k, v: (k, toTemplate(v)), items.items()))
+    super().__init__(map(lambda kv: (kv[0], toTemplate(kv[1])), items.items()))
 
   def macros(self):
     """
     Return an array with all the macros in the dict
     """
-    return set().union(*map(lambda k, v: v.macros() if isinstance(v, Template) else set(), self.items()))
+    return set().union(*map(lambda kv: kv[1].macros() if isinstance(kv[1], Template) else set(), self.items()))
 
   def apply(self, props):
     """
     Replace all string keys with template string
     """
-    return dict(map(lambda k, v: (k, v.apply(props)) if isinstance(v, Template) else (k, v), self.items()))
+    return dict(map(lambda kv: (kv[0], kv[1].apply(props)) if isinstance(kv[1], Template) else kv, self.items()))
