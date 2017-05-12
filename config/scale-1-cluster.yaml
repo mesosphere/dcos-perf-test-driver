@@ -1,6 +1,6 @@
 # The config section contains the general test configuration
 config:
-  runs: 2
+  runs: 10
   title: Deployment Times
 
   metrics:
@@ -37,7 +37,8 @@ policies:
   - class: policy.ChainedDeploymentPolicy
     steps:
       - instances: 1
-      - instances: 2
+      - instances: 10
+      - instances: 100
 
 # Channels establish the way the parameters are given to the applicataion
 channels:
@@ -50,8 +51,8 @@ channels:
     body: |
       {
         "cmd": "sleep 1200",
-        "cpus": 0.1,
-        "mem": 128,
+        "cpus": 0.01,
+        "mem": 32,
         "disk": 0,
         "instances": {{instances}},
         "id": "{{uuid()}}"

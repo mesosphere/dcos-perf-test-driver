@@ -1,3 +1,4 @@
+_The following document is just a mindmap, please ignore_
 
 # Sequence
 
