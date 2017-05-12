@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from performance.driver.core.util import LRUDict
+from performance.driver.core.utils import LRUDict
 
 class TestUtil(unittest.TestCase):
 

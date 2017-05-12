@@ -6,7 +6,7 @@ from contextlib import closing
 
 from performance.driver.core.observer import Observer
 from performance.driver.core.events import Event, LogLineEvent, TeardownEvent
-from performance.driver.core.util import LRUDict
+from performance.driver.core.utils import LRUDict
 
 from performance.driver.classes.channel.http import HTTPResponseEndEvent
 
