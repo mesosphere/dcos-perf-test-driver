@@ -82,13 +82,14 @@ class FSM:
     self.state = stateName
     self._handleEnterState()
 
-  def wait(self, targetStateName):
+  def wait(self, targetStateName, timeout=None):
     """
     Block until a target state is reached
     """
     with self.stateCv:
       while self.state != targetStateName:
-        self.stateCv.wait()
+        if not self.stateCv.wait(timeout) and not timeout is None:
+          raise TimeoutError('Timed out while waiting for state change')
 
   def handleEvent(self, event):
     """

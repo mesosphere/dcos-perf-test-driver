@@ -229,7 +229,7 @@ class TestEventBus(unittest.TestCase):
     pubEvent = Event()
     eventbus.publish(pubEvent)
 
-    # Wait for a bit more than a second
+    # Wait for a bit more than a second, but not enough for another tick
     time.sleep(1.05)
 
     # Stop waits for the queue to drain
