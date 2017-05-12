@@ -48,6 +48,22 @@ def loadConfig(filename):
   # Return config
   return config
 
+class DefinitionsDict(dict):
+  """
+  Definitions dictionary includes the `fork` function that allows the dict
+  to be cloned, appending some additional properties
+  """
+
+  def fork(self, *dicts):
+    """
+    Create a copy of this dict and extend it with one or more parameters given
+    """
+    copyDict = dict(self)
+    for d in dicts:
+      copyDict.update(d)
+
+    return DefinitionsDict(copyDict)
+
 class ComponentConfig(dict):
   """
   A component config handles configuration sections in the following form:
@@ -56,9 +72,10 @@ class ComponentConfig(dict):
     ... props
   """
 
-  def __init__(self, config:dict, path:str):
+  def __init__(self, config:dict, definitions:dict, path:str):
     super().__init__(config)
     self.logger = logging.getLogger('ComponentConfig')
+    self.definitions = definitions
     self.path = path
 
     if not 'class' in config:
@@ -100,6 +117,9 @@ class Configurable:
         raise KeyError('%s.%s' % (self.config.path, key))
     return self.config.get(key, default)
 
+  def getConfigDefinitions(self):
+    return self.config.definitions
+
 class GeneralConfig:
   """
   General configuration class contains the test-wide configuration parameters
@@ -118,11 +138,6 @@ class GeneralConfig:
         parameter['default'] = 0.0
       self.parameters[parameter['name']] = parameter
 
-    # Process definitions
-    self.definitions = {}
-    for key, value in generalConfig.get('define', {}).items():
-      self.definitions[key] = value
-
     # Populate field defaults
     self.runs = generalConfig.get('runs', 1)
 
@@ -134,30 +149,47 @@ class RootConfig:
 
   def __init__(self, config:dict):
     self.config = config
+    self.definitions = DefinitionsDict()
+
+    # Populate definitions with the defaults
+    if 'define' in config:
+      self.definitions = config['define']
 
   def policies(self):
     """
     Return all policies in the config and bind them to the event bus given
     """
-    return map(lambda c: ComponentConfig(c, 'policies'), self.config.get('policies', []))
+    return map(
+      lambda c: ComponentConfig(c, self.definitions, 'policies'),
+      self.config.get('policies', [])
+    )
 
   def channels(self):
     """
     Return all channels in the config and bind them to the event bus given
     """
-    return map(lambda c: ComponentConfig(c, 'channels'), self.config.get('channels', []))
+    return map(
+      lambda c: ComponentConfig(c, self.definitions, 'channels'),
+      self.config.get('channels', [])
+    )
 
   def observers(self):
     """
     Return all observers in the config and bind them to the event bus given
     """
-    return map(lambda c: ComponentConfig(c, 'observers'), self.config.get('observers', []))
+    return map(
+      lambda c: ComponentConfig(c, self.definitions, 'observers'),
+      self.config.get('observers', [])
+    )
 
   def trackers(self):
     """
     Return all trackers in the config and bind them to the event bus given
     """
-    return map(lambda c: ComponentConfig(c, 'trackers'), self.config.get('trackers', []))
+    return map(
+      lambda c: ComponentConfig(c, self.definitions, 'trackers'),
+      self.config.get('trackers', [])
+    )
 
   def general(self):
     """

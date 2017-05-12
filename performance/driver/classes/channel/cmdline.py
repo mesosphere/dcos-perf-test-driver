@@ -164,12 +164,15 @@ class CmdlineChannel(Channel):
     cwd = self.getConfig('cwd', required=False)
     cwd = self.getConfig('cwd', required=False)
 
+    # Combine parameters with the definitions
+    macroValues = self.getConfigDefinitions().fork(event.parameters)
+
     # Compile arguments
-    cmdline = self.cmdlineTpl.apply(event.parameters)
+    cmdline = self.cmdlineTpl.apply(macroValues)
     args = shlex.split(cmdline)
-    stdin = self.stdinTpl.apply(event.parameters)
-    env = self.envTpl.apply(event.parameters)
-    cwd = self.cwdTpl.apply(event.parameters)
+    stdin = self.stdinTpl.apply(macroValues)
+    env = self.envTpl.apply(macroValues)
+    cwd = self.cwdTpl.apply(macroValues)
 
     # Reset empty arguments to `None`
     if not stdin:

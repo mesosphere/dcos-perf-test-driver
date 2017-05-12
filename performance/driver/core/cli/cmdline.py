@@ -17,7 +17,7 @@ def parse_cmdline():
   parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                       help='Show verbose messages for every operation')
 
-  parser.add_argument('-D', '--define', default=[], action='append', dest='def',
+  parser.add_argument('-D', '--define', default=[], action='append', dest='defs',
                       help='Define one or more macro values for the tests.')
 
   # The remaining part is the configuration and it's arguments

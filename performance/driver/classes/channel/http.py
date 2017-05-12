@@ -38,6 +38,7 @@ class HTTPChannel(Channel):
 
     # Start a requests session in order to persist cookies
     self.session = requests.Session()
+    self.urlTpl = TemplateString(self.getConfig('url'))
     self.bodyTpl = TemplateString(self.getConfig('body'))
     self.headerTpl = TemplateDict(self.getConfig('headers', default={}))
 
@@ -62,10 +63,14 @@ class HTTPChannel(Channel):
     if not hasChanges:
       return
 
-    url = self.getConfig('url')
+    # Combine parameters with the definitions
+    macroValues = self.getConfigDefinitions().fork(event.parameters)
+
+    # Compose values
     verb = self.getConfig('verb', default='GET')
-    body = self.bodyTpl.apply(event.parameters)
-    headers = self.headerTpl.apply(event.parameters)
+    url = self.urlTpl.apply(macroValues)
+    body = self.bodyTpl.apply(macroValues)
+    headers = self.headerTpl.apply(macroValues)
 
     # Helper function to notify the message bus when an HTTP response starts
     def ack_response(request, *args, **kwargs):

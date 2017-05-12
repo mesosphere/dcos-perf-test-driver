@@ -16,6 +16,7 @@ class TemplateMethods:
     """
     return uuid.uuid4().hex
 
+
 def toTemplate(obj):
   """
   Cast to the appropriate template format
@@ -28,6 +29,7 @@ def toTemplate(obj):
     return TemplateDict(obj)
 
   return obj
+
 
 class Template:
   """
@@ -45,6 +47,7 @@ class Template:
     Return a clone of the base object with the template parameters replaced
     """
     return self
+
 
 class TemplateString(str, Template):
   """
@@ -84,6 +87,7 @@ class TemplateString(str, Template):
 
     return MACRO.sub(repl, self)
 
+
 class TemplateList(list, Template):
   """
   A template list that might contain templates in it's keys
@@ -106,6 +110,7 @@ class TemplateList(list, Template):
     Replace all string keys with template string
     """
     return list(map(lambda x: x.apply(props) if isinstance(x, Template) else x, self))
+
 
 class TemplateDict(dict, Template):
   """

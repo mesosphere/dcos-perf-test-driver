@@ -6,7 +6,6 @@ from contextlib import closing
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event, LogLineEvent, TeardownEvent
-from performance.driver.core.utils import LRUDict
 
 from performance.driver.classes.channel.http import HTTPResponseEndEvent
 
@@ -87,7 +86,7 @@ class MarathonEventsObserver(Observer):
     super().__init__(*args, **kwargs)
     self.url = self.getConfig('url')
     self.eventThread = None
-    self.deploymentTraceIDs = LRUDict()
+    self.deploymentTraceIDs = {}
     self.running = True
 
     # Subscribe into receiving LogLine events, and place us above the

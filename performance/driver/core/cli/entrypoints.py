@@ -41,6 +41,13 @@ def dcos_perf_test_driver():
   # Load configuration
   config = RootConfig(loadConfig(cmdline.config))
 
+  # Update command-line definitions
+  for definition in cmdline.defs:
+    if not '=' in definition:
+      raise TypeError('Please specify definitions in key=value format')
+    key, value = definition.split('=')
+    config.definitions[key] = value
+
   # Start a test session
   session = Session(config)
   session.run()
