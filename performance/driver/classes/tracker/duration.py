@@ -1,6 +1,6 @@
 import time
 
-from performance.driver.core.tracker import Tracker
+from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent
 
 class TrackedEvent:

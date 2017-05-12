@@ -4,7 +4,7 @@ import json
 
 from contextlib import closing
 
-from performance.driver.core.observer import Observer
+from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event, LogLineEvent, TeardownEvent
 from performance.driver.core.utils import LRUDict
 

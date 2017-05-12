@@ -1,7 +1,7 @@
 import threading
 import requests
 
-from performance.driver.core.observer import Observer
+from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event
 
 class HTTPStatusEvent(Event):

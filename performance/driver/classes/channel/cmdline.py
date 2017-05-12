@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 
 from performance.driver.core.events import LogLineEvent, ParameterUpdateEvent, TeardownEvent, StartEvent
 from performance.driver.core.template import TemplateString, TemplateDict
-from performance.driver.core.channel import Channel
+from performance.driver.core.classes import Channel
 
 class CmdlineChannel(Channel):
 

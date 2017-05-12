@@ -1,7 +1,7 @@
 import logging
 
-from .config import Configurable
-from .events import ParameterUpdateEvent
+from performance.driver.core.config import Configurable
+from performance.driver.core.events import ParameterUpdateEvent
 
 class Observer(Configurable):
 

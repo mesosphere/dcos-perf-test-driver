@@ -1,7 +1,7 @@
 import logging
 
-from .config import Configurable
-from .events import MetricUpdateEvent
+from performance.driver.core.config import Configurable
+from performance.driver.core.events import MetricUpdateEvent
 
 class Tracker(Configurable):
 

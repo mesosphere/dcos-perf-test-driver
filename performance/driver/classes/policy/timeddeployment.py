@@ -1,5 +1,5 @@
 import time
-from performance.driver.core.policy import PolicyFSM, State
+from performance.driver.core.classes import PolicyFSM, State
 
 class TimedDevelopmentPolicy(PolicyFSM):
 

@@ -2,7 +2,7 @@ import requests
 
 from performance.driver.core.events import Event, ParameterUpdateEvent, TeardownEvent
 from performance.driver.core.template import TemplateString, TemplateDict
-from performance.driver.core.channel import Channel
+from performance.driver.core.classes import Channel
 
 class HTTPRequestStartEvent(Event):
   def __init__(self, url, *args, **kwargs):

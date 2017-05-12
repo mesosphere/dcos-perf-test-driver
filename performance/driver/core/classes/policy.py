@@ -1,8 +1,8 @@
 import logging
 
-from .config import Configurable
-from . import events
-from . import fsm
+from performance.driver.core.config import Configurable
+from performance.driver.core import events
+from performance.driver.core import fsm
 
 class State(fsm.State):
   """
