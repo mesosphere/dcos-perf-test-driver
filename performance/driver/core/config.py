@@ -7,7 +7,9 @@ from .eventbus import EventBus
 
 def mergeConfig(source, destination):
   for key, value in source.items():
-    if isinstance(value, dict):
+    if not key in destination:
+      destination[key] = value
+    elif isinstance(value, dict):
       # get node or create one
       node = destination.setdefault(key, {})
       mergeConfig(value, node)

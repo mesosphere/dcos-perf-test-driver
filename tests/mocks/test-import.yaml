@@ -1,0 +1,31 @@
+include:
+  - test-import-imported.yaml
+
+config:
+  runs: 123
+  title: Some title
+
+  parameters:
+    - name: param1
+    - name: param2
+    - name: param3
+    - name: param4
+
+  metrics:
+    - name: metric1
+    - name: metric2
+    - name: metric3
+    - name: metric4
+    - name: metric5
+
+channels:
+  - class: tests.mocks.classes.Channel1
+
+observers:
+  - class: tests.mocks.classes.Observer1
+  - class: tests.mocks.classes.Observer2
+
+trackers:
+  - class: tests.mocks.classes.Tracker1
+  - class: tests.mocks.classes.Tracker2
+  - class: tests.mocks.classes.Tracker3

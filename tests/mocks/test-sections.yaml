@@ -1,0 +1,36 @@
+config:
+  runs: 123
+  title: Some title
+
+  parameters:
+    - name: param1
+    - name: param2
+    - name: param3
+    - name: param4
+    - name: param5
+
+  metrics:
+    - name: metric1
+    - name: metric2
+    - name: metric3
+    - name: metric4
+    - name: metric5
+    - name: metric6
+
+policies:
+  - class: tests.mocks.classes.Policy1
+
+channels:
+  - class: tests.mocks.classes.Channel1
+  - class: tests.mocks.classes.Channel2
+
+observers:
+  - class: tests.mocks.classes.Observer1
+  - class: tests.mocks.classes.Observer2
+  - class: tests.mocks.classes.Observer3
+
+trackers:
+  - class: tests.mocks.classes.Tracker1
+  - class: tests.mocks.classes.Tracker2
+  - class: tests.mocks.classes.Tracker3
+  - class: tests.mocks.classes.Tracker4
