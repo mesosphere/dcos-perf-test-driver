@@ -85,6 +85,13 @@ class EventBus:
     self.mainThread.join()
     self.mainThread = None
 
+  def flush(self):
+    """
+    Wait until the queue is drained
+    """
+    if not self.queue.empty():
+      self.queue.join()
+
   def _clockthread(self):
     """
     Helper thread that dispatches a clock tick every second
