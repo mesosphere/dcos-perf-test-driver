@@ -120,6 +120,14 @@ class Configurable:
   def getConfigDefinitions(self):
     return self.config.definitions
 
+  def getConfigDefinition(self, key, defaultValue=None):
+    if not key in self.config.definitions:
+      return defaultValue
+    return self.config.definitions[key]
+
+  def setConfigDefinition(self, key, value):
+    self.config.definitions[key] = value
+
 class GeneralConfig:
   """
   General configuration class contains the test-wide configuration parameters
@@ -157,7 +165,7 @@ class RootConfig:
 
   def policies(self):
     """
-    Return all policies in the config and bind them to the event bus given
+    Return all policies in the config
     """
     return map(
       lambda c: ComponentConfig(c, self.definitions, 'policies'),
@@ -166,7 +174,7 @@ class RootConfig:
 
   def channels(self):
     """
-    Return all channels in the config and bind them to the event bus given
+    Return all channels in the config
     """
     return map(
       lambda c: ComponentConfig(c, self.definitions, 'channels'),
@@ -175,7 +183,7 @@ class RootConfig:
 
   def observers(self):
     """
-    Return all observers in the config and bind them to the event bus given
+    Return all observers in the config
     """
     return map(
       lambda c: ComponentConfig(c, self.definitions, 'observers'),
@@ -184,11 +192,20 @@ class RootConfig:
 
   def trackers(self):
     """
-    Return all trackers in the config and bind them to the event bus given
+    Return all trackers in the config
     """
     return map(
       lambda c: ComponentConfig(c, self.definitions, 'trackers'),
       self.config.get('trackers', [])
+    )
+
+  def tasks(self):
+    """
+    Return all tasks in the config
+    """
+    return map(
+      lambda c: ComponentConfig(c, self.definitions, 'tasks'),
+      self.config.get('tasks', [])
     )
 
   def general(self):

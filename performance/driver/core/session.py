@@ -17,6 +17,7 @@ class Session:
     self.eventbus = EventBus()
     self.parameters = ParameterBatch(self.eventbus, config.general())
     self.summarizer = Summarizer(self.eventbus, config.general())
+    self.interrupted = False
 
     # Instantiate components
     self.policies = []
@@ -43,6 +44,27 @@ class Session:
       self.logger.debug('Registered \'%s\' tracker' % type(instance).__name__)
       self.trackers.append(instance)
 
+    self.tasks = []
+    for policy in config.tasks():
+      instance = policy.instance(self.eventbus)
+      self.logger.debug('Registered \'%s\' task' % type(instance).__name__)
+      self.tasks.append(instance)
+
+  def runTasks(self, atName):
+    """
+    Run tasks that are scheduled to run at the given 'at' state
+    """
+    for task in self.tasks:
+      if task.at == atName:
+        try:
+          task.run()
+        except Exception as e:
+          self.logger.error('Unable to run a task for state \'%s\'' % atName)
+          self.logger.exception(e)
+          return False
+
+    return True
+
   def interrupt(self, signum, stackFrame):
     """
     Interrupt the tests and force exit
@@ -56,6 +78,7 @@ class Session:
     # as soon as possible. This interrupt will be injected in-frame, meaning
     # that since the `run` thread is blocked in the policy wait loop, we will
     # resume from that point onwards
+    self.interrupted = True
     self.eventbus.publish(InterruptEvent())
 
   def run(self):
@@ -72,6 +95,12 @@ class Session:
     # Start satelite components
     self.eventbus.start()
 
+    # Start setup tasks
+    if not self.runTasks('setup'):
+      self.eventbus.stop()
+      self.logger.error('Aborted due to a failed \'setup\' task')
+      return
+
     # Start all policies, effectively starting the tests
     self.logger.info('Starting tests (%i run(s))' % runs)
     for policy in self.policies:
@@ -82,7 +111,7 @@ class Session:
     self.eventbus.publish(StartEvent())
 
     # Repeat tests more than once
-    while runs > 0:
+    while not self.interrupted and (runs > 0):
 
       # Wait for all policies to end
       for policy in self.policies:
@@ -101,6 +130,7 @@ class Session:
         # Dispatch the restart event
         self.eventbus.publish(RestartEvent())
 
-    # Send a teardown signal
+    # Teardown
     self.eventbus.publish(TeardownEvent())
+    self.runTasks('teardown')
     self.eventbus.stop()
