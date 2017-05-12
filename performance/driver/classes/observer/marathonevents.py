@@ -135,8 +135,15 @@ class MarathonEventsObserver(Observer):
     """
     self.logger.debug('Tearing down marathon event monitor')
     self.running = False
+
+    # Interrupt any active request
     if self.activeRequest:
       self.activeRequest.raw._fp.close()
+
+    # Join thread
+    if self.eventThread:
+      self.eventThread.join()
+      self.eventThread = None
 
   def handleStartEvent(self, event):
     """
@@ -197,6 +204,12 @@ class MarathonEventsObserver(Observer):
         self.activeRequest = r
         try:
           for chunk in r.iter_lines(decode_unicode=True, chunk_size=1):
+
+            # Break if exited
+            if not self.running:
+              break
+
+            # Process event phases
             if chunk.startswith('event:'):
               eventName = chunk[7:]
             elif chunk.startswith('data:') and not eventName is None:
