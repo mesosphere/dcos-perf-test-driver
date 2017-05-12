@@ -15,7 +15,7 @@ class Session:
     self.config = config
     self.prevSigHandler = None
     self.eventbus = EventBus()
-    self.parameters = ParameterBatch(self.eventbus)
+    self.parameters = ParameterBatch(self.eventbus, config.general())
     self.summarizer = Summarizer(self.eventbus, config.general())
 
     # Instantiate components

@@ -6,6 +6,9 @@ import os
 from .eventbus import EventBus
 
 def mergeConfig(source, destination):
+  """
+  Merges `source` object into `destination`.
+  """
   for key, value in source.items():
     if not key in destination:
       destination[key] = value
@@ -20,6 +23,9 @@ def mergeConfig(source, destination):
   return destination
 
 def loadConfig(filename):
+  """
+  Load YAML configuration into a dict
+  """
   with open(filename, 'r') as f:
     config = yaml.load(f)
 
@@ -50,7 +56,7 @@ class ComponentConfig(dict):
     ... props
   """
 
-  def __init__(self, config, path):
+  def __init__(self, config:dict, path:str):
     super().__init__(config)
     self.logger = logging.getLogger('ComponentConfig')
     self.path = path
@@ -79,12 +85,27 @@ class ComponentConfig(dict):
     # Instantiate with the config class as first argument
     return classType(self, eventBus, *args, **kwargs)
 
+class Configurable:
+  """
+  Base class that provides the configuration-fetching primitives to
+  channels, observers and policies.
+  """
+
+  def __init__(self, config:ComponentConfig):
+    self.config = config
+
+  def getConfig(self, key, default=None, required=True):
+    if not key in self.config:
+      if required and default is None:
+        raise KeyError('%s.%s' % (self.config.path, key))
+    return self.config.get(key, default)
+
 class GeneralConfig:
   """
   General configuration class contains the test-wide configuration parameters
   """
 
-  def __init__(self, generalConfig):
+  def __init__(self, generalConfig:dict):
     # Process metrics
     self.metrics = {}
     for metric in generalConfig.get('metrics', []):
@@ -93,7 +114,14 @@ class GeneralConfig:
     # Process parameters
     self.parameters = {}
     for parameter in generalConfig.get('parameters', []):
+      if not 'default' in parameter:
+        parameter['default'] = 0.0
       self.parameters[parameter['name']] = parameter
+
+    # Process definitions
+    self.definitions = {}
+    for key, value in generalConfig.get('define', {}).items():
+      self.definitions[key] = value
 
     # Populate field defaults
     self.runs = generalConfig.get('runs', 1)
@@ -104,7 +132,7 @@ class RootConfig:
   Root configuration section
   """
 
-  def __init__(self, config):
+  def __init__(self, config:dict):
     self.config = config
 
   def policies(self):
@@ -136,20 +164,4 @@ class RootConfig:
     Return the general config section
     """
     return GeneralConfig(self.config.get('config', {}))
-
-class Configurable:
-  """
-  Base class that provides the configuration-fetching primitives to
-  channels, observers and policies.
-  """
-
-  def __init__(self, config):
-    self.config = config
-
-  def getConfig(self, key, default=None, required=True):
-    if not key in self.config:
-      if required and default is None:
-        raise KeyError('%s.%s' % (self.config.path, key))
-    return self.config.get(key, default)
-
 

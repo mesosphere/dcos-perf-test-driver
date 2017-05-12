@@ -14,6 +14,12 @@ class SingleDeploymentPolicy(PolicyFSM):
       """
       self.goto(SingleDeploymentPolicy.Deploy)
 
+    def onRestartEvent(self, event):
+      """
+      If we are instructed to restart the tests switch back to `Deploy` state
+      """
+      self.goto(ChainedDeploymentPolicy.Deploy)
+
   class Deploy(State):
     """
     Deploy a service

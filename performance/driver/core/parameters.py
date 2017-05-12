@@ -11,15 +11,20 @@ class ParameterBatch:
   to a single `ParameterUpdateEvent` at the end of the event handling sequence.
   """
 
-  def __init__(self, eventBus):
+  def __init__(self, eventBus, config):
     """
     Initialize the parameter batch
     """
     self.logger = logging.getLogger('ParameterBatch')
+    self.config = config
     self.parameters = {}
     self.updates = []
     self.eventBus = eventBus
     self.updateTraceid = uuid.uuid4().hex
+
+    # Populate default parameter values
+    for key, parameter in config.parameters.items():
+      self.parameters[key] = parameter['default']
 
     # Subscribe as a last handler in the event bus
     eventBus.subscribe(self.handleEvent, order=10)

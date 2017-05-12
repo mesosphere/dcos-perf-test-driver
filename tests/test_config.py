@@ -247,11 +247,11 @@ class TestFSM(unittest.TestCase):
 
     general = config.general()
 
-    # Check if trackers are correctly created
+    # Check if trackers are correctly created, with the correct defaults
     self.assertEqual(general.runs, 123)
     self.assertEqual(general.parameters, {
-        "foo": {"name": "foo"},
-        "bar": {"name": "bar"}
+        "foo": {"name": "foo", "default": 0 },
+        "bar": {"name": "bar", "default": 0 }
       })
     self.assertEqual(general.metrics, {
         "fooz": {"name": "fooz"},
