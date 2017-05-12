@@ -1,3 +1,4 @@
+import logging
 import unittest
 import threading
 
@@ -41,17 +42,22 @@ class TestFSM(unittest.TestCase):
     # Test FSM
     class TestFSM(FSM):
       class Start(State):
-        def onEnter(self):
+        def onEnter(selfFsm):
           StartOnEnter()
-          self.goto(TestFSM.Other)
+
+          # Goto should only accept state references
+          with self.assertRaises(TypeError) as context:
+            selfFsm.goto('Other')
+
+          selfFsm.goto(TestFSM.Other)
 
       class Other(State):
-        def onEnter(self):
+        def onEnter(selfFsm):
           OtherOnEnter()
-          self.goto(TestFSM.End)
+          selfFsm.goto(TestFSM.End)
 
       class End(State):
-        def onEnter(self):
+        def onEnter(selfFsm):
           EndOnEnter()
 
     # Enter
@@ -106,6 +112,40 @@ class TestFSM(unittest.TestCase):
     Event1.assert_called_with()
     Event2.assert_called_with()
     Event3.assert_called_with()
+
+  def test_event_exception(self):
+    """
+    An exception in an `onEventName` handler should just pass through
+    """
+
+    # Create Mocks
+    HandledEvent = Mock()
+
+    # Test FSM
+    class TestFSM(FSM):
+      class Start(State):
+        def onFirstEvent(self, event):
+          raise TypeError('You used me wrong!')
+        def onSecondEvent(self, event):
+          HandledEvent()
+
+    # Enter
+    fsm = TestFSM()
+    fsm.start()
+
+    # Some test events
+    class FirstEvent(Event):
+      pass
+    class SecondEvent(Event):
+      pass
+
+    # Dispatch the events
+    fsm.logger.setLevel(logging.CRITICAL)
+    fsm.handleEvent(FirstEvent())
+    fsm.handleEvent(SecondEvent())
+
+    # Check if event handled regardless of the error
+    HandledEvent.assert_called_with()
 
   def test_wait(self):
     """

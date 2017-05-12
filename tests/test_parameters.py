@@ -35,7 +35,7 @@ class TestParameterBatch(unittest.TestCase):
     """
     self.eventbus.stop()
 
-  def test_event_batching(self):
+  def test_setParameter(self):
     """
     Parameter updates should be batched in a single update event
     """
@@ -72,6 +72,47 @@ class TestParameterBatch(unittest.TestCase):
         "bar": 3
       })
 
+  def test_setParameters(self):
+    """
+    It should be possible to use setParameters to specify a batch update
+    """
+
+    def firstHandler(event):
+      self.parameters.setParameters({
+          "foo": 2,
+          "bar": 4
+        })
+
+    def secondHandler(event):
+      self.parameters.setParameters({
+          "bar": 3
+        })
+
+    class TriggerUpdateEvent(Event):
+      pass
+
+    # Create a mock subscription to parameter updates
+    subscriber = Mock()
+    self.eventbus.subscribe(subscriber, events=(ParameterUpdateEvent,))
+
+    # Register the handlers that will trigger a parameter update
+    self.eventbus.subscribe(firstHandler, events=(TriggerUpdateEvent,))
+    self.eventbus.subscribe(secondHandler, events=(TriggerUpdateEvent,))
+
+    # Dispatch a TriggerUpdateEvent, that will trigger the property
+    # updates that will eventually trigger only one parameter update
+    self.eventbus.publish(TriggerUpdateEvent())
+    self.eventbus.flush()
+
+    # Check if we are called only once
+    self.assertEqual(len(subscriber.mock_calls), 1)
+
+    # Check if the .parameters value of the ParameterUpdateEvent event contains
+    # the correct values
+    self.assertEqual(subscriber.mock_calls[0][1][0].parameters, {
+        "foo": 2,
+        "bar": 3
+      })
 
   def test_default_values(self):
     """

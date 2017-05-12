@@ -78,6 +78,28 @@ class TestEventBus(unittest.TestCase):
     # Check if we were called
     subscriber.assert_called_with(pubEvent)
 
+  def test_unsubscribe(self):
+    """
+    Test if unsubscription works
+    """
+    eventbus = EventBus()
+    eventbus.start()
+
+    # Create a mock subscription
+    subscriber = Mock()
+    eventbus.subscribe(subscriber)
+    eventbus.unsubscribe(subscriber)
+
+    # Dispatch and test
+    pubEvent = Event()
+    eventbus.publish(pubEvent)
+
+    # Stop waits for the queue to drain
+    eventbus.stop()
+
+    # We should not be called
+    subscriber.assert_not_called()
+
   def test_subscribe_order(self):
     """
     Test if the subscription order works
