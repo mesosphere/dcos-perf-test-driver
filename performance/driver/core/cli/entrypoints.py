@@ -38,6 +38,9 @@ def dcos_perf_test_driver():
       }
     )
 
+  # Get a logger
+  logger = logging.getLogger('Main')
+
   # Load configuration
   config = RootConfig(loadConfig(cmdline.config))
 
@@ -48,6 +51,20 @@ def dcos_perf_test_driver():
     key, value = definition.split('=')
     config.definitions[key] = value
 
+  # Complain about missing definitions
+  hasMissing = False
+  for name, definition in config.general().definitions.items():
+    if definition['required'] and not name in config.definitions:
+      desc = ''
+      if 'desc' in definition:
+        desc = ' (%s)' % definition['desc']
+      logger.error('Missing required definition `%s`%s' % \
+        (name, desc)
+      )
+      hasMissing = True
+  if hasMissing:
+    return 1
+
   # Start a test session
   session = Session(config)
   session.run()
@@ -55,3 +72,6 @@ def dcos_perf_test_driver():
   # Report
   import json
   print(json.dumps(session.summarizer.collect(), sort_keys=True, indent=4, separators=(',', ': ')))
+
+  # Success
+  return 0

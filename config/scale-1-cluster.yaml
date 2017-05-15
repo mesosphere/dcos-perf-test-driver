@@ -17,6 +17,11 @@ config:
     - name: instances
       desc: The number of parameters
 
+  definitions:
+    - name: cluster_url
+      desc: The URL to the deployed DC/OS cluster
+      required: yes
+
 # Tasks are stand-alone actions that are executed at various lifecycle phases
 # of the tests.
 tasks:

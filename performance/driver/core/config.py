@@ -146,6 +146,13 @@ class GeneralConfig:
         parameter['default'] = 0.0
       self.parameters[parameter['name']] = parameter
 
+    # Process definition configuration
+    self.definitions = {}
+    for definition in generalConfig.get('definitions', []):
+      if not 'required'in definition:
+        definition['required'] = False
+      self.definitions[definition['name']] = definition
+
     # Populate field defaults
     self.runs = generalConfig.get('runs', 1)
 
