@@ -20,19 +20,28 @@ class Summarizer:
     # and we track the traceids
     eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
 
-  def collect(self):
+  def raw(self):
     """
-    Collect all values in a concentrated format
+    Collect all values in raw timeseries format
     """
     data = []
     for axis in self.axes:
-      ax_data = {}
-      for name, ts in axis.timeseries.items():
-        ax_data[ts.name] = ts.values
-
       data.append({
         "parameters": axis.parameters,
-        "values": ax_data
+        "values": axis.raw()
+      })
+
+    return data
+
+  def sum(self):
+    """
+    Summarive the values with the rules specified
+    """
+    data = []
+    for axis in self.axes:
+      data.append({
+        "parameters": axis.parameters,
+        "values": axis.sum()
       })
 
     return data

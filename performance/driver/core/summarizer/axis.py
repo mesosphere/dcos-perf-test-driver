@@ -1,3 +1,4 @@
+from . import rules
 from .timeseries import SummarizerAxisTimeseries
 
 class SummarizerAxis:
@@ -35,3 +36,43 @@ class SummarizerAxis:
         parameters.items()
       )
     )
+
+  def raw(self):
+    """
+    Return raw timeseries values
+    """
+    # Collect values
+    values = {}
+    for metric, series in self.timeseries.items():
+      values[metric] = series.values
+
+    return values
+
+  def sum(self):
+    """
+    Summarize using the merge rules given
+    """
+
+    # Collect summarize rules for each metric
+    metricSummarizers = {}
+    for metric, config in self.config.metrics.items():
+      sum_rules = config.get('summarize', [])
+      if not type(sum_rules) is list:
+        sum_rules = [sum_rules]
+      metricSummarizers[metric] = sum_rules
+
+    # Collect values
+    values = {}
+    for metric, series in self.timeseries.items():
+
+      # Summarize timeseries
+      sums = {}
+      for summarizer in metricSummarizers[metric]:
+        sums[summarizer] = getattr(rules, summarizer)(series)
+
+      # Collect
+      values[metric] = sums
+
+    return values
+
+
