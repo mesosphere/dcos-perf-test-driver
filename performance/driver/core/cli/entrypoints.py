@@ -5,6 +5,7 @@ import coloredlogs
 from .cmdline import parse_cmdline
 from performance.driver.core.config import loadConfig, RootConfig
 from performance.driver.core.session import Session
+from performance.driver.core.classes.reporter import ConsoleReporter
 
 def dcos_perf_test_driver():
   """
@@ -43,6 +44,7 @@ def dcos_perf_test_driver():
 
   # Load configuration
   config = RootConfig(loadConfig(cmdline.config))
+  generalConfig = config.general()
 
   # Update command-line definitions
   for definition in cmdline.defs:
@@ -53,7 +55,7 @@ def dcos_perf_test_driver():
 
   # Complain about missing definitions
   hasMissing = False
-  for name, definition in config.general().definitions.items():
+  for name, definition in generalConfig.definitions.items():
     if definition['required'] and not name in config.definitions:
       desc = ''
       if 'desc' in definition:
@@ -69,9 +71,9 @@ def dcos_perf_test_driver():
   session = Session(config)
   session.run()
 
-  # Report
-  import json
-  print(json.dumps(session.summarizer.collect(), sort_keys=True, indent=4, separators=(',', ': ')))
+  # Instantiate reporter
+  reporter = generalConfig.instanceReporter()
+  reporter.dump(session.summarizer)
 
   # Success
   return 0

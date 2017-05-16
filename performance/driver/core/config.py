@@ -135,6 +135,7 @@ class GeneralConfig:
 
   def __init__(self, generalConfig:dict):
     # Process metrics
+    self.logger = logging.getLogger('GeneralConfig')
     self.metrics = {}
     for metric in generalConfig.get('metrics', []):
       self.metrics[metric['name']] = metric
@@ -153,8 +154,38 @@ class GeneralConfig:
         definition['required'] = False
       self.definitions[definition['name']] = definition
 
+    # Process report config
+    self.reportConfig = None
+    if 'report' in generalConfig:
+      self.reportConfig = generalConfig['report']
+
     # Populate field defaults
     self.runs = generalConfig.get('runs', 1)
+
+  def instanceReporter(self, *args, **kwargs):
+    """
+    Return a class instance
+    """
+    if not self.reportConfig:
+      self.logger.warn('Missing `report` config. Falling back to default')
+      return importlib.import_module('performance.driver.core.classes.reporter') \
+        .ConsoleReporter(None, self)
+
+    # De-compose class path to module and class name
+    classPath = 'performance.driver.classes.%s' % self.reportConfig['class']
+    self.logger.debug('Instantiating %s' % classPath)
+
+    pathComponents = classPath.split('.')
+    className = pathComponents.pop()
+    modulePath = '.'.join(pathComponents)
+
+    # Get a reference to the class type
+    self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className, modulePath))
+    module = importlib.import_module(modulePath)
+    classType = getattr(module, className)
+
+    # Instantiate with the config class as first argument
+    return classType(self.reportConfig, self, *args, **kwargs)
 
 
 class RootConfig:
