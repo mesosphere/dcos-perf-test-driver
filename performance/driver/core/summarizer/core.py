@@ -3,22 +3,23 @@ import time
 
 from .axis import SummarizerAxis
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent
+from performance.driver.core.eventbus import EventBusSubscriber
 
-class Summarizer:
+class Summarizer(EventBusSubscriber):
 
   def __init__(self, eventbus, config):
     """
     Summarizer collects all the metric updates into an axis/timeseries matrix
     """
+    EventBusSubscriber.__init__(self, eventbus)
     self.logger = logging.getLogger('Summarizer')
-    self.eventbus = eventbus
     self.config = config
     self.axes = []
     self.axisLookup = {}
 
     # Every time we have a ParameterUpdateEvent we construct a new axis
     # and we track the traceids
-    eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
+    self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
 
   def raw(self):
     """

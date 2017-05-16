@@ -16,7 +16,7 @@ class ParameterBatch(EventBusSubscriber):
     """
     Initialize the parameter batch
     """
-    super().__init__(eventbus)
+    EventBusSubscriber.__init__(self, eventbus)
     self.logger = logging.getLogger('ParameterBatch')
     self.config = config
     self.parameters = {}
@@ -28,7 +28,7 @@ class ParameterBatch(EventBusSubscriber):
       self.parameters[key] = parameter['default']
 
     # Subscribe as a last handler in the event bus
-    eventbus.subscribe(self.handleEvent, order=10)
+    self.eventbus.subscribe(self.handleEvent, order=10)
 
   def handleEvent(self, event):
     """
