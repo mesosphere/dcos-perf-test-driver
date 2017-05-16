@@ -41,6 +41,8 @@ def mean(timeseries:SummarizerAxisTimeseries):
 
   # Average
   count = len(timeseries.values)
+  if count == 0:
+    return 0
   return v_mean / count
 
 def median(timeseries:SummarizerAxisTimeseries):
@@ -75,6 +77,8 @@ def variance(timeseries:SummarizerAxisTimeseries):
 
   # Average
   v_variance = len(timeseries.values)
+  if v_variance == 0:
+    return 0
   return mean / v_variance
 
 def sdeviation(timeseries:SummarizerAxisTimeseries):
