@@ -1,6 +1,7 @@
 import logging
 
 from performance.driver.core.config import Configurable
+from performance.driver.core.eventbus import EventBusSubscriber
 from performance.driver.core import events
 from performance.driver.core import fsm
 
@@ -17,20 +18,20 @@ class State(fsm.State):
     """
     self.goto(type(self._fsm).End)
 
-class PolicyFSM(fsm.FSM, Configurable):
+class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
   """
   A policy-oriented FSM
   """
 
-  def __init__(self, config, eventBus, parameterBatch):
+  def __init__(self, config, eventbus, parameterBatch):
     fsm.FSM.__init__(self)
     Configurable.__init__(self, config)
+    EventBusSubscriber.__init__(self, eventbus)
     self.logger = logging.getLogger('Policy<%s>' % type(self).__name__)
-    self.eventBus = eventBus
     self.parameterBatch = parameterBatch
 
     # Receive events from the bus
-    eventBus.subscribe(self.handleEvent)
+    eventbus.subscribe(self.handleEvent)
 
     if not 'End' in self.states:
       raise TypeError('A policy FSM must contain an \'End\' state')

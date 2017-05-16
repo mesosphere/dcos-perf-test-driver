@@ -3,23 +3,24 @@ import json
 import uuid
 
 from .events import ParameterUpdateEvent
+from performance.driver.core.eventbus import EventBusSubscriber
 
-class ParameterBatch:
+class ParameterBatch(EventBusSubscriber):
   """
   This class is used as an interface for triggering parameter update events
   by the policies. It ensures that multiple parameter update triggers results
   to a single `ParameterUpdateEvent` at the end of the event handling sequence.
   """
 
-  def __init__(self, eventBus, config):
+  def __init__(self, eventbus, config):
     """
     Initialize the parameter batch
     """
+    super().__init__(eventbus)
     self.logger = logging.getLogger('ParameterBatch')
     self.config = config
     self.parameters = {}
     self.updates = []
-    self.eventBus = eventBus
     self.updateTraceid = uuid.uuid4().hex
 
     # Populate default parameter values
@@ -27,7 +28,7 @@ class ParameterBatch:
       self.parameters[key] = parameter['default']
 
     # Subscribe as a last handler in the event bus
-    eventBus.subscribe(self.handleEvent, order=10)
+    eventbus.subscribe(self.handleEvent, order=10)
 
   def handleEvent(self, event):
     """
@@ -49,7 +50,7 @@ class ParameterBatch:
 
     # Dispatch parameter update
     self.logger.info('Setting axis to %s' % json.dumps(parameters))
-    self.eventBus.publish(
+    self.eventbus.publish(
       ParameterUpdateEvent(
         parameters,
         self.parameters,

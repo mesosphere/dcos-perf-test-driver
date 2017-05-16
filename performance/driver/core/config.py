@@ -199,7 +199,7 @@ class RootConfig:
 
     # Populate definitions with the defaults
     if 'define' in config:
-      self.definitions = config['define']
+      self.definitions = DefinitionsDict(config['define'])
 
   def policies(self):
     """

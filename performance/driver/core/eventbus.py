@@ -11,6 +11,14 @@ class ExitEvent(Event):
   A local event that instructs the main event loop to exit
   """
 
+class EventBusSubscriber:
+  """
+  The base class that every event bus subscriber should implement
+  """
+
+  def __init__(self, eventbus):
+    self.eventbus = eventbus
+
 class EventBus:
   """
   The event bus handles delivery of in-system messages
