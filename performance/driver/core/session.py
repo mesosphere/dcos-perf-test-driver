@@ -113,10 +113,16 @@ class Session:
     # Repeat tests more than once
     while not self.interrupted and (runs > 0):
 
+      # Run pre-test tasks
+      self.runTasks('pretest')
+
       # Wait for all policies to end
       for policy in self.policies:
         policy.wait('End')
       self.logger.info('All tests completed')
+
+      # Run post-test tasks
+      self.runTasks('posttest')
 
       # If we have more policies to go, restart tests
       runs -= 1
