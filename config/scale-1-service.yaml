@@ -6,16 +6,29 @@ config:
   metrics:
     - name: startTime
       desc: The deployment time from HTTP request till the deployment success
+      summarize: [mean, min, max]
 
     - name: requestTime
       desc: The deployment time from start to end
+      summarize: [mean, min, max]
 
     - name: deployTime
       desc: The deployment time from start to end
+      summarize: [mean, min, max]
 
   parameters:
     - name: instances
-      desc: The number of parameters
+      desc: The number of instances per application
+
+  report:
+    class: reporter.CSVReporter
+    filename: results.csv
+
+# Teardown all tasks at teardown
+tasks:
+  - class: tasks.marathon.RemoveAllApps
+    url: http://127.0.0.1:8080
+    at: teardown
 
 # Policies are driving the evolvement of the parameters over time
 policies:
@@ -26,7 +39,10 @@ policies:
   - class: policy.ChainedDeploymentPolicy
     steps:
       - instances: 1
-      - instances: 2
+      - instances: 10
+      - instances: 100
+      # - instances: 500
+      # - instances: 1000
 
 # Channels establish the way the parameters are given to the applicataion
 channels:
@@ -41,8 +57,8 @@ channels:
     body: |
       {
         "cmd": "sleep 1200",
-        "cpus": 1,
-        "mem": 128,
+        "cpus": 0.1,
+        "mem": 64,
         "disk": 0,
         "instances": {{instances}},
         "id": "{{uuid()}}"
