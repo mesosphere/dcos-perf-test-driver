@@ -14,3 +14,16 @@ def handleOnlyTraces(traceid=None, traceidProperty=None):
       function(self, event)
     return wrapper
   return real_decorator
+
+def subscribesTo(*events):
+  def real_decorator(function):
+    function.__e_subscribes__ = events
+    return function
+  return real_decorator
+
+def publishes(*events):
+  def real_decorator(function):
+    function.__e_publishes__ = events
+    return function
+  return real_decorator
+

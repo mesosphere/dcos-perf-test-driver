@@ -162,6 +162,9 @@ class GeneralConfig:
     # Populate field defaults
     self.runs = generalConfig.get('runs', 1)
 
+    # Populate timeouts
+    self.staleTimeout = generalConfig.get('staleTimeout', 120)
+
   def instanceReporter(self, *args, **kwargs):
     """
     Return a class instance

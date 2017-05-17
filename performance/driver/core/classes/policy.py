@@ -12,9 +12,16 @@ class State(fsm.State):
 
   def onInterruptEvent(self, event):
     """
-    When a policy hits an interrupt event it should sink to the end as soon
+    When a policy receives an interrupt event it should sink to the end as soon
     as possible. This placeholder ensures that policies that haven't implemented
     this behaviour are properly sinked.
+    """
+    self.goto(type(self._fsm).End)
+
+  def onStalledEvent(self, event):
+    """
+    When a policy receives a stalled event it should either continue the tests
+    or if it's not possible, it should be properly sinked.
     """
     self.goto(type(self._fsm).End)
 

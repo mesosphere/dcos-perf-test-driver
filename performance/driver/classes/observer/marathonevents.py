@@ -200,77 +200,93 @@ class MarathonEventsObserver(Observer):
       # ...
       #
       eventName = None
-      with closing(requests.get(url, stream=True, headers=headers)) as r:
-        self.activeRequest = r
-        try:
-          for chunk in r.iter_lines(decode_unicode=True, chunk_size=1):
+      try:
+        with closing(requests.get(url, stream=True, headers=headers)) as r:
+          self.activeRequest = r
+          try:
+            for chunk in r.iter_lines(decode_unicode=True, chunk_size=1):
 
-            # Break if exited
+              # Break if exited
+              if not self.running:
+                break
+
+              # Process event phases
+              if chunk.startswith('event:'):
+                eventName = chunk[7:]
+              elif chunk.startswith('data:') and not eventName is None:
+                eventData = json.loads(chunk[6:])
+                self.logger.debug('Received event %s: %r' % (eventName, eventData))
+
+                #
+                # deployment_step_success
+                #
+                if eventName == 'deployment_step_success':
+                  deploymentId = eventData['plan']['id']
+                  self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
+                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+
+                #
+                # deployment_step_failure
+                #
+                elif eventName == 'deployment_step_failure':
+                  deploymentId = eventData['plan']['id']
+                  self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
+                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+
+                #
+                # deployment_info
+                #
+                elif eventName == 'deployment_info':
+                  deploymentId = eventData['plan']['id']
+                  self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
+                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+
+                #
+                # deployment_success
+                #
+                elif eventName == 'deployment_success':
+                  deploymentId = eventData['id']
+                  self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
+                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+                  if deploymentId in self.deploymentTraceIDs:
+                    del self.deploymentTraceIDs[deploymentId]
+
+                #
+                # deployment_failed
+                #
+                elif eventName == 'deployment_failed':
+                  deploymentId = eventData['id']
+                  self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
+                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+                  if deploymentId in self.deploymentTraceIDs:
+                    del self.deploymentTraceIDs[deploymentId]
+
+                # Warn unknown events
+                else:
+                  self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
+
+                eventName = None
+
+          except Exception as e:
             if not self.running:
-              break
+              return
 
-            # Process event phases
-            if chunk.startswith('event:'):
-              eventName = chunk[7:]
-            elif chunk.startswith('data:') and not eventName is None:
-              eventData = json.loads(chunk[6:])
-              self.logger.debug('Received event %s: %r' % (eventName, eventData))
+            if isinstance(e, requests.exceptions.ConnectionError):
+              self.logger.error('Unable to connect to the remote host. Retrying in 1s sec.')
+              time.sleep(1)
+            else:
+              self.logger.error('Exception in the marathon events main loop')
+              self.logger.exception(e)
 
-              #
-              # deployment_step_success
-              #
-              if eventName == 'deployment_step_success':
-                deploymentId = eventData['plan']['id']
-                self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
-                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+            # Restart loop
+            continue
 
-              #
-              # deployment_step_failure
-              #
-              elif eventName == 'deployment_step_failure':
-                deploymentId = eventData['plan']['id']
-                self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
-                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+      except Exception as e:
+        if not self.running:
+          return
 
-              #
-              # deployment_info
-              #
-              elif eventName == 'deployment_info':
-                deploymentId = eventData['plan']['id']
-                self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
-                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
-
-              #
-              # deployment_success
-              #
-              elif eventName == 'deployment_success':
-                deploymentId = eventData['id']
-                self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
-                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
-                if deploymentId in self.deploymentTraceIDs:
-                  del self.deploymentTraceIDs[deploymentId]
-
-              #
-              # deployment_failed
-              #
-              elif eventName == 'deployment_failed':
-                deploymentId = eventData['id']
-                self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
-                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
-                if deploymentId in self.deploymentTraceIDs:
-                  del self.deploymentTraceIDs[deploymentId]
-
-              # Warn unknown events
-              else:
-                self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
-
-              eventName = None
-
-        except Exception as e:
-          if not self.running:
-            return
-
-          self.logger.error('Exception in the marathon events main loop')
+        if isinstance(e, requests.exceptions.ConnectionError):
+          self.logger.error('Unable to connect to the remote host')
+        else:
+          self.logger.error('Exception while connecting to SSE event stream')
           self.logger.exception(e)
-
-          # Restart loop

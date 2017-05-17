@@ -71,6 +71,15 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
 
+    def onStalledEvent(self, event):
+      self.logger.warn('No activity while waiting for a marathon deployment to succeed')
+      self.logger.debug('This means that either marathon failed to deploy the request '
+        'on time, or that you haven\'t registered an observer that emmits a '
+        '`MarathonDeploymentSuccessEvent`.')
+
+      # Try next deployment
+      self.goto(ChainedDeploymentPolicy.Deploy)
+
   class End(State):
     """
     Sink state

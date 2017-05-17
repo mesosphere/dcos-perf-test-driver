@@ -1,6 +1,8 @@
-from threading import Condition
 import inspect
 import logging
+import time
+
+from threading import Condition
 
 class State:
   """
@@ -52,6 +54,7 @@ class FSM:
     self.state = 'Start'
     self.stateCv = Condition()
     self.logger = logging.getLogger('FSM<%s>' % type(self).__name__)
+    self.lastTransitionTs = time.time()
 
     for (stateName, stateClass) in inspect.getmembers(self, predicate=inspect.isclass):
       if issubclass(stateClass, State):
@@ -73,6 +76,10 @@ class FSM:
     """
     if not issubclass(state, State):
       raise TypeError('The state given to the goto function is not a State class')
+
+    # Don't re-enter current state
+    if state.__name__ == self.state:
+      return
 
     stateName = state.__name__
     self.logger.debug('Switching to state %s' % stateName)
@@ -125,6 +132,7 @@ class FSM:
     Handle the trigger function that enters in the given state
     """
     self.logger.debug('Entering in state %s' % self.state)
+    self.lastTransitionTs = time.time()
     stateInst = self.states[self.state]
     stateInst.onEnter()
 

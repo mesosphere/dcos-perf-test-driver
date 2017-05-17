@@ -1,8 +1,9 @@
-import signal
 import logging
+import signal
+import time
 
 from .eventbus import EventBus
-from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent
+from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, StalledEvent
 from .parameters import ParameterBatch
 from .summarizer import Summarizer
 
@@ -13,8 +14,8 @@ class Session:
     """
     self.logger = logging.getLogger('Session')
     self.config = config
-    self.prevSigHandler = None
     self.eventbus = EventBus()
+    self.prevSigHandler = None
     self.parameters = ParameterBatch(self.eventbus, config.general())
     self.summarizer = Summarizer(self.eventbus, config.general())
     self.interrupted = False
@@ -59,13 +60,14 @@ class Session:
         try:
           task.run()
         except Exception as e:
-          self.logger.error('Unable to run a task for state \'%s\'' % atName)
+          self.logger.error('Task %s for state \'%s\' raised an exception' % \
+            (type(task).__name__, atName))
           self.logger.exception(e)
           return False
 
     return True
 
-  def interrupt(self, signum, stackFrame):
+  def interrupt(self, *argv):
     """
     Interrupt the tests and force exit
     """
@@ -87,7 +89,8 @@ class Session:
     """
 
     # Prepare the number of runs we have to loop through
-    runs = self.config.general().runs
+    generalConfig = self.config.general()
+    runs = generalConfig.runs
 
     # Register an interrupt signal handler
     self.prevSigHandler = signal.signal(signal.SIGINT, self.interrupt)
@@ -117,8 +120,24 @@ class Session:
       self.runTasks('pretest')
 
       # Wait for all policies to end
-      for policy in self.policies:
-        policy.wait('End')
+      activePolicies = True
+      while not self.interrupted and activePolicies:
+
+        # Iterate over all policies and wait for them to reach to `End` State
+        ts = time.time()
+        activePolicies = False
+        for policy in self.policies:
+          if policy.state != 'End':
+            activePolicies = True
+
+            # Check if a policy is stalled
+            if ts - policy.lastTransitionTs > generalConfig.staleTimeout:
+              self.logger.warn('Policy `%s` stalled' % type(policy).__name__)
+              policy.handleEvent(StalledEvent())
+
+        # Idle sleep
+        time.sleep(0.1)
+
       self.logger.info('All tests completed')
 
       # Run post-test tasks
@@ -126,7 +145,7 @@ class Session:
 
       # If we have more policies to go, restart tests
       runs -= 1
-      if runs > 0:
+      if not self.interrupted and (runs > 0):
 
         # Start all policies, effectively starting the tests
         self.logger.info('Restarting tests (%i run(s) left)' % runs)

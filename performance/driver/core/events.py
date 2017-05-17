@@ -67,6 +67,12 @@ class InterruptEvent(Event):
   or when the user has instructed to interupt the tests via a keystroke
   """
 
+class StalledEvent(Event):
+  """
+  An stalled event is dispatched from the session manager when an FSM has stuck
+  to a non-terminal state for longer than expected time.
+  """
+
 class TickEvent(Event):
   """
   A clock event is dispatched every second
