@@ -82,8 +82,12 @@ class CSVReporter(Reporter):
         for summarizer, value in summarizedValues.items():
           csv.col('%s (%s)' % (metric, summarizer)).set(str(value))
 
+      # Process flags
+      for name, value in testCase['flags'].items():
+        csv.col(name).set(str(value))
+
     # Dump csv file
     csv.saveTo(
       self.config.get('filename', 'results.csv'),
-      self.config.get('separator', ';')
+      self.config.get('separator', ',')
     )

@@ -10,18 +10,18 @@ class SummarizerAxis:
     self.config = config
     self.parameters = dict(parameters)
     self.traceids = list(traceids)
-    self.events = []
+    self.flags = {}
 
     # Generate timeseries classes
     self.timeseries = {}
     for metric, config in self.config.metrics.items():
       self.timeseries[metric] = SummarizerAxisTimeseries(metric, config)
 
-  def event(self, event):
+  def flag(self, name, value):
     """
-    Keep track of events in this axis
+    Keep track of flags in this axis
     """
-    self.events.append(event)
+    self.flags[name] = value
 
   def push(self, metric, value):
     """

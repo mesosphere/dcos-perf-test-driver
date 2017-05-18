@@ -9,6 +9,7 @@ from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.events import Event, LogLineEvent, TeardownEvent, StartEvent
 from performance.driver.core.utils.http import is_accessible
+from performance.driver.core.decorators import subscribesToHint, publishesHint
 
 from performance.driver.classes.channel.http import HTTPResponseEndEvent
 
@@ -85,6 +86,7 @@ class MarathonEventsObserver(Observer):
   reached a ready state.
   """
 
+  @subscribesToHint(LogLineEvent, HTTPResponseEndEvent, TeardownEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.urlTpl = TemplateString(self.getConfig('url'))
@@ -94,10 +96,10 @@ class MarathonEventsObserver(Observer):
     self.running = True
     self.activeRequest = None
 
-    # Subscribe into receiving LogLine events, and place us above the
-    # average priority in order to provide translated, high-level events
-    # to the rest of the components that reside on order=5 (default)
-    self.eventbus.subscribe(self.handleLogLineEvent, events=(LogLineEvent,), order=2)
+    # # Subscribe into receiving LogLine events, and place us above the
+    # # average priority in order to provide translated, high-level events
+    # # to the rest of the components that reside on order=5 (default)
+    # self.eventbus.subscribe(self.handleLogLineEvent, events=(LogLineEvent,), order=2)
 
     # When an HTTP request is completed and a marathon deployment is started,
     # we have to keep track of the traceids of the event that initiated the
@@ -121,13 +123,14 @@ class MarathonEventsObserver(Observer):
     if 'Marathon-Deployment-Id' in event.headers:
       self.deploymentTraceIDs[event.headers['Marathon-Deployment-Id']] = event.traceids
 
-  def handleLogLineEvent(self, event):
-    """
-    Provide translations for some well-known marathon log lines
-    """
-    if 'All services up and running.' in event.line:
-      self.logger.info('Marathon web server started')
-      self.eventbus.publish(MarathonStartedEvent())
+  # @publishesHint(MarathonStartedEvent)
+  # def handleLogLineEvent(self, event):
+  #   """
+  #   Provide translations for some well-known marathon log lines
+  #   """
+  #   if 'All services up and running.' in event.line:
+  #     self.logger.info('Marathon web server started')
+  #     self.eventbus.publish(MarathonStartedEvent())
 
   def handleTeardownEvent(self, event):
     """
@@ -154,6 +157,9 @@ class MarathonEventsObserver(Observer):
     self.eventThread = threading.Thread(target=self.eventHandlerThread)
     self.eventThread.start()
 
+  @publishesHint(MarathonStartedEvent, MarathonDeploymentStepSuccessEvent, \
+    MarathonDeploymentStepFailureEvent, MarathonDeploymentInfoEvent, \
+    MarathonDeploymentSuccessEvent, MarathonDeploymentFailedEvent)
   def eventHandlerThread(self):
     """
     While in this thread the
@@ -183,6 +189,7 @@ class MarathonEventsObserver(Observer):
           return
 
     # We are ready
+    self.logger.info('Marathon web server is responding')
     self.eventbus.publish(MarathonStartedEvent())
 
     # Append our required headers

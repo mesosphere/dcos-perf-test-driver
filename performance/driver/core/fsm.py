@@ -70,6 +70,12 @@ class FSM:
     self.state = 'Start'
     self._handleEnterState()
 
+  def keepalive(self):
+    """
+    Update the stale timeout timer
+    """
+    self.lastTransitionTs = time.time()
+
   def goto(self, state):
     """
     Switch FSM to the given state

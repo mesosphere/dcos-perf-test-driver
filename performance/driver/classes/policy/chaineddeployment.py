@@ -68,6 +68,9 @@ class ChainedDeploymentPolicy(PolicyFSM):
       if not event.hasTrace(self.traceid):
         return
 
+      # Successful
+      self.setStatus('OK')
+
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
 
@@ -76,6 +79,9 @@ class ChainedDeploymentPolicy(PolicyFSM):
       self.logger.debug('This means that either marathon failed to deploy the request '
         'on time, or that you haven\'t registered an observer that emmits a '
         '`MarathonDeploymentSuccessEvent`.')
+
+      # Set error status
+      self.setStatus('STALLED')
 
       # Try next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)

@@ -2,7 +2,7 @@ import logging
 import time
 
 from .axis import SummarizerAxis
-from performance.driver.core.events import ParameterUpdateEvent, RestartEvent
+from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, FlagUpdateEvent
 from performance.driver.core.eventbus import EventBusSubscriber
 
 class Summarizer(EventBusSubscriber):
@@ -21,6 +21,9 @@ class Summarizer(EventBusSubscriber):
     # and we track the traceids
     self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
 
+    # Every time a flag gets updated, the respective axis flags should be updated
+    self.eventbus.subscribe(self.handleFlagUpdateEvent, events=(FlagUpdateEvent,))
+
   def raw(self):
     """
     Collect all values in raw timeseries format
@@ -29,7 +32,8 @@ class Summarizer(EventBusSubscriber):
     for axis in self.axes:
       data.append({
         "parameters": axis.parameters,
-        "values": axis.raw()
+        "values": axis.raw(),
+        "flags": axis.flags
       })
 
     return data
@@ -42,10 +46,26 @@ class Summarizer(EventBusSubscriber):
     for axis in self.axes:
       data.append({
         "parameters": axis.parameters,
-        "values": axis.sum()
+        "values": axis.sum(),
+        "flags": axis.flags
       })
 
     return data
+
+  def handleFlagUpdateEvent(self, event):
+    """
+    Handle flag update
+    """
+
+    # It's not possible to track parameters without trace ID
+    if len(event.traceids) == 0:
+      self.logger.error('Ignoring FlagUpdateEvent without track ID')
+      return
+
+    # Update the flags of matched axes
+    for traceid in event.traceids:
+      if traceid in self.axisLookup:
+        self.axisLookup[traceid].flag(event.name ,event.value)
 
   def handleParameterUpdateEvent(self, event):
     """

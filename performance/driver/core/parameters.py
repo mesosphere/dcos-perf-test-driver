@@ -2,8 +2,9 @@ import logging
 import json
 import uuid
 
-from .events import ParameterUpdateEvent
+from .events import ParameterUpdateEvent, FlagUpdateEvent
 from performance.driver.core.eventbus import EventBusSubscriber
+from performance.driver.core.decorators import subscribesToHint, publishesHint
 
 class ParameterBatch(EventBusSubscriber):
   """
@@ -20,7 +21,8 @@ class ParameterBatch(EventBusSubscriber):
     self.logger = logging.getLogger('ParameterBatch')
     self.config = config
     self.parameters = {}
-    self.updates = []
+    self.paramUpdates = []
+    self.flagUpdates = []
     self.updateTraceid = uuid.uuid4().hex
 
     # Populate default parameter values
@@ -30,6 +32,7 @@ class ParameterBatch(EventBusSubscriber):
     # Subscribe as a last handler in the event bus
     self.eventbus.subscribe(self.handleEvent, order=10)
 
+  @publishesHint(FlagUpdateEvent, ParameterUpdateEvent)
   def handleEvent(self, event):
     """
     Property updates can occurr any time during an event handling process,
@@ -40,36 +43,44 @@ class ParameterBatch(EventBusSubscriber):
     # Compose a 'diff' batch and 'new' parameter space
     batch = {}
     parameters = dict(self.parameters)
-    for name, value in self.updates:
+    for name, value in self.paramUpdates:
       batch[name] = value
       parameters[name] = value
 
-    # Don't trigger anything if nothing changed
-    if not batch:
-      return
+    # First dispatch flag updates
+    if self.flagUpdates:
+      for flagName, flagValue in self.flagUpdates:
+        self.eventbus.publish(
+          FlagUpdateEvent(
+            flagName, flagValue,
+            traceid=self.updateTraceid
+          )
+        )
 
-    # Dispatch parameter update
-    self.logger.info('Setting axis to %s' % json.dumps(parameters))
-    self.eventbus.publish(
-      ParameterUpdateEvent(
-        parameters,
-        self.parameters,
-        batch,
-        traceid=self.updateTraceid
+      self.flagUpdates = []
+
+    # Then dispatch parameter updates
+    if batch:
+      self.logger.info('Setting axis to %s' % json.dumps(parameters))
+      self.eventbus.publish(
+        ParameterUpdateEvent(
+          parameters,
+          self.parameters,
+          batch,
+          traceid=self.updateTraceid
+        )
       )
-    )
 
-    # Reset
-    self.updates = []
-    self.parameters = parameters
-    self.updateTraceid = uuid.uuid4().hex
+      self.paramUpdates = []
+      self.parameters = parameters
+      self.updateTraceid = uuid.uuid4().hex
 
   def setParameter(self, name, value):
     """
     Schedule a property update batch that will be triggered when the event
     handling is completed
     """
-    self.updates.append((name, value))
+    self.paramUpdates.append((name, value))
     return self.updateTraceid
 
   def setParameters(self, parameters):
@@ -78,4 +89,11 @@ class ParameterBatch(EventBusSubscriber):
     """
     for key, value in parameters.items():
       self.setParameter(key, value)
+    return self.updateTraceid
+
+  def setFlag(self, flag, value=True):
+    """
+    Set a flag for this run
+    """
+    self.flagUpdates.append((flag, value))
     return self.updateTraceid

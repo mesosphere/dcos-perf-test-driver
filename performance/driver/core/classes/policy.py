@@ -43,6 +43,18 @@ class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
     if not 'End' in self.states:
       raise TypeError('A policy FSM must contain an \'End\' state')
 
+  def setStatus(self, value):
+    """
+    Set status is a shorthand for setting the status flag
+    """
+    self.setFlag('status', value)
+
+  def setFlag(self, flag, value=True):
+    """
+    Set a flag for this run
+    """
+    return self.parameterBatch.setFlag(flag, value)
+
   def setParameter(self, name, value):
     """
     Set a value for a test parameter

@@ -163,7 +163,7 @@ class GeneralConfig:
     self.runs = generalConfig.get('runs', 1)
 
     # Populate timeouts
-    self.staleTimeout = generalConfig.get('staleTimeout', 120)
+    self.staleTimeout = generalConfig.get('staleTimeout', 600)
 
   def instanceReporter(self, *args, **kwargs):
     """

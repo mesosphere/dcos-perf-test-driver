@@ -10,9 +10,11 @@ from subprocess import Popen, PIPE
 from performance.driver.core.events import LogLineEvent, ParameterUpdateEvent, TeardownEvent, StartEvent
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
+from performance.driver.core.decorators import subscribesToHit, publishesHint
 
 class CmdlineChannel(Channel):
 
+  @subscribesToHit(ParameterUpdateEvent, TeardownEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.activeTask = None
@@ -28,6 +30,7 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
 
+  @publishesHint(LogLineEvent)
   def monitor(self, sourceName, proc, stdin=None):
     """
     Oversees the execution of the process

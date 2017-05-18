@@ -3,6 +3,7 @@ import requests
 from performance.driver.core.events import Event, ParameterUpdateEvent, TeardownEvent
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
+from performance.driver.core.decorators import subscribesToHint, publishesHint
 
 class HTTPRequestStartEvent(Event):
   def __init__(self, url, *args, **kwargs):
@@ -28,6 +29,7 @@ class HTTPResponseEndEvent(Event):
 
 class HTTPChannel(Channel):
 
+  @subscribesToHint(ParameterUpdateEvent, TeardownEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.activeRequest = None
@@ -49,6 +51,7 @@ class HTTPChannel(Channel):
     if self.activeRequest:
       self.activeRequest.raw._fp.close()
 
+  @publishesHint(HTTPRequestStartEvent, HTTPRequestEndEvent, HTTPResponseStartEvent, HTTPResponseEndEvent)
   def handleParameterUpdate(self, event):
     """
     Handle a property update

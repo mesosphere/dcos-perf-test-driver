@@ -91,6 +91,15 @@ class ParameterUpdateEvent(Event):
     self.oldParameters = oldParameters
     self.changes = changes
 
+class FlagUpdateEvent(Event):
+  """
+  A flag has changed for this run
+  """
+  def __init__(self, name, value, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.name = name
+    self.value = value
+
 class MetricUpdateEvent(Event):
   """
   A metric has changed

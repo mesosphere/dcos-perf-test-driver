@@ -1,10 +1,11 @@
-import requests
-import json
 import os
 import requests
+import threading
+import json
 
 from performance.driver.core.classes import Task
 from performance.driver.core.events import ParameterUpdateEvent
+from ..observer.marathonevents import MarathonDeploymentSuccessEvent
 
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings()
@@ -13,6 +14,32 @@ class RemoveAllApps(Task):
   """
   Remove all apps found in the marathon URL
   """
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.cv = threading.Condition()
+    self.trackDeployments = []
+    self.eventbus.subscribe(self.handleMarathonDeploymentSuccessEvent, events=(MarathonDeploymentSuccessEvent,))
+
+  def handleMarathonDeploymentSuccessEvent(self, event):
+    """
+    Keep track of completed deployments
+    """
+    if event.deployment in self.trackDeployments:
+      print("Removing %s from %r" % (event.deployment, self.trackDeployments))
+      with self.cv:
+        self.trackDeployments.remove(event.deployment)
+        self.cv.notify()
+
+  def waitDeployments(self):
+    """
+    Wait for deployment ID to complete
+    """
+    if len(self.trackDeployments) == 0:
+      return
+    with self.cv:
+      while len(self.trackDeployments) > 0:
+        self.cv.wait()
 
   def run(self):
     self.logger.info('Removing all apps from marathon')
@@ -39,8 +66,14 @@ class RemoveAllApps(Task):
       raise RuntimeError('Unable to enumerate running apps')
 
     # Destroy every service
+    self.trackDeployments = []
     for app in response.json()['apps']:
       self.logger.debug('Removing app %s' % app['id'])
       response = requests.delete('%s/v2/apps/%s' % (cluster_url, app['id']), verify=False, headers=headers)
       if response.status_code != 200:
         self.logger.warn('Unable to remove app %s' % app['id'])
+      else:
+        self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+
+    # Wait for deployments
+    self.waitDeployments()

@@ -2,19 +2,21 @@ import logging
 import signal
 import time
 
-from .eventbus import EventBus
+from .eventbus import EventBus, EventBusSubscriber
 from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, StalledEvent
 from .parameters import ParameterBatch
 from .summarizer import Summarizer
 
-class Session:
+from performance.driver.core.decorators import subscribesToHint, publishesHint
+
+class Session(EventBusSubscriber):
 
   def __init__(self, config):
     """
     """
+    super().__init__(EventBus())
     self.logger = logging.getLogger('Session')
     self.config = config
-    self.eventbus = EventBus()
     self.prevSigHandler = None
     self.parameters = ParameterBatch(self.eventbus, config.general())
     self.summarizer = Summarizer(self.eventbus, config.general())
@@ -67,6 +69,7 @@ class Session:
 
     return True
 
+  @publishesHint(InterruptEvent)
   def interrupt(self, *argv):
     """
     Interrupt the tests and force exit
@@ -83,6 +86,7 @@ class Session:
     self.interrupted = True
     self.eventbus.publish(InterruptEvent())
 
+  @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent)
   def run(self):
     """
     Entry point for the test session
@@ -107,6 +111,7 @@ class Session:
     # Start all policies, effectively starting the tests
     self.logger.info('Starting tests (%i run(s))' % runs)
     for policy in self.policies:
+      self.logger.info('Using test policy `%s`' % type(policy).__name__)
       policy.start()
     self.logger.debug('All policies are ready')
 
