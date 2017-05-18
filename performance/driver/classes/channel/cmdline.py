@@ -10,11 +10,11 @@ from subprocess import Popen, PIPE
 from performance.driver.core.events import LogLineEvent, ParameterUpdateEvent, TeardownEvent, StartEvent
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
-from performance.driver.core.decorators import subscribesToHit, publishesHint
+from performance.driver.core.decorators import subscribesToHint, publishesHint
 
 class CmdlineChannel(Channel):
 
-  @subscribesToHit(ParameterUpdateEvent, TeardownEvent, StartEvent)
+  @subscribesToHint(ParameterUpdateEvent, TeardownEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.activeTask = None
