@@ -5,7 +5,8 @@ import json
 
 from performance.driver.core.classes import Task
 from performance.driver.core.events import ParameterUpdateEvent
-from ..observer.marathonevents import MarathonDeploymentSuccessEvent
+from ..observer.marathonevents import MarathonDeploymentSuccessEvent, \
+  MarathonDeploymentFailedEvent
 
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings()
@@ -21,13 +22,13 @@ class MarathonDeploymentMonitorTask(Task):
     # Get config parameters
     self.cluster_url = self.getConfig('url', None)
     if self.cluster_url is None:
-      self.cluster_url = self.getConfigDefinition('cluster_url', None)
+      self.cluster_url = self.getDefinition('cluster_url', None)
       if self.cluster_url is None:
         raise KeyError('Missing `url` parameter or `cluster_url` definition')
 
     # Add auth headers if we have an auth_token defined
     self.headers = {}
-    auth_token = self.getConfigDefinition('auth_token', None)
+    auth_token = self.getDefinition('auth_token', None)
     if not auth_token is None:
       self.headers = {
         'Authorization': 'token=%s' % auth_token
@@ -36,9 +37,10 @@ class MarathonDeploymentMonitorTask(Task):
     # Track delpoyments
     self.cv = threading.Condition()
     self.trackDeployments = []
-    self.eventbus.subscribe(self.handleMarathonDeploymentSuccessEvent, events=(MarathonDeploymentSuccessEvent,))
+    self.eventbus.subscribe(self.handleMarathonDeploymentCompletionEvent, \
+      events=(MarathonDeploymentSuccessEvent,MarathonDeploymentFailedEvent))
 
-  def handleMarathonDeploymentSuccessEvent(self, event):
+  def handleMarathonDeploymentCompletionEvent(self, event):
     """
     Keep track of completed deployments
     """
@@ -67,7 +69,7 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 
     # Request list of apps
     self.logger.debug('Enumerating all apps')
-    response = requests.get('%s/v2/groups?_timestamp=1494604512847&embed=group.groups&embed=group.apps&embed=group.pods&embed=group.apps.deployments&embed=group.apps.counts&embed=group.apps.tasks&embed=group.apps.taskStats&embed=group.apps.lastTaskFailure' % self.cluster_url, verify=False, headers=self.headers)
+    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.cluster_url, verify=False, headers=self.headers)
     if response.status_code != 200:
       raise RuntimeError('Unable to enumerate running apps')
 

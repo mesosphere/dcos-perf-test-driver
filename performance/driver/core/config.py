@@ -4,6 +4,7 @@ import yaml
 import os
 
 from .eventbus import EventBus
+from .template import TemplateDict
 
 def mergeConfig(source, destination):
   """
@@ -48,7 +49,7 @@ def loadConfig(filename):
   # Return config
   return config
 
-class DefinitionsDict(dict):
+class DefinitionsDict(TemplateDict):
   """
   Definitions dictionary includes the `fork` function that allows the dict
   to be cloned, appending some additional properties
@@ -81,7 +82,7 @@ class ComponentConfig(dict):
     if not 'class' in config:
       raise TypeError('Missing required \'class\' property in the component config')
 
-  def instance(self, eventBus, *args, **kwargs):
+  def instance(self, *args, **kwargs):
     """
     Return a class instance
     """
@@ -100,7 +101,7 @@ class ComponentConfig(dict):
     classType = getattr(module, className)
 
     # Instantiate with the config class as first argument
-    return classType(self, eventBus, *args, **kwargs)
+    return classType(self, *args, **kwargs)
 
 class Configurable:
   """
@@ -111,21 +112,24 @@ class Configurable:
   def __init__(self, config:ComponentConfig):
     self.config = config
 
+  def getRenderedConfig(self, macros={}):
+    return TemplateDict(self.config).apply(self.config.definitions, macros)
+
   def getConfig(self, key, default=None, required=True):
     if not key in self.config:
       if required and default is None:
         raise KeyError('%s.%s' % (self.config.path, key))
     return self.config.get(key, default)
 
-  def getConfigDefinitions(self):
+  def getDefinitions(self):
     return self.config.definitions
 
-  def getConfigDefinition(self, key, defaultValue=None):
+  def getDefinition(self, key, defaultValue=None):
     if not key in self.config.definitions:
       return defaultValue
     return self.config.definitions[key]
 
-  def setConfigDefinition(self, key, value):
+  def setDefinition(self, key, value):
     self.config.definitions[key] = value
 
 class GeneralConfig:
@@ -153,6 +157,9 @@ class GeneralConfig:
       if not 'required'in definition:
         definition['required'] = False
       self.definitions[definition['name']] = definition
+
+    # Process metadata
+    self.meta = generalConfig.get('meta', {})
 
     # Process report config
     self.reportConfig = None
@@ -204,6 +211,13 @@ class RootConfig:
     if 'define' in config:
       self.definitions = DefinitionsDict(config['define'])
 
+  def compileDefinitions(self, cmdlineDefinitions={}):
+    """
+    Apply template variables to definitions
+    """
+    self.definitions.update(cmdlineDefinitions)
+    self.definitions = DefinitionsDict(self.definitions.apply(self.definitions))
+
   def policies(self):
     """
     Return all policies in the config
@@ -247,6 +261,25 @@ class RootConfig:
     return map(
       lambda c: ComponentConfig(c, self.definitions, 'tasks'),
       self.config.get('tasks', [])
+    )
+
+  def reporters(self):
+    """
+    Return all reporters in the config
+    """
+    reporters = self.config.get('reporters', [])
+
+    if len(reporters) == 0:
+      self.logger.warn('Missing `reporters` config section. Using defaults')
+      reporters = [
+        {
+          "class": "@performance.driver.core.classes.reporter.ConsoleReporter"
+        }
+      ]
+
+    return map(
+      lambda c: ComponentConfig(c, self.definitions, 'reporters'),
+      reporters
     )
 
   def general(self):

@@ -67,7 +67,7 @@ class HTTPChannel(Channel):
       return
 
     # Combine parameters with the definitions
-    macroValues = self.getConfigDefinitions().fork(event.parameters)
+    macroValues = self.getDefinitions().fork(event.parameters)
 
     # Compose values
     verb = self.getConfig('verb', default='GET')

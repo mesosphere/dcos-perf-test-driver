@@ -21,7 +21,7 @@ class AuthEE(Task):
     }
 
     # Get cluster
-    cluster = self.getConfigDefinition('cluster_url', None)
+    cluster = self.getDefinition('cluster_url', None)
     if cluster is None:
       raise KeyError('Missing `cluster_url` definition')
 
@@ -32,7 +32,7 @@ class AuthEE(Task):
       raise RuntimeError('Unable to authenticate on the cluster with the given credentials')
 
     # Get token
-    self.setConfigDefinition('auth_token', response.json()['token'])
+    self.setDefinition('auth_token', response.json()['token'])
     self.logger.debug('Authenticated')
 
 class AuthOpen(Task):
@@ -46,7 +46,7 @@ class AuthOpen(Task):
     }
 
     # Get cluster
-    cluster = self.getConfigDefinition('cluster_url', None)
+    cluster = self.getDefinition('cluster_url', None)
     if cluster is None:
       raise KeyError('Missing `cluster_url` definition')
 
@@ -57,5 +57,5 @@ class AuthOpen(Task):
       raise RuntimeError('Unable to authenticate on the cluster with the given credentials')
 
     # Get token
-    self.setConfigDefinition('auth_token', response.json()['token'])
+    self.setDefinition('auth_token', response.json()['token'])
     self.logger.debug('Authenticated')

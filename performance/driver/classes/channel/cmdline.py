@@ -168,7 +168,7 @@ class CmdlineChannel(Channel):
     cwd = self.getConfig('cwd', required=False)
 
     # Combine parameters with the definitions
-    macroValues = self.getConfigDefinitions().fork(event.parameters)
+    macroValues = self.getDefinitions().fork(event.parameters)
 
     # Compile arguments
     cmdline = self.cmdlineTpl.apply(macroValues)

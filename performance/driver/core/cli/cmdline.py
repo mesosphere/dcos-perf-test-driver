@@ -20,6 +20,9 @@ def parse_cmdline():
   parser.add_argument('-D', '--define', default=[], action='append', dest='defs',
                       help='Define one or more macro values for the tests.')
 
+  parser.add_argument('-M', '--meta', default=[], action='append', dest='meta',
+                      help='Define one or more metadata value.')
+
   # The remaining part is the configuration and it's arguments
   parser.add_argument('config',
                       help='The configuration script to use.')

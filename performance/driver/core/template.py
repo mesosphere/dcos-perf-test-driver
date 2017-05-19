@@ -93,7 +93,7 @@ class TemplateList(list, Template):
   A template list that might contain templates in it's keys
   """
 
-  def __init__(self, items):
+  def __init__(self, items=[]):
     """
     Replace every string item with a template string
     """
@@ -117,7 +117,7 @@ class TemplateDict(dict, Template):
   A template dict that might contain templates in it's values
   """
 
-  def __init__(self, items):
+  def __init__(self, items={}):
     """
     Replace every string item with a template string
     """

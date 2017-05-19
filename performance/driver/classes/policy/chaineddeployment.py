@@ -74,6 +74,19 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
 
+    def onMarathonDeploymentFailedEvent(self, event):
+      # Ignore deployment success events that do not originate from our
+      # setParameters trigger
+      if not event.hasTrace(self.traceid):
+        return
+
+      # Deployment failed
+      self.logger.warn('Deployment failed')
+      self.setStatus('FAILED')
+
+      # Schedule next deployment
+      self.goto(ChainedDeploymentPolicy.Deploy)
+
     def onStalledEvent(self, event):
       self.logger.warn('No activity while waiting for a marathon deployment to succeed')
       self.logger.debug('This means that either marathon failed to deploy the request '

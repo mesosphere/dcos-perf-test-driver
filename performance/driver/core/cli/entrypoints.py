@@ -47,11 +47,15 @@ def dcos_perf_test_driver():
   generalConfig = config.general()
 
   # Update command-line definitions
+  cmdlineDefinitions = {}
   for definition in cmdline.defs:
     if not '=' in definition:
       raise TypeError('Please specify definitions in key=value format')
     key, value = definition.split('=')
-    config.definitions[key] = value
+    cmdlineDefinitions[key] = value
+
+  # Compile global definitions, including the command-line definitions
+  config.compileDefinitions(cmdlineDefinitions)
 
   # Complain about missing definitions
   hasMissing = False
@@ -71,9 +75,11 @@ def dcos_perf_test_driver():
   session = Session(config)
   session.run()
 
-  # Instantiate reporter
-  reporter = generalConfig.instanceReporter()
-  reporter.dump(session.summarizer)
+  # Instantiate reporters
+  for reporterConfig in config.reporters():
+    reporter = reporterConfig.instance(generalConfig)
+    logger.debug('Instantiated \'%s\' reporter' % type(reporter).__name__)
+    reporter.dump(session.summarizer)
 
   # Success
   return 0

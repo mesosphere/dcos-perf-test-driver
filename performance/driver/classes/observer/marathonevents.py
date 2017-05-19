@@ -165,7 +165,7 @@ class MarathonEventsObserver(Observer):
     While in this thread the
     """
     # Render URL
-    definitions = self.getConfigDefinitions()
+    definitions = self.getDefinitions()
     url = self.urlTpl.apply(definitions)
     headers = self.headersTpl.apply(definitions)
 

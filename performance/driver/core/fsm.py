@@ -108,7 +108,6 @@ class FSM:
     """
     Handle the given event in the FSM
     """
-    self.logger.debug('Handling event %s' % event.name)
     stateInst = self.states[self.state]
 
     # Normalize the event name
@@ -120,6 +119,7 @@ class FSM:
 
       # Call the event handler if we have one
       if hasattr(stateInst, handlerName):
+        self.logger.debug('Handling event %s' % event.name)
         getattr(stateInst, handlerName)(event)
         return
 
