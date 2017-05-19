@@ -1,6 +1,6 @@
 from performance.driver.core.classes import Reporter
 
-class Column:
+class CSVColumn:
   def __init__(self, name, csvfile):
     self.csvfile = csvfile
     self.name = name
@@ -19,14 +19,14 @@ class CSVFile:
       if col.name == name:
         return col
 
-    col = Column(name, self)
+    col = CSVColumn(name, self)
     self.cols.append(col)
 
     col.rows = [''] * self.rows
     return col
 
   def separator(self):
-    self.cols.append(Column("", self))
+    self.cols.append(CSVColumn("", self))
 
   def addRow(self):
     for col in self.cols:
