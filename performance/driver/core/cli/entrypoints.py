@@ -54,6 +54,13 @@ def dcos_perf_test_driver():
     key, value = definition.split('=')
     cmdlineDefinitions[key] = value
 
+  # Update command-line metadata
+  for definition in cmdline.meta:
+    if not '=' in definition:
+      raise TypeError('Please specify metadata in key=value format')
+    key, value = definition.split('=')
+    config.meta[key] = value
+
   # Compile global definitions, including the command-line definitions
   config.compileDefinitions(cmdlineDefinitions)
 
