@@ -73,6 +73,14 @@ class StalledEvent(Event):
   to a non-terminal state for longer than expected time.
   """
 
+class RunTaskEvent(Event):
+  """
+  This event is dispatched when a policy requires the session to execute a task
+  """
+  def __init__(self, task):
+    super().__init__()
+    self.task = task
+
 class TickEvent(Event):
   """
   A clock event is dispatched every second

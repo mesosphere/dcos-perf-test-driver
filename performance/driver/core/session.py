@@ -1,9 +1,10 @@
 import logging
 import signal
+import threading
 import time
 
 from .eventbus import EventBus, EventBusSubscriber
-from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, StalledEvent
+from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, StalledEvent, RunTaskEvent
 from .parameters import ParameterBatch
 from .summarizer import Summarizer
 
@@ -11,6 +12,7 @@ from performance.driver.core.decorators import subscribesToHint, publishesHint
 
 class Session(EventBusSubscriber):
 
+  @subscribesToHint(RunTaskEvent)
   def __init__(self, config):
     """
     """
@@ -21,6 +23,9 @@ class Session(EventBusSubscriber):
     self.parameters = ParameterBatch(self.eventbus, config.general())
     self.summarizer = Summarizer(self.eventbus, config.general())
     self.interrupted = False
+
+    # Subscribe to event task
+    self.eventbus.subscribe(self.handleRunTaskEvent, events=(RunTaskEvent,))
 
     # Instantiate components
     self.policies = []
@@ -53,9 +58,20 @@ class Session(EventBusSubscriber):
       self.logger.debug('Registered \'%s\' task' % type(instance).__name__)
       self.tasks.append(instance)
 
-  def runTasks(self, atName):
+  def handleRunTaskEvent(self, event):
     """
     Run tasks that are scheduled to run at the given 'at' state
+    """
+    # Every task needs to be started in another thread, otherwise
+    # the event thread will be blocked and possibly cause deadlocks
+
+    threading \
+      .Thread(target=self.runTask, args=(event.task,), daemon=True) \
+      .start()
+
+  def runTask(self, atName):
+    """
+    Run the handlers for the task "at" handlers
     """
     for task in self.tasks:
       if task.at == atName:
@@ -103,10 +119,7 @@ class Session(EventBusSubscriber):
     self.eventbus.start()
 
     # Start setup tasks
-    if not self.runTasks('setup'):
-      self.eventbus.stop()
-      self.logger.error('Aborted due to a failed \'setup\' task')
-      return
+    self.eventbus.publish(RunTaskEvent('setup'))
 
     # Start all policies, effectively starting the tests
     self.logger.info('Starting tests (%i run(s))' % runs)
@@ -122,7 +135,7 @@ class Session(EventBusSubscriber):
     while not self.interrupted and (runs > 0):
 
       # Run pre-test tasks
-      self.runTasks('pretest')
+      self.eventbus.publish(RunTaskEvent('pretest'))
 
       # Wait for all policies to end
       activePolicies = True
@@ -146,7 +159,7 @@ class Session(EventBusSubscriber):
       self.logger.info('All tests completed')
 
       # Run post-test tasks
-      self.runTasks('posttest')
+      self.eventbus.publish(RunTaskEvent('posttest'))
 
       # If we have more policies to go, restart tests
       runs -= 1
@@ -162,5 +175,5 @@ class Session(EventBusSubscriber):
 
     # Teardown
     self.eventbus.publish(TeardownEvent())
-    self.runTasks('teardown')
+    self.eventbus.publish(RunTaskEvent('teardown'))
     self.eventbus.stop()
