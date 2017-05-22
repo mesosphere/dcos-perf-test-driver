@@ -1,4 +1,5 @@
 import time
+from performance.driver.core.events import RunTaskEvent
 from performance.driver.core.classes import PolicyFSM, State
 
 class ChainedDeploymentPolicy(PolicyFSM):
@@ -71,6 +72,9 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # Successful
       self.setStatus('OK')
 
+      # Run the inter-test tasks
+      self.eventbus.publish(RunTaskEvent('intertest'))
+
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
 
@@ -83,6 +87,9 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # Deployment failed
       self.logger.warn('Deployment failed')
       self.setStatus('FAILED')
+
+      # Run the inter-test tasks
+      self.eventbus.publish(RunTaskEvent('intertest'))
 
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
