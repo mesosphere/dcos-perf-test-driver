@@ -4,7 +4,8 @@ import threading
 import time
 
 from .eventbus import EventBus, EventBusSubscriber
-from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, StalledEvent, RunTaskEvent
+from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, \
+                    StalledEvent, RunTaskEvent, RunTaskCompletedEvent
 from .parameters import ParameterBatch
 from .summarizer import Summarizer
 
@@ -66,20 +67,22 @@ class Session(EventBusSubscriber):
     # the event thread will be blocked and possibly cause deadlocks
 
     threading \
-      .Thread(target=self.runTask, args=(event.task,), daemon=True) \
+      .Thread(target=self.runTask, args=(event,), daemon=True) \
       .start()
 
-  def runTask(self, atName):
+  def runTask(self, event):
     """
     Run the handlers for the task "at" handlers
     """
     for task in self.tasks:
-      if task.at == atName:
+      if task.at == event.task:
         try:
           task.run()
+          # Notify monitors that the task has completed
+          self.eventbus.publish(RunTaskCompletedEvent(event))
         except Exception as e:
           self.logger.error('Task %s for state \'%s\' raised an exception' % \
-            (type(task).__name__, atName))
+            (type(task).__name__, event.task))
           self.logger.exception(e)
           return False
 

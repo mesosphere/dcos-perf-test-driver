@@ -3,10 +3,12 @@ import time
 
 from .axis import SummarizerAxis
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, FlagUpdateEvent
+from performance.driver.core.decorators import subscribesToHint
 from performance.driver.core.eventbus import EventBusSubscriber
 
 class Summarizer(EventBusSubscriber):
 
+  @subscribesToHint(ParameterUpdateEvent, FlagUpdateEvent)
   def __init__(self, eventbus, config):
     """
     Summarizer collects all the metric updates into an axis/timeseries matrix

@@ -15,6 +15,9 @@ def min(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Get the minimum of the values
   """
+  if len(timeseries.values) < 1:
+    return 0
+
   v_min = timeseries.values[0][1]
   for ts, value in timeseries.values:
     if value < v_min:
@@ -26,6 +29,9 @@ def max(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Get the maximum of the values
   """
+  if len(timeseries.values) < 1:
+    return 0
+
   v_max = timeseries.values[0][1]
   for ts, value in timeseries.values:
     if value > v_max:

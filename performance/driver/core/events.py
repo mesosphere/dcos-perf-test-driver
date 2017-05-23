@@ -81,6 +81,16 @@ class RunTaskEvent(Event):
     super().__init__()
     self.task = task
 
+class RunTaskCompletedEvent(Event):
+  """
+  This event is displatched when a task is completed. This is useful if you
+  want to keep track of a lengthy event
+  """
+
+  def __init__(self, previousEvent):
+    super().__init__(traceid=previousEvent.traceids)
+    self.task = previousEvent.task
+
 class TickEvent(Event):
   """
   A clock event is dispatched every second
