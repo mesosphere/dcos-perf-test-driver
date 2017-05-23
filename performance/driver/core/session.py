@@ -78,14 +78,15 @@ class Session(EventBusSubscriber):
       if task.at == event.task:
         try:
           task.run()
-          # Notify monitors that the task has completed
-          self.eventbus.publish(RunTaskCompletedEvent(event))
         except Exception as e:
           self.logger.error('Task %s for state \'%s\' raised an exception' % \
             (type(task).__name__, event.task))
           self.logger.exception(e)
+          self.eventbus.publish(RunTaskCompletedEvent(event, e))
           return False
 
+    # Notify monitors that the task has completed
+    self.eventbus.publish(RunTaskCompletedEvent(event))
     return True
 
   @publishesHint(InterruptEvent)

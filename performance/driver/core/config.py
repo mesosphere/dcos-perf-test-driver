@@ -76,10 +76,12 @@ class ComponentConfig(dict):
     ... props
   """
 
-  def __init__(self, config:dict, definitions:dict, path:str):
+  def __init__(self, config:dict, rootConfig, path:str):
     super().__init__(config)
     self.logger = logging.getLogger('ComponentConfig')
-    self.definitions = definitions
+    self.rootConfig = rootConfig
+    self.definitions = rootConfig.definitions
+    self.meta = rootConfig.meta
     self.path = path
 
     if not 'class' in config:
@@ -126,6 +128,9 @@ class Configurable:
       if required and default is None:
         raise KeyError('%s.%s' % (self.config.path, key))
     return self.config.get(key, default)
+
+  def getMeta(self):
+    return self.config.meta
 
   def getDefinitions(self):
     return self.config.definitions
@@ -195,7 +200,7 @@ class GeneralConfig:
   General configuration class contains the test-wide configuration parameters
   """
 
-  def __init__(self, generalConfig:dict):
+  def __init__(self, generalConfig:dict, rootConfig):
     # Process metrics
     self.logger = logging.getLogger('GeneralConfig')
     self.metrics = {}
@@ -221,7 +226,7 @@ class GeneralConfig:
     for indicator in generalConfig.get('indicators', []):
       self.indicators[indicator['name']] = ComponentConfig(
         indicator,
-        self.definitions,
+        rootConfig,
         'config.indicators'
       )
 
@@ -247,11 +252,8 @@ class RootConfig:
   def __init__(self, config:dict):
     self.logger = logging.getLogger('RootConfig')
     self.config = config
-    self.definitions = DefinitionsDict()
-
-    # Populate definitions with the defaults
-    if 'define' in config:
-      self.definitions = DefinitionsDict(config['define'])
+    self.definitions = DefinitionsDict(config.get('define', {}))
+    self.meta = config.get('meta', {})
 
   def compileDefinitions(self, cmdlineDefinitions={}):
     """
@@ -265,7 +267,7 @@ class RootConfig:
     Return all policies in the config
     """
     return map(
-      lambda c: ComponentConfig(c, self.definitions, 'policies'),
+      lambda c: ComponentConfig(c, self, 'policies'),
       self.config.get('policies', [])
     )
 
@@ -274,7 +276,7 @@ class RootConfig:
     Return all channels in the config
     """
     return map(
-      lambda c: ComponentConfig(c, self.definitions, 'channels'),
+      lambda c: ComponentConfig(c, self, 'channels'),
       self.config.get('channels', [])
     )
 
@@ -283,7 +285,7 @@ class RootConfig:
     Return all observers in the config
     """
     return map(
-      lambda c: ComponentConfig(c, self.definitions, 'observers'),
+      lambda c: ComponentConfig(c, self, 'observers'),
       self.config.get('observers', [])
     )
 
@@ -292,7 +294,7 @@ class RootConfig:
     Return all trackers in the config
     """
     return map(
-      lambda c: ComponentConfig(c, self.definitions, 'trackers'),
+      lambda c: ComponentConfig(c, self, 'trackers'),
       self.config.get('trackers', [])
     )
 
@@ -301,7 +303,7 @@ class RootConfig:
     Return all tasks in the config
     """
     return map(
-      lambda c: ComponentConfig(c, self.definitions, 'tasks'),
+      lambda c: ComponentConfig(c, self, 'tasks'),
       self.config.get('tasks', [])
     )
 
@@ -318,7 +320,7 @@ class RootConfig:
       ]
 
     return map(
-      lambda c: ComponentConfig(c, self.definitions, 'reporters'),
+      lambda c: ComponentConfig(c, self, 'reporters'),
       reporters
     )
 
@@ -326,5 +328,5 @@ class RootConfig:
     """
     Return the general config section
     """
-    return GeneralConfig(self.config.get('config', {}))
+    return GeneralConfig(self.config.get('config', {}), self)
 

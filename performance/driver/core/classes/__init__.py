@@ -1,4 +1,5 @@
 from .channel import Channel
+from .indicator import Indicator
 from .observer import Observer
 from .policy import PolicyFSM, State
 from .reporter import Reporter

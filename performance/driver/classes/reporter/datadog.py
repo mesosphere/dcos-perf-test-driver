@@ -1,4 +1,6 @@
 import time
+import socket
+
 from datadog import initialize, api
 from performance.driver.core.classes import Reporter
 
@@ -11,27 +13,39 @@ class DataDogReporter(Reporter):
 
     # Initialize DataDog API
     initialize(
-        api_key=self.getConfig('api_key'),
-        app_key=self.getConfig('app_key')
-      )
+      api_key=self.getConfig('api_key'),
+      app_key=self.getConfig('app_key'),
+      hostname=self.getConfig('hostname', socket.gethostname())
+    )
 
     # Get some configuration options
     prefix = self.getConfig('prefix', 'dcos.perf.')
     metrics = self.getConfig('metrics', self.generalConfig.metrics.keys())
 
-    # tags=self.generalConfig.meta
+    # Calculate indicators
+    indicatorValues = summarizer.indicators()
 
-    # # Submit a single point with a timestamp of `now`
-    # api.Metric.send(metric='page.views', points=1000)
+    # Compise datadog series
+    series = []
+    for point in self.getConfig('points', []):
 
-    # # Submit a point with a timestamp (must be ~current)
-    # api.Metric.send(metric='my.pair', points=(now, 15))
+      # Make sure we have this summarizer
+      if not point['indicator'] in indicatorValues:
+        raise TypeError('Unknown indicator `%s` in datadog summarizer' % \
+          point['indicator'])
 
-    # # Submit multiple points.
-    # api.Metric.send(metric='my.series', points=[(now, 15), (future_10s, 16)])
+      # Submit metrics and add all metadata as tags
+      series.append({
+          "metric": '%s%s' % (prefix, point['name']),
+          "points": indicatorValues[point['indicator']],
+          "tags": list(
+            map(
+              lambda v: "%s:%s" % (v[0], str(v[1])),
+              self.getMeta().items()
+            )
+          )
+        })
 
-    # # Submit a point with a host and tags.
-    # api.Metric.send(metric='my.series', points=100, host="myhost.example.com", tags=["version:1"])
-
-    # # Submit multiple metrics
-    # api.Metric.send([{'metric':'my.series', 'points':15}, {'metric':'my1.series', 'points':16}])
+    # Send all series in one batch
+    self.logger.info("Submitting series to datadog: %r" % series)
+    api.Metric.send(series)

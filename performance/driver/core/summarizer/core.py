@@ -59,8 +59,8 @@ class Summarizer(EventBusSubscriber):
     Summarize the entire all the test runs to scalar indicators
     """
     data = {}
-    for indicator in self.config.indicators:
-      data[indicator.name] = indicator.instance().calculate(self.axes)
+    for indicator, config in self.config.indicators.items():
+      data[indicator] = config.instance().calculate(self.axes)
 
     return data
 

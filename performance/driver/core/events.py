@@ -87,9 +87,10 @@ class RunTaskCompletedEvent(Event):
   want to keep track of a lengthy event
   """
 
-  def __init__(self, previousEvent):
+  def __init__(self, previousEvent, exception=None):
     super().__init__(traceid=previousEvent.traceids)
     self.task = previousEvent.task
+    self.exception = exception
 
 class TickEvent(Event):
   """

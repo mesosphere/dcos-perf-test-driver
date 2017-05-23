@@ -75,9 +75,6 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # Run the inter-test tasks
       self.eventbus.publish(RunTaskEvent('intertest'))
 
-      # Schedule next deployment
-      self.goto(ChainedDeploymentPolicy.Deploy)
-
     def onMarathonDeploymentFailedEvent(self, event):
       # Ignore deployment success events that do not originate from our
       # setParameters trigger
@@ -90,6 +87,13 @@ class ChainedDeploymentPolicy(PolicyFSM):
 
       # Run the inter-test tasks
       self.eventbus.publish(RunTaskEvent('intertest'))
+
+    def onRunTaskCompletedEvent(self, event):
+      """
+      When the 'intertest' task is completed, then switch to deployment
+      """
+      if event.task != 'intertest':
+        return
 
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
