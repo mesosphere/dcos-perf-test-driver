@@ -24,6 +24,7 @@ class ParameterBatch(EventBusSubscriber):
     self.paramUpdates = []
     self.flagUpdates = []
     self.updateTraceid = uuid.uuid4().hex
+    self.previousTraceId = None
 
     # Populate default parameter values
     for key, parameter in config.parameters.items():
@@ -47,13 +48,13 @@ class ParameterBatch(EventBusSubscriber):
       batch[name] = value
       parameters[name] = value
 
-    # First dispatch flag updates
+    # First dispatch flag updates for the previous run
     if self.flagUpdates:
       for flagName, flagValue in self.flagUpdates:
         self.eventbus.publish(
           FlagUpdateEvent(
             flagName, flagValue,
-            traceid=self.updateTraceid
+            traceid=self.previousTraceId
           )
         )
 
@@ -73,6 +74,7 @@ class ParameterBatch(EventBusSubscriber):
 
       self.paramUpdates = []
       self.parameters = parameters
+      self.previousTraceId = self.updateTraceid
       self.updateTraceid = uuid.uuid4().hex
 
   def setParameter(self, name, value):
