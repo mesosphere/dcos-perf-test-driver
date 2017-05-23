@@ -54,6 +54,16 @@ class Summarizer(EventBusSubscriber):
 
     return data
 
+  def indicators(self):
+    """
+    Summarize the entire all the test runs to scalar indicators
+    """
+    data = {}
+    for indicator in self.config.indicators:
+      data[indicator.name] = indicator.instance().calculate(self.axes)
+
+    return data
+
   def handleFlagUpdateEvent(self, event):
     """
     Handle flag update

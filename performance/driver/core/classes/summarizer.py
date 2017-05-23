@@ -17,7 +17,7 @@ class Summarizer(Configurable):
     self.name = config.get('name', type(self).__name__)
     self.logger = logging.getLogger('Summarizer<%s>' % type(self).__name__)
 
-  def sum(self, timeseries:SummarizerAxisTimeseries, parameters:SummarizerAxisParameters):
+  def calculate(self, timeseries:SummarizerAxisTimeseries, parameters:SummarizerAxisParameters):
     """
     Calculate summarized value and return the summarized metric
     """
@@ -42,7 +42,7 @@ class BuiltInSummarizer(Summarizer):
     # Get a reference to the built-in summarizer
     self.ref = getattr(builtin, funcName)
 
-  def sum(self, timeseries:SummarizerAxisTimeseries, parameters:SummarizerAxisParameters):
+  def calculate(self, timeseries:SummarizerAxisTimeseries, parameters:SummarizerAxisParameters):
     """
     Call the built-in summarizer function
     """

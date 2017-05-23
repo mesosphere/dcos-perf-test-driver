@@ -6,6 +6,9 @@ import os
 from .eventbus import EventBus
 from .template import TemplateDict
 
+# TODO: Make @ expand to `performance.driver.core.classes`
+# TODO: Make MetricConfig use ComponentConfig
+
 def mergeConfig(source, destination):
   """
   Merges `source` object into `destination`.
@@ -88,7 +91,10 @@ class ComponentConfig(dict):
     """
 
     # De-compose class path to module and class name
-    classPath = 'performance.driver.classes.%s' % self['class']
+    if self['class'][0] == "@":
+      classPath = 'performance.driver.core.classes.%s' % self['class'][1:]
+    else:
+      classPath = 'performance.driver.classes.%s' % self['class']
     self.logger.debug('Instantiating %s' % classPath)
 
     pathComponents = classPath.split('.')
@@ -143,6 +149,7 @@ class MetricConfig:
     self.config = metricConfig
     self.summarizers = []
 
+    # Extract summarizer configuration
     for summ in metricConfig.get('summarize', []):
       if type(summ) is str:
         summ = {
@@ -209,6 +216,15 @@ class GeneralConfig:
         definition['required'] = False
       self.definitions[definition['name']] = definition
 
+    # Process indicator configuration
+    self.indicators = {}
+    for indicator in generalConfig.get('indicators', []):
+      self.indicators[indicator['name']] = ComponentConfig(
+        indicator,
+        self.definitions,
+        'config.indicators'
+      )
+
     # Process metadata
     self.meta = generalConfig.get('meta', {})
 
@@ -223,38 +239,13 @@ class GeneralConfig:
     # Populate timeouts
     self.staleTimeout = generalConfig.get('staleTimeout', 600)
 
-  def instanceReporter(self, *args, **kwargs):
-    """
-    Return a class instance
-    """
-    if not self.reportConfig:
-      self.logger.warn('Missing `report` config. Falling back to default')
-      return importlib.import_module('performance.driver.core.classes.reporter') \
-        .ConsoleReporter(None, self)
-
-    # De-compose class path to module and class name
-    classPath = 'performance.driver.classes.%s' % self.reportConfig['class']
-    self.logger.debug('Instantiating %s' % classPath)
-
-    pathComponents = classPath.split('.')
-    className = pathComponents.pop()
-    modulePath = '.'.join(pathComponents)
-
-    # Get a reference to the class type
-    self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className, modulePath))
-    module = importlib.import_module(modulePath)
-    classType = getattr(module, className)
-
-    # Instantiate with the config class as first argument
-    return classType(self.reportConfig, self, *args, **kwargs)
-
-
 class RootConfig:
   """
   Root configuration section
   """
 
   def __init__(self, config:dict):
+    self.logger = logging.getLogger('RootConfig')
     self.config = config
     self.definitions = DefinitionsDict()
 
@@ -323,9 +314,7 @@ class RootConfig:
     if len(reporters) == 0:
       self.logger.warn('Missing `reporters` config section. Using defaults')
       reporters = [
-        {
-          "class": "@performance.driver.core.classes.reporter.ConsoleReporter"
-        }
+        { "class": "@reporter.ConsoleReporter" }
       ]
 
     return map(

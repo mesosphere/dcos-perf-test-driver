@@ -76,7 +76,7 @@ class SummarizerAxis:
       # Summarize timeseries
       sums = {}
       for summarizer in metricSummarizers[metric]:
-        sums[summarizer.name] = summarizer.sum(series, self.parameters)
+        sums[summarizer.name] = summarizer.calculate(series, self.parameters)
 
       # Collect
       values[metric] = sums
