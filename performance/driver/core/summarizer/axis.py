@@ -1,5 +1,9 @@
-from . import rules
 from .timeseries import SummarizerAxisTimeseries
+
+class SummarizerAxisParameters(dict):
+  """
+  The parameters the axis is bound on
+  """
 
 class SummarizerAxis:
   """
@@ -8,7 +12,7 @@ class SummarizerAxis:
 
   def __init__(self, config, parameters, traceids):
     self.config = config
-    self.parameters = dict(parameters)
+    self.parameters = SummarizerAxisParameters(parameters)
     self.traceids = list(traceids)
     self.flags = {}
 
@@ -63,10 +67,7 @@ class SummarizerAxis:
     # Collect summarize rules for each metric
     metricSummarizers = {}
     for metric, config in self.config.metrics.items():
-      sum_rules = config.get('summarize', [])
-      if not type(sum_rules) is list:
-        sum_rules = [sum_rules]
-      metricSummarizers[metric] = sum_rules
+      metricSummarizers[metric] = config.instanceSummarizers()
 
     # Collect values
     values = {}
@@ -75,7 +76,7 @@ class SummarizerAxis:
       # Summarize timeseries
       sums = {}
       for summarizer in metricSummarizers[metric]:
-        sums[summarizer] = getattr(rules, summarizer)(series)
+        sums[summarizer.name] = summarizer.sum(series, self.parameters)
 
       # Collect
       values[metric] = sums

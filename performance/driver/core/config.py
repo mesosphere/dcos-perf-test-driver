@@ -132,6 +132,57 @@ class Configurable:
   def setDefinition(self, key, value):
     self.config.definitions[key] = value
 
+class MetricConfig:
+  """
+  Configuration class for the metrics
+  """
+
+  def __init__(self, metricConfig:dict):
+    # Process config
+    self.logger = logging.getLogger('MetricConfig')
+    self.config = metricConfig
+    self.summarizers = []
+
+    for summ in metricConfig.get('summarize', []):
+      if type(summ) is str:
+        summ = {
+          "class": "@%s" % summ,
+          "name": summ
+        }
+
+      # Collect summarizer config
+      self.summarizers.append(summ)
+
+  def instanceSummarizers(self):
+    """
+    Return an array with all the summarizers
+    """
+    summarizerInstances = []
+    for summConfig in self.summarizers:
+
+      # De-compose class path to module and class name
+      # The "@" shorthand is referring to the built-in summarizer
+      if summConfig['class'][0] == "@":
+        classPath = 'performance.driver.core.classes.summarizer.BuiltInSummarizer'
+      else:
+        classPath = 'performance.driver.classes.%s' % summConfig['class']
+      self.logger.debug('Instantiating %s' % classPath)
+
+      pathComponents = classPath.split('.')
+      className = pathComponents.pop()
+      modulePath = '.'.join(pathComponents)
+
+      # Get a reference to the class type
+      self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className, modulePath))
+      module = importlib.import_module(modulePath)
+      classType = getattr(module, className)
+
+      # Instantiate with the config class as first argument
+      summarizerInstances.append(classType(summConfig))
+
+    # Return summarizer instances
+    return summarizerInstances
+
 class GeneralConfig:
   """
   General configuration class contains the test-wide configuration parameters
@@ -142,7 +193,7 @@ class GeneralConfig:
     self.logger = logging.getLogger('GeneralConfig')
     self.metrics = {}
     for metric in generalConfig.get('metrics', []):
-      self.metrics[metric['name']] = metric
+      self.metrics[metric['name']] = MetricConfig(metric)
 
     # Process parameters
     self.parameters = {}

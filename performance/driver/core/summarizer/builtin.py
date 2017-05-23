@@ -1,7 +1,7 @@
 from collections import Counter
 from .timeseries import SummarizerAxisTimeseries
 
-def sum(timeseries:SummarizerAxisTimeseries):
+def sum(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Summarize the values of the given timeseries
   """
@@ -11,7 +11,7 @@ def sum(timeseries:SummarizerAxisTimeseries):
 
   return v_sum
 
-def min(timeseries:SummarizerAxisTimeseries):
+def min(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Get the minimum of the values
   """
@@ -21,7 +21,7 @@ def min(timeseries:SummarizerAxisTimeseries):
 
   return v_min
 
-def max(timeseries:SummarizerAxisTimeseries):
+def max(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Get the maximum of the values
   """
@@ -31,7 +31,7 @@ def max(timeseries:SummarizerAxisTimeseries):
 
   return v_max
 
-def mean(timeseries:SummarizerAxisTimeseries):
+def mean(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Calculate the mean of the timeseries
   """
@@ -45,7 +45,7 @@ def mean(timeseries:SummarizerAxisTimeseries):
     return 0
   return v_mean / count
 
-def median(timeseries:SummarizerAxisTimeseries):
+def median(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Calculate the median of the timeseries
   """
@@ -54,7 +54,7 @@ def median(timeseries:SummarizerAxisTimeseries):
   # Return middle value
   return values[round(len(values)/2)]
 
-def mode(timeseries:SummarizerAxisTimeseries):
+def mode(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Calculate the mode of the timeseries
   """
@@ -64,7 +64,7 @@ def mode(timeseries:SummarizerAxisTimeseries):
   data = Counter(values)
   return data.most_common(1)[0][0]
 
-def variance(timeseries:SummarizerAxisTimeseries):
+def variance(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Calculate the variance of the timeseries
   """
@@ -81,7 +81,7 @@ def variance(timeseries:SummarizerAxisTimeseries):
     return 0
   return mean / v_variance
 
-def sdeviation(timeseries:SummarizerAxisTimeseries):
+def sdeviation(timeseries:SummarizerAxisTimeseries, param:dict):
   """
   Calculate the standard deviation
   """
