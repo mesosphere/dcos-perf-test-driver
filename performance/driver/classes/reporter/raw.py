@@ -15,5 +15,6 @@ class RawReporter(Reporter):
     with open(filename, 'w') as f:
       f.write(json.dumps({
           'values': summarizer.raw(),
+          'indicators': summarizer.indicators(),
           'meta': self.getMeta()
         }, sort_keys=True, indent=2))
