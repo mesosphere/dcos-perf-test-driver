@@ -5,6 +5,26 @@ import uuid
 # Regex to strip ANSI sequences from the log lines
 ANSI_SEQUENCE = re.compile(r'\x1b[^m]*m')
 
+def isEventClassMatchingName(eventClass, className):
+  """
+  Check if the `eventClass` name or it's parent classes equals to `className`
+  """
+  if eventClass.__name__ == className:
+    return True
+
+  return any(map(
+    lambda c: isEventClassMatchingName(c, className), eventClass.__bases__
+  ))
+
+def isEventMatching(eventInstance, eventCheck):
+  """
+  Check if the `eventCheck` is validating the `eventInstance`
+  """
+  if type(eventCheck) is str:
+    return isEventClassMatchingName(type(eventInstance), eventCheck)
+  else:
+    return isinstance(eventInstance, eventCheck)
+
 class Event:
   """
   Base event

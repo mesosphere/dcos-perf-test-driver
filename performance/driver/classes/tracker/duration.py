@@ -1,7 +1,7 @@
 import time
 
 from performance.driver.core.classes import Tracker
-from performance.driver.core.events import ParameterUpdateEvent
+from performance.driver.core.events import ParameterUpdateEvent, isEventMatching
 
 class TrackedEvent:
   def __init__(self, startingEvent):
@@ -29,14 +29,13 @@ class DurationTracker(Tracker):
       self.logger.debug('Keeping track of trace ID %r' % event.traceids)
 
     # Track the starting event
-    eventName = type(event).__name__
-    if eventName == self.events['start'] and event.hasTraces(self.knownTraceIDs):
+    if isEventMatching(event, self.events['start']) and event.hasTraces(self.knownTraceIDs):
       self.activeTracks.append(TrackedEvent(event))
       self.logger.debug('Marked beginning of metric: ts=%f' % event.ts)
 
     # If we have found an ending event, look for a matching
     # event that continues the starting trace ID
-    elif eventName == self.events['end']:
+    elif isEventMatching(event, self.events['end']):
       for track in self.activeTracks:
         if track.event.hasTraces(event.traceids):
           self.logger.debug('Marked end of metric: ts=%f' % event.ts)
