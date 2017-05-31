@@ -124,7 +124,14 @@ class EventBus:
 
       for order, sub, events in self.subscribers:
         try:
-          if events is None or any(map(lambda cls: isinstance(event, cls), events)):
+          if events is None or any(
+              map(
+                lambda cls: \
+                  (type(event).__name__ == cls) if (type(cls) is str) \
+                                            else isinstance(event, cls),
+                events
+              )
+            ):
             sub(event)
         except Exception as e:
           self.logger.error('Exception while dispatching event %s' % event.name)

@@ -121,7 +121,10 @@ class Configurable:
     self.config = config
 
   def getRenderedConfig(self, macros={}):
-    return TemplateDict(self.config).apply(self.config.definitions, macros)
+    return TemplateDict(self.config).apply(self.config.definitions.fork(macros))
+
+  def getConfigMacros(self):
+    return TemplateDict(self.config).macros()
 
   def getConfig(self, key, default=None, required=True):
     if not key in self.config:
