@@ -24,10 +24,15 @@ class NormalizedMeanMetricIndicator(Indicator):
       summ = axis.sum()
 
       # Calculate normalized value
-      value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
+      if axis.parameters[v_parameter] == 0:
+        value = 0
+      else:
+        value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
       v_mean += value
 
     # Calculate mean
+    if len(axes) == 0:
+      return 0
     v_mean = float(v_mean) / len(axes)
 
     # Return
@@ -54,7 +59,10 @@ class NormalizedMinMetricIndicator(Indicator):
       summ = axis.sum()
 
       # Calculate normalized value
-      value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
+      if axis.parameters[v_parameter] == 0:
+        value = 0
+      else:
+        value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
 
       if v_min is None:
         v_min = value
@@ -86,7 +94,10 @@ class NormalizedMaxMetricIndicator(Indicator):
       summ = axis.sum()
 
       # Calculate normalized value
-      value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
+      if axis.parameters[v_parameter] == 0:
+        value = 0
+      else:
+        value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
 
       if v_max is None:
         v_max = value
