@@ -1,14 +1,24 @@
 import time
 import requests
 
-def is_accessible(url, timeout=1, headers=None):
+def is_accessible(url, timeout=1, headers=None, status_code=None):
   """
   Try to access the given endpoint and return True if the endpointn
   is accessible.
   """
   try:
     res = requests.get(url, timeout=timeout, verify=False, headers=headers)
-    return True
+    if status_code is None:
+      return True
+
+    # Validate accepted codes
+    if not type(status_code) in (list, tuple):
+      status_code = [status_code]
+    for code in status_code:
+      if res.status_code == code:
+        return True
+    return False
+
   except Exception as e:
     return False
 

@@ -169,19 +169,26 @@ class MarathonEventsObserver(Observer):
     url = self.urlTpl.apply(definitions)
     headers = self.headersTpl.apply(definitions)
 
-    # If we are missing an `Authorization` header but we have a
-    # `dcos_auth_token` definition, allocate an `Authorization` header now
-    if not 'Authorization' in headers \
-       and 'dcos_auth_token' in definitions:
-      headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
 
     # Wait til endpoint responds
     while self.running:
+
+      # If we are missing an `Authorization` header but we have a
+      # `dcos_auth_token` definition, allocate an `Authorization` header now
+      #
+      # Note: We are putting this within the loop because the `dcos_auth_token`
+      #       might appear at a later time if an authentication task is already
+      #       in progress.
+      #
+      if not 'Authorization' in headers \
+         and 'dcos_auth_token' in definitions:
+        headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+
       #
       # Poll the endpoint until it responds
       #
       self.logger.debug('Checking if %s is alive' % url)
-      if is_accessible(url, headers=headers):
+      if is_accessible(url, headers=headers, status_code=[200, 405]):
         break
 
       # Wait for 5 seconds
@@ -214,7 +221,7 @@ class MarathonEventsObserver(Observer):
       #
       eventName = None
       try:
-        with closing(requests.get(url, stream=True, headers=headers)) as r:
+        with closing(requests.get(url, verify=False, stream=True, headers=headers)) as r:
           self.activeRequest = r
           try:
             for chunk in r.iter_lines(decode_unicode=True, chunk_size=1):

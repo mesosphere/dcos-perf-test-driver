@@ -187,6 +187,7 @@ class HTTPChannel(Channel):
     req.activeRequest = self.session.request(
       req.verb,
       req.url,
+      verify=False,
       data=req.body,
       headers=req.headers,
       hooks=dict(response=ack_response)

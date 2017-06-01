@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import threading
 import json
@@ -20,25 +21,30 @@ class MarathonDeploymentMonitorTask(Task):
     super().__init__(*args, **kwargs)
 
     # Get config parameters
-    self.cluster_url = self.getConfig('url', None)
+    config = self.getRenderedConfig()
+    self.cluster_url = config.get('url', None)
     if self.cluster_url is None:
-      self.cluster_url = self.getDefinition('cluster_url', None)
-      if self.cluster_url is None:
-        raise KeyError('Missing `url` parameter or `cluster_url` definition')
-
-    # Add auth headers if we have an auth_token defined
-    self.headers = {}
-    auth_token = self.getDefinition('auth_token', None)
-    if not auth_token is None:
-      self.headers = {
-        'Authorization': 'token=%s' % auth_token
-      }
+      raise ValueError('Missing `url` parameter')
 
     # Track delpoyments
     self.cv = threading.Condition()
     self.trackDeployments = []
     self.eventbus.subscribe(self.handleMarathonDeploymentCompletionEvent, \
       events=(MarathonDeploymentSuccessEvent,MarathonDeploymentFailedEvent))
+
+  def getHeaders(self):
+    """
+    Compile and return headers
+    """
+    # Add auth headers if we have an dcos_auth_token defined
+    headers = {}
+    dcos_auth_token = self.getDefinition('dcos_auth_token', None)
+    if not dcos_auth_token is None:
+      headers = {
+        'Authorization': 'token=%s' % dcos_auth_token
+      }
+
+    return headers
 
   def handleMarathonDeploymentCompletionEvent(self, event):
     """
@@ -61,7 +67,7 @@ class MarathonDeploymentMonitorTask(Task):
 
 class RemoveAllApps(MarathonDeploymentMonitorTask):
   """
-  Remove all apps found in the marathon URL
+  Remove matching apps from marathon
   """
 
   def run(self):
@@ -69,7 +75,7 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 
     # Request list of apps
     self.logger.debug('Enumerating all apps')
-    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.cluster_url, verify=False, headers=self.headers)
+    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.cluster_url, verify=False, headers=self.getHeaders())
     if response.status_code != 200:
       raise RuntimeError('Unable to enumerate running apps')
 
@@ -77,9 +83,42 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
     self.trackDeployments = []
     for app in response.json()['apps']:
       self.logger.info('Removing app %s' % app['id'])
-      response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.headers)
+      response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
       if response.status_code != 200:
-        self.logger.warn('Unable to remove app %s' % app['id'])
+        self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
+      else:
+        self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+
+    # Wait for deployments to complete
+    self.waitDeployments()
+
+class RemoveMatchingApps(MarathonDeploymentMonitorTask):
+  """
+  Removes matching apps from marathon
+  """
+
+  def run(self):
+
+    # Compile matching regular expression from match directive
+    config = self.getRenderedConfig()
+    match = re.compile(config['match'])
+    self.logger.info('Removing apps matching `%s` from marathon' % config['match'])
+
+    # Request list of apps
+    self.logger.debug('Enumerating all apps')
+    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.cluster_url, verify=False, headers=self.getHeaders())
+    if response.status_code != 200:
+      raise RuntimeError('Unable to enumerate running apps')
+
+    # Destroy matching services
+    self.trackDeployments = []
+    for app in response.json()['apps']:
+      if not match.search(app['id']):
+        continue
+      self.logger.info('Removing app %s' % app['id'])
+      response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
+      if response.status_code != 200:
+        self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
       else:
         self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
 
@@ -97,9 +136,9 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
 
     # Destroy group
     self.logger.debug('Removing group %s' % group_name)
-    response = requests.delete('%s/v2/groups/%s/?force=true' % (self.cluster_url, group_name), verify=False, headers=self.headers)
+    response = requests.delete('%s/v2/groups/%s/?force=true' % (self.cluster_url, group_name), verify=False, headers=self.getHeaders())
     if response.status_code != 200:
-      self.logger.warn('Unable to remove group %s' % group_name)
+      self.logger.warn('Unable to remove group %s (HTTP response %i)' % (group_name, response.status_code))
     else:
       self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
 
