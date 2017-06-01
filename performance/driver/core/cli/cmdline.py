@@ -1,6 +1,6 @@
 import argparse
 
-def parse_cmdline():
+def parse_cmdline(args=None):
   """
   Parse application cmdline and return the arguments
   """
@@ -28,5 +28,5 @@ def parse_cmdline():
                       help='The configuration script to use.')
 
   # Parse and return
-  return parser.parse_args()
+  return parser.parse_args(args)
 

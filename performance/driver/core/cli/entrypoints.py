@@ -7,13 +7,13 @@ from performance.driver.core.config import loadConfig, RootConfig
 from performance.driver.core.session import Session
 from performance.driver.core.classes.reporter import ConsoleReporter
 
-def dcos_perf_test_driver():
+def dcos_perf_test_driver(args=None):
   """
   Entry point for the dcos-perf-test-driver CLI script
   """
 
   # Parse the command-line
-  cmdline = parse_cmdline()
+  cmdline = parse_cmdline(args)
   logger = logging.getLogger('Main')
 
   # Setup logging
