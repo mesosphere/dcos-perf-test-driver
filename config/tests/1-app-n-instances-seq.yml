@@ -1,0 +1,80 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the parameters this policy will be updating
+  parameters:
+    - name: instances
+      units: count
+      desc: The number of instances per application deployment
+
+#################################################
+# Test Metadata
+#################################################
+meta:
+  test: 1-app-n-instances
+
+#################################################
+# Test policy configuration
+#################################################
+policies:
+  - class: policy.ChainedDeploymentPolicy
+    steps:
+      - instances: 1
+      - instances: 2
+      - instances: 4
+      - instances: 8
+      - instances: 16
+      - instances: 32
+      # - instances: 64
+      # - instances: 128
+      # - instances: 256
+      # - instances: 512
+      # - instances: 1024
+      # - instances: 2048
+      # - instances: 4096
+      # - instances: 8192
+      # - instances: 16384
+      # - instances: 32768
+      # - instances: 65536
+      # - instances: 131072
+
+#################################################
+# Channel configuration
+#################################################
+channels:
+
+  # Perform an HTTP request for every `instance` parameter change
+  - class: channel.HTTPChannel
+    url: "{{marathon_url}}/v2/apps"
+    verb: POST
+    body: |
+      {
+        "cmd": "sleep 1200",
+        "cpus": 0.1,
+        "mem": 64,
+        "disk": 0,
+        "instances": {{instances}},
+        "id": "/scale-instances/{{uuid()}}",
+        "backoffFactor": 1.0,
+        "backoffSeconds": 0
+      }
+
+#################################################
+# One-time tasks
+#################################################
+tasks:
+
+  # Right after ever test run we should remove all the instances
+  - class: tasks.marathon.RemoveGroup
+    url: "{{marathon_url}}"
+    group: /scale-instances
+    at: intertest
+
+  # Also remove the tests if they were abruptly terminated
+  - class: tasks.marathon.RemoveGroup
+    url: "{{marathon_url}}"
+    group: /scale-instances
+    at: teardown

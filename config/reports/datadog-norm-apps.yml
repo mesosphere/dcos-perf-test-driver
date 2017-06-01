@@ -1,0 +1,29 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Introduce some indicators that will be fed to datadog
+  indicators:
+
+    # Calculate `meanDeploymentTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of instances
+    - name: meanDeploymentTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: deploymentTime.mean
+      parameter: apps
+
+#################################################
+# Global test configuration
+#################################################
+reporters:
+
+  - class: reporter.DataDogReporter
+    api_key: 8ac037e7d400439bf8c3b01af6c01542
+    app_key: 175158c47663ae1870fa9a53e761c254573542bd
+    prefix: "marathon.perf."
+    points:
+      - name: meanDeploymentTime
+        indicator: meanDeploymentTime

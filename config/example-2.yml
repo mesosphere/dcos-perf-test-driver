@@ -1,0 +1,32 @@
+#
+# General test configuration
+#
+config:
+  repeat: 5
+  title: "1 App / N Instances Test on EE Cluster"
+
+define:
+  marathon_repo_dir: /Users/icharala/Develop/marathon
+
+#
+# Import everything
+#
+include:
+
+  # We are going to run scale tests with one app with n number of instances
+  - tests/1-app-n-instances-seq.yml
+
+  # We are running marathon on an EE cluster, so we are using the respective channels
+  - lib/marathon-config-cluster-ext-ee.yml
+
+  # The simulation is targeting marathon, so include the marathon observers
+  - lib/marathon-observers.yml
+
+  # Measure deployment time and http-requests
+  - measure/deployment-time.yml
+  - measure/http-request-time.yml
+
+  # We will dump the raw results, csv files and the image plots
+  - reports/raw.yml
+  - reports/csv.yml
+  - reports/plots.yml

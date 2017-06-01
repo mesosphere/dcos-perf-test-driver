@@ -1,0 +1,9 @@
+
+#################################################
+# Global test configuration
+#################################################
+reporters:
+
+  # Dump raw time series results to results/dump.json
+  - class: reporter.RawReporter
+    filename: results/dump.json
