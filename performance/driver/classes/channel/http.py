@@ -248,9 +248,21 @@ class HTTPChannel(Channel):
     if not hasChanges:
       return
 
+    config = self.getRenderedConfig(event.parameters)
+    definitions = self.getDefinitions()
+
+    # If we are missing an `Authorization` header but we have a
+    # `dcos_auth_token` definition, allocate an `Authorization` header now
+    if not 'headers' in config:
+      config['headers'] = {}
+    if not 'Authorization' in config['headers'] \
+       and 'dcos_auth_token' in definitions:
+      config['headers']['Authorization'] = 'token=%s' % \
+        definitions['dcos_auth_token']
+
     # Prepare request state and send initial request
     self.requestState = HTTPRequestState(
-      self.getRenderedConfig(event.parameters),
+      config,
       event.traceids
     )
     self.handleRequest()

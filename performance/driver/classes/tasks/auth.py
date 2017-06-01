@@ -32,7 +32,7 @@ class AuthEE(Task):
       raise RuntimeError('Unable to authenticate on the cluster with the given credentials')
 
     # Get token
-    self.setDefinition('auth_token', response.json()['token'])
+    self.setDefinition('dcos_auth_token', response.json()['token'])
     self.logger.debug('Authenticated')
 
 class AuthOpen(Task):
@@ -57,5 +57,5 @@ class AuthOpen(Task):
       raise RuntimeError('Unable to authenticate on the cluster with the given credentials')
 
     # Get token
-    self.setDefinition('auth_token', response.json()['token'])
+    self.setDefinition('dcos_auth_token', response.json()['token'])
     self.logger.debug('Authenticated')

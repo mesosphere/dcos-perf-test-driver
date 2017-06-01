@@ -169,6 +169,12 @@ class MarathonEventsObserver(Observer):
     url = self.urlTpl.apply(definitions)
     headers = self.headersTpl.apply(definitions)
 
+    # If we are missing an `Authorization` header but we have a
+    # `dcos_auth_token` definition, allocate an `Authorization` header now
+    if not 'Authorization' in headers \
+       and 'dcos_auth_token' in definitions:
+      headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+
     # Wait til endpoint responds
     while self.running:
       #
