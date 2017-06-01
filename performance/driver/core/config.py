@@ -26,9 +26,9 @@ def mergeConfig(source, destination):
       destination[key] = value
   return destination
 
-def loadConfig(filename):
+def loadConfigFile(filename):
   """
-  Load YAML configuration into a dict
+  Load just a single YAML configuration file
   """
   with open(filename, 'r') as f:
     config = yaml.load(f)
@@ -51,6 +51,18 @@ def loadConfig(filename):
 
   # Return config
   return config
+
+def loadConfig(filename):
+  """
+  Load one or more configuration files at once
+  """
+  if type(filename) in (list, tuple):
+    config = {}
+    for file in filename:
+      config = mergeConfig(config, loadConfigFile(file))
+    return config
+  else:
+    return loadConfigFile(filename)
 
 class DefinitionsDict(TemplateDict):
   """

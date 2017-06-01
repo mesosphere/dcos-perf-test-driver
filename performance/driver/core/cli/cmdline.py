@@ -24,7 +24,7 @@ def parse_cmdline():
                       help='Define one or more metadata value.')
 
   # The remaining part is the configuration and it's arguments
-  parser.add_argument('config',
+  parser.add_argument('config', nargs='*',
                       help='The configuration script to use.')
 
   # Parse and return
