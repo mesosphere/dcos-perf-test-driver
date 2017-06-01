@@ -114,7 +114,7 @@ class Session(EventBusSubscriber):
 
     # Prepare the number of runs we have to loop through
     generalConfig = self.config.general()
-    runs = generalConfig.runs
+    runs = generalConfig.repeat
 
     # Register an interrupt signal handler
     self.prevSigHandler = signal.signal(signal.SIGINT, self.interrupt)

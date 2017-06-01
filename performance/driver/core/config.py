@@ -242,7 +242,7 @@ class GeneralConfig:
       self.reportConfig = generalConfig['report']
 
     # Populate field defaults
-    self.runs = generalConfig.get('runs', 1)
+    self.repeat = generalConfig.get('repeat', 1)
 
     # Populate timeouts
     self.staleTimeout = generalConfig.get('staleTimeout', 600)
