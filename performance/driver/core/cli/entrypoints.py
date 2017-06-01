@@ -14,6 +14,7 @@ def dcos_perf_test_driver():
 
   # Parse the command-line
   cmdline = parse_cmdline()
+  logger = logging.getLogger('Main')
 
   # Setup logging
   coloredlogs.install(
@@ -39,54 +40,64 @@ def dcos_perf_test_driver():
       }
     )
 
-  # Get a logger
-  logger = logging.getLogger('Main')
+  try:
 
-  # Load configuration
-  config = RootConfig(loadConfig(cmdline.config))
-  generalConfig = config.general()
+    # Get a logger
+    if not cmdline.config:
+      raise TypeError('You must specify at least one configuration file')
 
-  # Update command-line definitions
-  cmdlineDefinitions = {}
-  for definition in cmdline.defs:
-    if not '=' in definition:
-      raise TypeError('Please specify definitions in key=value format')
-    key, value = definition.split('=')
-    cmdlineDefinitions[key] = value
+    # Load configuration
+    config = RootConfig(loadConfig(cmdline.config))
+    generalConfig = config.general()
 
-  # Update command-line metadata
-  for definition in cmdline.meta:
-    if not '=' in definition:
-      raise TypeError('Please specify metadata in key=value format')
-    key, value = definition.split('=')
-    config.meta[key] = value
+    # Update command-line definitions
+    cmdlineDefinitions = {}
+    for definition in cmdline.defs:
+      if not '=' in definition:
+        raise TypeError('Please specify definitions in key=value format')
+      key, value = definition.split('=')
+      cmdlineDefinitions[key] = value
 
-  # Compile global definitions, including the command-line definitions
-  config.compileDefinitions(cmdlineDefinitions)
+    # Update command-line metadata
+    for definition in cmdline.meta:
+      if not '=' in definition:
+        raise TypeError('Please specify metadata in key=value format')
+      key, value = definition.split('=')
+      config.meta[key] = value
 
-  # Complain about missing definitions
-  hasMissing = False
-  for name, definition in generalConfig.definitions.items():
-    if definition['required'] and not name in config.definitions:
-      desc = ''
-      if 'desc' in definition:
-        desc = ' (%s)' % definition['desc']
-      logger.error('Missing required definition `%s`%s' % \
-        (name, desc)
-      )
-      hasMissing = True
-  if hasMissing:
+    # Compile global definitions, including the command-line definitions
+    config.compileDefinitions(cmdlineDefinitions)
+
+    # Complain about missing definitions
+    hasMissing = False
+    for name, definition in generalConfig.definitions.items():
+      if definition['required'] and not name in config.definitions:
+        desc = ''
+        if 'desc' in definition:
+          desc = ' (%s)' % definition['desc']
+        logger.error('Missing required definition `%s`%s' % \
+          (name, desc)
+        )
+        hasMissing = True
+    if hasMissing:
+      return 1
+
+    # Start a test session
+    session = Session(config)
+    session.run()
+
+    # Instantiate reporters
+    for reporterConfig in config.reporters():
+      reporter = reporterConfig.instance(generalConfig)
+      logger.debug('Instantiated \'%s\' reporter' % type(reporter).__name__)
+      reporter.dump(session.summarizer)
+
+    # Success
+    return 0
+
+  except Exception as e:
+    logger.error('Error: %s' % str(e))
+    if cmdline.verbose:
+      logger.exception(e)
+
     return 1
-
-  # Start a test session
-  session = Session(config)
-  session.run()
-
-  # Instantiate reporters
-  for reporterConfig in config.reporters():
-    reporter = reporterConfig.instance(generalConfig)
-    logger.debug('Instantiated \'%s\' reporter' % type(reporter).__name__)
-    reporter.dump(session.summarizer)
-
-  # Success
-  return 0
