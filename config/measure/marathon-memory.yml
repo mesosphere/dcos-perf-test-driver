@@ -1,0 +1,28 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the metrics we are measuring
+  metrics:
+    - name: marathonMemTotalUsage
+      desc: Total memory usage
+      summarize: [mean, min, max]
+      units: Kb
+
+    - name: marathonMemHeapUsage
+      desc: Heap memory usage
+      summarize: [mean, min, max]
+      units: Kb
+
+#################################################
+# Tracker configuration
+#################################################
+trackers:
+
+  # Re-route metrics collected from marathon to metrics being collected
+  - class: tracker.DumpMetricTracker
+    map:
+      gauges.jvm.memory.total.used.value: marathonMemTotalUsage
+      gauges.jvm.memory.heap.used.value: marathonMemHeapUsage

@@ -7,3 +7,8 @@ observers:
   # The event observer receives real-time events from marathon
   - class: observer.MarathonEventsObserver
     url: "{{marathon_url}}/v2/events"
+
+  # The metrics observer samples the /metrics endpoint and emmits their
+  # value updates to the event bus.
+  - class: observer.MarathonMetricsObserver
+    url: "{{marathon_url}}/metrics"
