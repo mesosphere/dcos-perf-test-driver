@@ -255,6 +255,7 @@ class GeneralConfig:
 
     # Populate field defaults
     self.repeat = generalConfig.get('repeat', 1)
+    self.title = generalConfig.get('title', 'Scale Tests')
 
     # Populate timeouts
     self.staleTimeout = generalConfig.get('staleTimeout', 600)

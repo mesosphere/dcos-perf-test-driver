@@ -10,24 +10,25 @@ class DataDogReporter(Reporter):
     """
     Dump summarizer values to the csv file
     """
+    config = self.getRenderedConfig()
 
     # Initialize DataDog API
     initialize(
-      api_key=self.getConfig('api_key'),
-      app_key=self.getConfig('app_key'),
-      hostname=self.getConfig('hostname', socket.gethostname())
+      api_key=config.get('api_key', None),
+      app_key=config.get('app_key', None),
+      hostname=config.get('hostname', socket.gethostname())
     )
 
     # Get some configuration options
-    prefix = self.getConfig('prefix', 'dcos.perf.')
-    metrics = self.getConfig('metrics', self.generalConfig.metrics.keys())
+    prefix = config.get('prefix', 'dcos.perf.')
+    metrics = config.get('metrics', self.generalConfig.metrics.keys())
 
     # Calculate indicators
     indicatorValues = summarizer.indicators()
 
     # Compise datadog series
     series = []
-    for point in self.getConfig('points', []):
+    for point in config.get('points', []):
 
       # Make sure we have this summarizer
       if not point['indicator'] in indicatorValues:

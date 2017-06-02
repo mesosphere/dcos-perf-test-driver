@@ -81,13 +81,17 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 
     # Destroy every service
     self.trackDeployments = []
-    for app in response.json()['apps']:
-      self.logger.info('Removing app %s' % app['id'])
-      response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
-      if response.status_code != 200:
-        self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
-      else:
-        self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+    try:
+      for app in response.json()['apps']:
+        self.logger.info('Removing app %s' % app['id'])
+        response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
+        if response.status_code != 200:
+          self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
+        else:
+          self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+
+    except requests.exceptions.ConnectionError as e:
+      self.logger.warn('Unable to remove app (%r)' % (e,))
 
     # Wait for deployments to complete
     self.waitDeployments()
@@ -112,18 +116,22 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
 
     # Destroy matching services
     self.trackDeployments = []
-    for app in response.json()['apps']:
-      if not match.search(app['id']):
-        continue
-      self.logger.info('Removing app %s' % app['id'])
-      response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
-      if response.status_code != 200:
-        self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
-      else:
-        self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+    try:
+      for app in response.json()['apps']:
+        if not match.search(app['id']):
+          continue
+        self.logger.info('Removing app %s' % app['id'])
+        response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
+        if response.status_code != 200:
+          self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
+        else:
+          self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
 
-    # Wait for deployments to complete
-    self.waitDeployments()
+      # Wait for deployments to complete
+      self.waitDeployments()
+
+    except requests.exceptions.ConnectionError as e:
+      self.logger.warn('Unable to remove app (%r)' % (e,))
 
 class RemoveGroup(MarathonDeploymentMonitorTask):
   """
@@ -136,11 +144,16 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
 
     # Destroy group
     self.logger.debug('Removing group %s' % group_name)
-    response = requests.delete('%s/v2/groups/%s/?force=true' % (self.cluster_url, group_name), verify=False, headers=self.getHeaders())
-    if response.status_code != 200:
-      self.logger.warn('Unable to remove group %s (HTTP response %i)' % (group_name, response.status_code))
-    else:
-      self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+    try:
+      response = requests.delete('%s/v2/groups/%s/?force=true' % (self.cluster_url, group_name), verify=False, headers=self.getHeaders())
+      if response.status_code != 200:
+        self.logger.warn('Unable to remove group %s (HTTP response %i)' % (group_name, response.status_code))
+      else:
+        self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
 
-    # Wait for deployments to complete
-    self.waitDeployments()
+      # Wait for deployments to complete
+      self.waitDeployments()
+
+    except requests.exceptions.ConnectionError as e:
+      self.logger.warn('Unable to remove group %s (%r)' % (group_name, e))
+

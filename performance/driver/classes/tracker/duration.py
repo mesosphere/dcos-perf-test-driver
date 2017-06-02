@@ -83,7 +83,7 @@ class DurationTracker(Tracker):
     if isinstance(event, ParameterUpdateEvent):
       self.flushTraces()
       self.activeTraces.append(EdgeDurationTrace(event))
-      self.logger.info('Keeping track of trace ID %r' % event.traceids)
+      self.logger.debug('Keeping track of trace ID %r' % event.traceids)
 
     # Track the `start` and `end` of events
     if isEventMatching(event, self.events['start']):

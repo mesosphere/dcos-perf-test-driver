@@ -66,7 +66,7 @@ class PlotReporter(Reporter):
       line = ax.plot(x1, values, '-', label=name, linewidth=2)
 
     # Show legend
-    ax.set_title(plotGroup.title)
+    ax.set_title("%s [%s]" % (self.generalConfig.title, plotGroup.title))
     ax.legend(loc='lower right')
     ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
     ax.set_ylabel("%s (%s)" % (plotGroup.name, plotGroup.units))
@@ -109,7 +109,7 @@ class PlotReporter(Reporter):
       i += 1
 
     # Show legend
-    ax.set_title("%s (%s)" % (plotGroup.title, plotGroup.units))
+    ax.set_title("%s [%s (%s)]" % (self.generalConfig.title, plotGroup.title, plotGroup.units))
     ax.legend(loc='lower right')
     ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
     ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
