@@ -36,14 +36,16 @@ class Event:
     self.name = type(self).__name__
     self.ts = time.time()
 
-    if traceid is None:
-      self.traceids = [uuid.uuid4().hex]
-    elif type(traceid) is tuple:
-      self.traceids = list(traceid)
+    # Allocate a unique trace ID for this event
+    self.traceids = [uuid.uuid4().hex]
+
+    # Enrich with the given trace IDs
+    if type(traceid) is tuple:
+      self.traceids += list(traceid)
     elif type(traceid) is list:
-      self.traceids = traceid
-    else:
-      self.traceids = [traceid]
+      self.traceids += traceid
+    elif not traceid is None:
+      self.traceids += [traceid]
 
   def hasTrace(self, traceid):
     """
