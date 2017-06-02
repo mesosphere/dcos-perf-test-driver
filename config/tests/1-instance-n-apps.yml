@@ -21,32 +21,81 @@ meta:
 #################################################
 policies:
 
-  # Update the `apps` parameter
-  - class: policy.LazyChainedDeploymentPolicy
-
+  # Use a chained deployment policy that submits a new request only when
+  # the previous deployment has completed
+  - class: policy.ChainedDeploymentPolicy
+    waitForValueEvents: yes
     events:
-      continue: MarathonDeploymentSuccessEvent
-      fail: MarathonDeploymentFailedEvent
-
+      success: MarathonDeploymentSuccessEvent
+      failure: MarathonDeploymentFailedEvent
     parameter: apps
     values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072]
 
-    steps:
-      - apps: 1
-      - apps: 2
-      - apps: 4
-      - apps: 8
-      - apps: 16
-      - apps: 32
-      - apps: 64
-      - apps: 128
-      - apps: 256
-      # - apps: 512
-      # - apps: 1024
-      # - apps: 2048
-      # - apps: 4096
-      # - apps: 8192
-      # - apps: 16384
-      # - apps: 32768
-      # - apps: 65536
-      # - apps: 131072
+#################################################
+# Channel configuration
+#################################################
+channels:
+
+  # Perform an HTTP request for every `instance` parameter change
+  - class: channel.HTTPChannel
+    url: "{{marathon_url}}/v2/apps"
+    verb: POST
+    repeat: "{{apps}}"
+    body: |
+      {
+        "cmd": "sleep 1200",
+        "cpus": 0.1,
+        "mem": 64,
+        "disk": 0,
+        "instances": 1,
+        "id": "/scale-instances/{{uuid()}}-{{i}}",
+        "backoffFactor": 1.0,
+        "backoffSeconds": 0
+      }
+
+#################################################
+# One-time tasks
+#################################################
+tasks:
+
+  # Right after ever test run we should remove all the instances
+  - class: tasks.marathon.RemoveGroup
+    url: "{{marathon_url}}"
+    group: /scale-instances
+    at: intertest
+
+  # Also remove the tests if they were abruptly terminated
+  - class: tasks.marathon.RemoveGroup
+    url: "{{marathon_url}}"
+    group: /scale-instances
+    at: teardown
+
+  # # Update the `apps` parameter
+  # - class: policy.LazyChainedDeploymentPolicy
+
+  #   events:
+  #     continue: MarathonDeploymentSuccessEvent
+  #     fail: MarathonDeploymentFailedEvent
+
+  #   parameter: apps
+  #   values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072]
+
+  #   steps:
+  #     - apps: 1
+  #     - apps: 2
+  #     - apps: 4
+  #     - apps: 8
+  #     - apps: 16
+  #     - apps: 32
+  #     - apps: 64
+  #     - apps: 128
+  #     - apps: 256
+  #     # - apps: 512
+  #     # - apps: 1024
+  #     # - apps: 2048
+  #     # - apps: 4096
+  #     # - apps: 8192
+  #     # - apps: 16384
+  #     # - apps: 32768
+  #     # - apps: 65536
+  #     # - apps: 131072

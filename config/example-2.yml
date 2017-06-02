@@ -30,3 +30,4 @@ include:
   - reports/raw.yml
   - reports/csv.yml
   - reports/plots.yml
+  - reports/datadog-norm-instances.yml

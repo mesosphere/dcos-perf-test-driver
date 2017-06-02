@@ -15,15 +15,34 @@ config:
       metric: deploymentTime.mean
       parameter: instances
 
+    # Calculate `meanHttpRequestTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of instances
+    - name: meanHttpRequestTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: httpRequestTime.mean
+      parameter: instances
+
+  # We require datadog credentials to be given through the command-line
+  definitions:
+    - name: datadog_api_key
+      desc: The datadog API Key
+      required: yes
+    - name: datadog_app_key
+      desc: The datadog App Key
+      required: yes
+
 #################################################
 # Global test configuration
 #################################################
 reporters:
 
   - class: reporter.DataDogReporter
-    api_key: 8ac037e7d400439bf8c3b01af6c01542
-    app_key: 175158c47663ae1870fa9a53e761c254573542bd
+    api_key: "{{datadog_api_key}}"
+    app_key: "{{datadog_app_key}}"
     prefix: "marathon.perf."
     points:
       - name: meanDeploymentTime
         indicator: meanDeploymentTime
+      - name: meanHttpRequestTime
+        indicator: meanHttpRequestTime

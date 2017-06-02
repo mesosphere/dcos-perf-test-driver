@@ -20,26 +20,15 @@ meta:
 # Test policy configuration
 #################################################
 policies:
+
+  # Use a chained deployment policy that submits a new request only when
+  # the previous deployment has completed
   - class: policy.ChainedDeploymentPolicy
-    steps:
-      - instances: 1
-      - instances: 2
-      - instances: 4
-      - instances: 8
-      - instances: 16
-      - instances: 32
-      # - instances: 64
-      # - instances: 128
-      # - instances: 256
-      # - instances: 512
-      # - instances: 1024
-      # - instances: 2048
-      # - instances: 4096
-      # - instances: 8192
-      # - instances: 16384
-      # - instances: 32768
-      # - instances: 65536
-      # - instances: 131072
+    events:
+      success: MarathonDeploymentSuccessEvent
+      failure: MarathonDeploymentFailedEvent
+    parameter: instances
+    values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072]
 
 #################################################
 # Channel configuration
