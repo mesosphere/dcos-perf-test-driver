@@ -77,25 +77,56 @@ def pickFirstLast(current, total, firstEvent, lastEvent, middleEvent):
     return middleEvent
 
 class HTTPRequestState:
-  def __init__(self, config, traceids):
+  def __init__(self, channel, eventParameters, traceids):
+
+    # Render config and definitions
+    config = channel.getRenderedConfig(eventParameters)
+    definitions = channel.getDefinitions()
+
+    # If we are missing an `Authorization` header but we have a
+    # `dcos_auth_token` definition, allocate an `Authorization` header now
+    if not 'headers' in config:
+      config['headers'] = {}
+    if not 'Authorization' in config['headers'] \
+       and 'dcos_auth_token' in definitions:
+      config['headers']['Authorization'] = 'token=%s' % \
+        definitions['dcos_auth_token']
+
     # Get base request parameters
     self.url = config['url']
     self.body = config.get('body', '')
     self.verb = config.get('verb', 'GET')
     self.headers = config.get('headers', {})
     self.traceids = traceids
+    self.eventParameters = eventParameters
+    self.channel = channel
 
     # Extract repeat config
-    self.repeat = config.get('repeat', 1)
+    self.repeat = int(config.get('repeat', 1))
     self.repeatAfter = config.get('repeatAfter', None)
     self.repeatInterval = config.get('repeatInterval', None)
     if not self.repeatInterval is None:
       self.repeatInterval = float(self.repeatInterval)
 
+    # Expose 'i' parameter that should be equal to the current
+    # run in scase of a repeatable one
+
     # State information
     self.activeRequest = None
     self.completedCounter = 0
     self.lastRequestTs = 0
+
+  def getBody(self):
+    """
+    Dynamically compose body, by applying some template variables (if any)
+    """
+
+    # Compile the parameters to request
+    parameters = { 'i': self.completedCounter }
+    parameters.update(self.eventParameters)
+
+    # Render config and get body
+    return self.channel.getRenderedConfig(parameters).get('body')
 
 ###############################
 # Entry Point
@@ -188,10 +219,15 @@ class HTTPChannel(Channel):
       req.verb,
       req.url,
       verify=False,
-      data=req.body,
+      data=req.getBody(),
       headers=req.headers,
       hooks=dict(response=ack_response)
     )
+
+    # Warn errors
+    if (req.activeRequest.status_code < 200) or (req.activeRequest.status_code >= 300):
+      self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
+        (req.verb, req.url, req.activeRequest.status_code))
 
     # Process response
     self.eventbus.publish(pickFirstLast(
@@ -249,21 +285,10 @@ class HTTPChannel(Channel):
     if not hasChanges:
       return
 
-    config = self.getRenderedConfig(event.parameters)
-    definitions = self.getDefinitions()
-
-    # If we are missing an `Authorization` header but we have a
-    # `dcos_auth_token` definition, allocate an `Authorization` header now
-    if not 'headers' in config:
-      config['headers'] = {}
-    if not 'Authorization' in config['headers'] \
-       and 'dcos_auth_token' in definitions:
-      config['headers']['Authorization'] = 'token=%s' % \
-        definitions['dcos_auth_token']
-
     # Prepare request state and send initial request
     self.requestState = HTTPRequestState(
-      config,
+      self,
+      event.parameters,
       event.traceids
     )
     self.handleRequest()
