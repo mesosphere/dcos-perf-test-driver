@@ -26,6 +26,10 @@ class DumpMetricTracker(Tracker):
     config = self.getRenderedConfig()
     mapping = config.get('map', {})
 
+    # Don't track anything until we have a parameter update first
+    if self.activeTraceids is None:
+        return
+
     # Map parameter to value
     if event.name in mapping:
       self.trackMetric(
