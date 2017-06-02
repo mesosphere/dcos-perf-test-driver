@@ -1,0 +1,9 @@
+
+#################################################
+# Observer configuration
+#################################################
+observers:
+
+  # The event observer receives real-time events from marathon
+  - class: observer.MarathonEventsObserver
+    url: "{{marathon_url}}/v2/events"
