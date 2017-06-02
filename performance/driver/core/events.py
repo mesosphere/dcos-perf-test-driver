@@ -145,7 +145,7 @@ class MetricUpdateEvent(Event):
   """
   A metric has changed
   """
-  def __init__(self, name, value, **kwargs):
+  def __init__(self, name, value, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.name = name
     self.value = value
