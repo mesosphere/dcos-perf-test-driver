@@ -11,8 +11,6 @@ datadog==0.16.0
 decorator==4.0.11
 humanfriendly==3.0
 idna==2.5
-matplotlib==2.0.2
-numpy==1.12.1
 packaging==16.8
 pycparser==2.17
 pyOpenSSL==17.0.0
