@@ -10,6 +10,26 @@ config:
       units: count
       desc: The number of instances per application deployment
 
+  # Introduce some indicators that will be used to extract
+  # the outcome of the test as a single scalar value
+  indicators:
+
+    # Calculate `meanDeploymentTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of instances
+    - name: meanDeploymentTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: deploymentTime.mean
+      parameter: instances
+
+    # Calculate `meanHttpRequestTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of instances
+    - name: meanHttpRequestTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: httpRequestTime.mean
+      parameter: instances
+
 #################################################
 # Test Metadata
 #################################################

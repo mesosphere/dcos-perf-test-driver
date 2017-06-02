@@ -10,6 +10,26 @@ config:
       units: count
       desc: The number of apps deployed to marathon
 
+  # Introduce some indicators that will be used to extract
+  # the outcome of the test as a single scalar value
+  indicators:
+
+    # Calculate `meanDeploymentTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of apps
+    - name: meanDeploymentTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: deploymentTime.mean
+      parameter: apps
+
+    # Calculate `meanHttpRequestTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of apps
+    - name: meanHttpRequestTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: httpRequestTime.mean
+      parameter: apps
+
 #################################################
 # Test Metadata
 #################################################
@@ -70,33 +90,3 @@ tasks:
     url: "{{marathon_url}}"
     group: /scale-instances
     at: teardown
-
-  # # Update the `apps` parameter
-  # - class: policy.LazyChainedDeploymentPolicy
-
-  #   events:
-  #     continue: MarathonDeploymentSuccessEvent
-  #     fail: MarathonDeploymentFailedEvent
-
-  #   parameter: apps
-  #   values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072]
-
-  #   steps:
-  #     - apps: 1
-  #     - apps: 2
-  #     - apps: 4
-  #     - apps: 8
-  #     - apps: 16
-  #     - apps: 32
-  #     - apps: 64
-  #     - apps: 128
-  #     - apps: 256
-  #     # - apps: 512
-  #     # - apps: 1024
-  #     # - apps: 2048
-  #     # - apps: 4096
-  #     # - apps: 8192
-  #     # - apps: 16384
-  #     # - apps: 32768
-  #     # - apps: 65536
-  #     # - apps: 131072

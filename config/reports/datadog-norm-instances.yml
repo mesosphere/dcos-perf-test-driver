@@ -4,25 +4,6 @@
 #################################################
 config:
 
-  # Introduce some indicators that will be fed to datadog
-  indicators:
-
-    # Calculate `meanDeploymentTime` by calculating the normalizing average
-    # of all the `deploymentTime` mean values, normalized against the number
-    # of instances
-    - name: meanDeploymentTime
-      class: indicator.NormalizedMeanMetricIndicator
-      metric: deploymentTime.mean
-      parameter: instances
-
-    # Calculate `meanHttpRequestTime` by calculating the normalizing average
-    # of all the `deploymentTime` mean values, normalized against the number
-    # of instances
-    - name: meanHttpRequestTime
-      class: indicator.NormalizedMeanMetricIndicator
-      metric: httpRequestTime.mean
-      parameter: instances
-
   # We require datadog credentials to be given through the command-line
   definitions:
     - name: datadog_api_key
