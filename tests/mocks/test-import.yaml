@@ -2,7 +2,7 @@ include:
   - test-import-imported.yaml
 
 config:
-  runs: 123
+  repeat: 123
   title: Some title
 
   parameters:

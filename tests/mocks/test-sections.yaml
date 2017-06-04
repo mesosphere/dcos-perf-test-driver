@@ -1,5 +1,5 @@
 config:
-  runs: 123
+  repeat: 123
   title: Some title
 
   parameters:

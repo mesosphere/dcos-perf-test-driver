@@ -3,7 +3,7 @@ import unittest
 import json
 
 from . import mocks
-from performance.driver.core.config import loadConfig, RootConfig, ComponentConfig
+from performance.driver.core.config import loadConfig, RootConfig, ComponentConfig, MetricConfig
 
 class TestFSM(unittest.TestCase):
 
@@ -26,7 +26,7 @@ class TestFSM(unittest.TestCase):
             { "class": "tests.mocks.classes.Channel2" }
         ],
         "config": {
-            "runs": 123,
+            "repeat": 123,
             "title": "Some title",
             "metrics": [
                 { "name": "metric1" },
@@ -80,7 +80,7 @@ class TestFSM(unittest.TestCase):
             { "class": "tests.mocks.classes.Channel2" }
         ],
         "config": {
-            "runs": 123,
+            "repeat": 123,
             "title": "Some title",
             "metrics": [
                 { "name": "metric1" },
@@ -232,7 +232,7 @@ class TestFSM(unittest.TestCase):
 
     config = RootConfig({
         "config": {
-          "runs": 123,
+          "repeat": 123,
 
           "parameters": [
             {"name": "foo"},
@@ -248,12 +248,21 @@ class TestFSM(unittest.TestCase):
     general = config.general()
 
     # Check if trackers are correctly created, with the correct defaults
-    self.assertEqual(general.runs, 123)
+    self.assertEqual(general.repeat, 123)
     self.assertEqual(general.parameters, {
         "foo": {"name": "foo", "default": 0 },
         "bar": {"name": "bar", "default": 0 }
       })
-    self.assertEqual(general.metrics, {
-        "fooz": {"name": "fooz"},
-        "barz": {"name": "barz"}
-      })
+
+    # Check if metrics are of proper type
+    self.assertEqual(list(general.metrics.keys()), ['fooz', 'barz'])
+    self.assertEqual(type(general.metrics['fooz']), MetricConfig)
+    self.assertEqual(type(general.metrics['barz']), MetricConfig)
+
+    # Check if metric object values are correct
+    self.assertEqual(general.metrics['fooz'].config,
+        {"name": "fooz"}
+    )
+    self.assertEqual(general.metrics['barz'].config,
+        {"name": "barz"}
+    )

@@ -23,7 +23,7 @@ class TestParameterBatch(unittest.TestCase):
           {"name": "baz"},
           {"name": "bax"}
         ]
-      })
+      }, None)
     self.eventbus = EventBus()
     self.parameters = ParameterBatch(self.eventbus, self.config)
 

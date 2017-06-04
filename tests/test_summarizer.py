@@ -23,7 +23,7 @@ class TestSummarizer(unittest.TestCase):
           {"name": "baz"},
           {"name": "bax"}
         ]
-      })
+      }, None)
     self.eventbus = EventBus()
     self.summarizer = Summarizer(self.eventbus, self.config)
 
