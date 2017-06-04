@@ -33,7 +33,7 @@ class Event:
   related events and is used to group them together to the same operation.
   """
   def __init__(self, traceid=None):
-    self.name = type(self).__name__
+    self.event = type(self).__name__
     self.ts = time.time()
 
     # Allocate a unique trace ID for this event
@@ -63,7 +63,7 @@ class Event:
     """
     Return a string representation of the event
     """
-    return '%s[trace=%s]' % (self.name, ','.join(self.traceids))
+    return '%s[trace=%s]' % (self.event, ','.join(self.traceids))
 
 class StartEvent(Event):
   """

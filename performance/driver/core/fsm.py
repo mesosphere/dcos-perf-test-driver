@@ -111,7 +111,7 @@ class FSM:
     stateInst = self.states[self.state]
 
     # Normalize the event name
-    eventName = event.name
+    eventName = event.event
     handlerName = 'on' + eventName[0].upper() + eventName[1:]
 
     # Look for events and sink to the error state if something occurs
@@ -119,7 +119,7 @@ class FSM:
 
       # Call the event handler if we have one
       if hasattr(stateInst, handlerName):
-        self.logger.debug('Handling event %s' % event.name)
+        self.logger.debug('Handling event %s' % event.event)
         getattr(stateInst, handlerName)(event)
         return
 

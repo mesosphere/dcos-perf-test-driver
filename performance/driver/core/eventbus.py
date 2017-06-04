@@ -24,7 +24,7 @@ class EventBus:
   The event bus handles delivery of in-system messages
   """
 
-  def __init__(self, clockFrequency=2):
+  def __init__(self, clockFrequency=4):
     self.logger = logging.getLogger('EventBus')
     self.subscribers = []
     self.queue = Queue()
@@ -127,7 +127,7 @@ class EventBus:
           if events is None or any(map(lambda cls: isEventMatching(event, cls), events)):
             sub(event)
         except Exception as e:
-          self.logger.error('Exception while dispatching event %s' % event.name)
+          self.logger.error('Exception while dispatching event %s' % event.event)
           self.logger.exception(e)
 
       # Mark task as done
