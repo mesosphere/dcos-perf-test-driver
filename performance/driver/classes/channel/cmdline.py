@@ -18,6 +18,8 @@ class CmdlineChannel(Channel):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.activeTask = None
+    self.activeParameters = {}
+    self.killing = False
 
     # Receive parameter updates and clean-up on teardown
     self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
@@ -91,6 +93,11 @@ class CmdlineChannel(Channel):
         # Break loop
         break
 
+    # Mark as stopped
+    self.activeTask = None
+    if not self.killing:
+      self.logger.warn('Process exited prematurely')
+      self.launch(self.activeParameters)
 
   def kill(self):
     """
@@ -100,6 +107,7 @@ class CmdlineChannel(Channel):
       return
 
     # Stop process and join
+    self.killing = True
     proc, thread = self.activeTask
     if proc.poll() is None:
       os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
@@ -107,13 +115,38 @@ class CmdlineChannel(Channel):
 
     # Unset active task
     self.activeTask = None
+    self.killing = False
 
-  def launch(self, args, stdin=None, env=None, cwd=None):
+  def launch(self, parameters):
     """
     Launch process with the given command-line
     """
 
-    # Launch the process
+    # Compose the arguments for the execution
+    cwd = self.getConfig('cwd', required=False)
+    cwd = self.getConfig('cwd', required=False)
+
+    # Combine parameters with the definitions
+    macroValues = self.getDefinitions().fork(parameters)
+
+    # Compile arguments
+    cmdline = self.cmdlineTpl.apply(macroValues)
+    args = shlex.split(cmdline)
+    stdin = self.stdinTpl.apply(macroValues)
+    env = self.envTpl.apply(macroValues)
+    cwd = self.cwdTpl.apply(macroValues)
+
+    # Reset empty arguments to `None`
+    if not stdin:
+      stdin = None
+    if not cwd:
+      cwd = None
+    if not env:
+      env = None
+
+    # Launch
+    self.logger.debug('Starting process: \'%s\'' % ' '.join(args))
+    self.activeParameters = parameters
     proc = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env, cwd=cwd, preexec_fn=os.setsid)
 
     # Launch a thread to monitor it's output
@@ -163,29 +196,5 @@ class CmdlineChannel(Channel):
       # and schedule a new execution later
       self.kill()
 
-    # Compose the arguments for the execution
-    cwd = self.getConfig('cwd', required=False)
-    cwd = self.getConfig('cwd', required=False)
-
-    # Combine parameters with the definitions
-    macroValues = self.getDefinitions().fork(event.parameters)
-
-    # Compile arguments
-    cmdline = self.cmdlineTpl.apply(macroValues)
-    args = shlex.split(cmdline)
-    stdin = self.stdinTpl.apply(macroValues)
-    env = self.envTpl.apply(macroValues)
-    cwd = self.cwdTpl.apply(macroValues)
-
-    # Reset empty arguments to `None`
-    if not stdin:
-      stdin = None
-    if not cwd:
-      cwd = None
-    if not env:
-      env = None
-
-    # Launch
-    self.logger.debug('Starting process: \'%s\'' % ' '.join(args))
-    self.launch(args, stdin, env, cwd)
-
+    # Launch new process
+    self.launch(event.parameters)
