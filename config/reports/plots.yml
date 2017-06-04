@@ -6,4 +6,5 @@ reporters:
 
   # Create plots as images to results/plot-*.png
   - class: reporter.PlotReporter
+    xscale: log2
     prefix: results/plot-

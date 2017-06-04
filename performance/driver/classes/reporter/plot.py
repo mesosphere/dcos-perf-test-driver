@@ -14,6 +14,44 @@ def norm(v, vmin, vmax, tomin=0.0, tomax=1.0, wrap=True):
     return tomax
   return ((float(v) - vmin) / (vmax - vmin)) * (tomax - tomin) + tomin
 
+def getPlotfn(ax, xscale, yscale):
+  """
+  Get the correct plot function configuration to the axis string given
+  """
+  if xscale not in ('linear', 'log', 'log2', 'log10'):
+    raise TypeError('Unknown `xscale` value \'%s\'' % xscale)
+  if yscale not in ('linear', 'log', 'log2', 'log10'):
+    raise TypeError('Unknown `yscale` value \'%s\'' % yscale)
+
+  if xscale == 'linear' and yscale == 'linear':
+    return (ax.plot, {})
+  elif xscale != 'linear' and yscale != 'linear':
+    kwargs = {}
+    if xscale == 'log2':
+      kwargs['basex'] = 2
+    if xscale == 'log10':
+      kwargs['basex'] = 10
+    if yscale == 'log2':
+      kwargs['basey'] = 2
+    if yscale == 'log10':
+      kwargs['basey'] = 10
+    return (ax.loglog, kwargs)
+  else:
+    if xscale != 'linear':
+      kwargs = {}
+      if xscale == 'log2':
+        kwargs['basex'] = 2
+      if xscale == 'log10':
+        kwargs['basex'] = 10
+      return (ax.semilogx, kwargs)
+    else:
+      kwargs = {}
+      if yscale == 'log2':
+        kwargs['basey'] = 2
+      if yscale == 'log10':
+        kwargs['basey'] = 10
+      return (ax.semilogy, kwargs)
+
 class PlotGroup:
 
   def __init__(self, metric):
@@ -65,11 +103,18 @@ class PlotReporter(Reporter):
 
     # Create sub-plots
     fig, ax = self.createPlot()
+
+    # Prepare plot function according to config
+    (plotfn, plotfn_kwargs) = getPlotfn(
+      ax,
+      self.getConfig('xscale', 'linear'),
+      self.getConfig('yscale', 'linear')
+    )
     for name, values in plotGroup.valueSeries.items():
-      line = ax.plot(x1, values, '-', label=name, linewidth=2)
+      line = plotfn(x1, values, '-', label=name, linewidth=2, **plotfn_kwargs)
 
     # Show legend
-    ax.grid(True)
+    ax.grid(b=True, color='lightgray', linestyle='dotted')
     ax.set_title("%s [%s]" % (self.generalConfig.title, plotGroup.title))
     ax.legend(loc='lower right')
     ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
