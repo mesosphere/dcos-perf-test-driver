@@ -1,0 +1,28 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the metrics we are measuring
+  metrics:
+    - name: marathonMemTotalUsage
+      desc: Total memory usage of marathon
+      summarize: [mean, min, max]
+      units: Kb
+
+    - name: marathonThreadCount
+      desc: Number of threads in marathon
+      summarize: [mean, min, max]
+      units: threads
+
+#################################################
+# Tracker configuration
+#################################################
+trackers:
+
+  # Re-route metrics collected from marathon to metrics being collected
+  - class: tracker.DumpMetricTracker
+    map:
+      system-metric.memory.memory-used.p50: marathonMemTotalUsage
+      system-metric.threads.thread-count.p50: marathonThreadCount

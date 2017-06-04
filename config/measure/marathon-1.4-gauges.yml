@@ -1,0 +1,28 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the metrics we are measuring
+  metrics:
+    - name: marathonUptime
+      desc: Marathon uptime
+      summarize: [mean, min, max]
+      units: ms
+
+    - name: marathonLeaderDuration
+      desc: The duration since the last leader election happened in milliseconds
+      summarize: [mean, min, max]
+      units: ms
+
+#################################################
+# Tracker configuration
+#################################################
+trackers:
+
+  # Re-route metrics collected from marathon to metrics being collected
+  - class: tracker.DumpMetricTracker
+    map:
+      gauges.service.mesosphere.marathon.uptime.p50: marathonUptime
+      gauges.service.mesosphere.marathon.leaderDuration.p50: marathonLeaderDuration
