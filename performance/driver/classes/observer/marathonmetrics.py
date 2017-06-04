@@ -3,8 +3,9 @@ import json
 import time
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import Event, MetricUpdateEvent, TickEvent
+from performance.driver.core.events import Event, MetricUpdateEvent, TickEvent, ParameterUpdateEvent
 from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.utils import dictDiff
 
 class MarathonMetricsObserver(Observer):
   """
@@ -15,35 +16,15 @@ class MarathonMetricsObserver(Observer):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.eventbus.subscribe(self.handleTickEvent, events=(TickEvent,))
+    self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
     self.previous = {}
+    self.forceUpdate = False
 
-  def emitParameterValues(self, value, prevValue, path=""):
+  def handleParameterUpdateEvent(self, event):
     """
-    Recursively process the given value object, list or scalar value and
-    emmit a MetricUpdateEvent for every value
+    Force parameter update when we have a test restart
     """
-    if type(value) is dict:
-      if not type(prevValue) is dict:
-        prevValue = {}
-      for key, item in value.items():
-        ovalue = prevValue.get(key, None)
-        if path != "":
-          key = "%s.%s" % (path, key)
-        self.emitParameterValues(item, ovalue, path=key)
-
-    elif type(value) is list:
-      if not type(prevValue) is list:
-        prevValue = []
-      for i in range(0, len(value)):
-        ovalue = prevValue[i]
-        key = str(i)
-        if path != "":
-          key = "%s.%i" % (path, key)
-        self.emitParameterValues(value[i], ovalue, path=key)
-
-    else:
-      if value != prevValue:
-        self.eventbus.publish(MetricUpdateEvent(path, value))
+    self.forceUpdate = True
 
   def handleTickEvent(self, event):
     """
@@ -70,9 +51,16 @@ class MarathonMetricsObserver(Observer):
           '(Received %i HTTP status code)' % res.status_code)
         return
 
+      # Get previous value and reset previous if we have a force update
+      prevValue = self.previous
+      if self.forceUpdate:
+        self.forceUpdate = False
+        prevValue = {}
+
       # Emit one event for every parameter value
       value = res.json()
-      self.emitParameterValues(value, self.previous)
+      for path, vprev, vnext in dictDiff(prevValue, value):
+        self.eventbus.publish(MetricUpdateEvent('.'.join(path), vnext))
       self.previous = value
 
     except requests.exceptions.ConnectionError as e:
