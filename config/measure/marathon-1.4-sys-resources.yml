@@ -29,6 +29,6 @@ trackers:
   # Re-route metrics collected from marathon to metrics being collected
   - class: tracker.DumpMetricTracker
     map:
-      system-metric.cpu.cpu-wait.p50: marathonSysCpuWait
-      system-metric.cpu.cpu-system.p50: marathonSysCpuSystem
-      system-metric.cpu.cpu-user.p50: marathonSysCpuUser
+      system-metric.cpu.cpu-wait.mean: marathonSysCpuWait
+      system-metric.cpu.cpu-system.mean: marathonSysCpuSystem
+      system-metric.cpu.cpu-user.mean: marathonSysCpuUser

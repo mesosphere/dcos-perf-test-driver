@@ -24,5 +24,5 @@ trackers:
   # Re-route metrics collected from marathon to metrics being collected
   - class: tracker.DumpMetricTracker
     map:
-      system-metric.memory.memory-used.p50: marathonMemTotalUsage
-      system-metric.threads.thread-count.p50: marathonThreadCount
+      system-metric.memory.memory-used.mean: marathonMemTotalUsage
+      system-metric.threads.thread-count.mean: marathonThreadCount

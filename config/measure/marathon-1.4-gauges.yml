@@ -44,9 +44,9 @@ trackers:
   # Re-route metrics collected from marathon to metrics being collected
   - class: tracker.DumpMetricTracker
     map:
-      gauges.service.mesosphere.marathon.uptime.p50: marathonUptime
-      gauges.service.mesosphere.marathon.leaderDuration.p50: marathonLeaderDuration
-      gauges.service.mesosphere.marathon.app.count.p50: marathonAppCount
-      gauges.service.mesosphere.marathon.group.count.p50: marathonGroupCount
-      gauges.service.mesosphere.marathon.task.p50: marathonTasksCount
-      gauges.service.mesosphere.marathon.task.staged.count.p50: marathonTasksStaged
+      gauges.service.mesosphere.marathon.uptime.mean: marathonUptime
+      gauges.service.mesosphere.marathon.leaderDuration.mean: marathonLeaderDuration
+      gauges.service.mesosphere.marathon.app.count.mean: marathonAppCount
+      gauges.service.mesosphere.marathon.group.count.mean: marathonGroupCount
+      gauges.service.mesosphere.marathon.task.mean: marathonTasksCount
+      gauges.service.mesosphere.marathon.task.staged.count.mean: marathonTasksStaged
