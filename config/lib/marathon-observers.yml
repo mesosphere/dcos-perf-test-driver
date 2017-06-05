@@ -4,15 +4,9 @@
 #################################################
 observers:
 
-  # The marathon poller is polling various marathon endpoints, such as `/groups`
-  # or `/v2/deployments` and is extracting events similar to the event observer
-  #
-  # NOTE: Since marathon is dropping some of the events in the eventBus, the
-  #       `observer.MarathonEventsObserver` is not very reliable, thus we are
-  #       using this one.
-  #
-  - class: observer.MarathonPollerObserver
-    url: "{{marathon_url}}"
+  # The events observer is subscribing to the
+  - class: observer.MarathonEventsObserver
+    url: "{{marathon_url}}/v2/events"
 
   # The metrics observer samples the /metrics endpoint and emmits their
   # value updates to the event bus.
