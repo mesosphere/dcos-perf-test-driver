@@ -16,6 +16,26 @@ config:
       summarize: [mean, min, max]
       units: ms
 
+    - name: marathonAppCount
+      desc: The number of apps in marathon
+      summarize: [mean, min, max]
+      units: count
+
+    - name: marathonGroupCount
+      desc: The number of groups in marathon
+      summarize: [mean, min, max]
+      units: count
+
+    - name: marathonTasksCount
+      desc: The number of tasks in marathon
+      summarize: [mean, min, max]
+      units: count
+
+    - name: marathonTasksStaged
+      desc: The number of tasks in marathon
+      summarize: [mean, min, max]
+      units: count
+
 #################################################
 # Tracker configuration
 #################################################
@@ -26,3 +46,7 @@ trackers:
     map:
       gauges.service.mesosphere.marathon.uptime.p50: marathonUptime
       gauges.service.mesosphere.marathon.leaderDuration.p50: marathonLeaderDuration
+      gauges.service.mesosphere.marathon.app.count.p50: marathonAppCount
+      gauges.service.mesosphere.marathon.group.count.p50: marathonGroupCount
+      gauges.service.mesosphere.marathon.task.p50: marathonTasksCount
+      gauges.service.mesosphere.marathon.task.staged.count.p50: marathonTasksStaged
