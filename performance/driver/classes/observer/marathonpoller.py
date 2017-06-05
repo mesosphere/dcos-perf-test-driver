@@ -1,3 +1,4 @@
+import threading
 import requests
 import json
 import time
@@ -5,7 +6,7 @@ import time
 from .marathonevents import MarathonDeploymentSuccessEvent, MarathonStartedEvent
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import TickEvent
+from performance.driver.core.events import TickEvent, TeardownEvent
 from performance.driver.core.decorators import subscribesToHint, publishesHint
 from performance.driver.core.utils import dictDiff
 
@@ -18,7 +19,7 @@ class MarathonPollerObserver(Observer):
 
   /!\ WARNING /!\ : Make sure `eventbus` clock operates on a high enough
                     frequenty, in order to track appearance and completion of
-                    short deployments! Usually a value of 2 Hz is enough.
+                    short deployments! Usually a value of 4 Hz is enough.
   """
 
   @subscribesToHint(TickEvent)
@@ -33,17 +34,29 @@ class MarathonPollerObserver(Observer):
     # request in order to trace it back to the source event.
     self.eventbus.subscribe(self.handleHttpResponse, events=(HTTPResponseEndEvent,), order=2)
 
-    # We subscribe to TickEvent in order to poll the endpoint on tick interval
-    self.eventbus.subscribe(self.handleTickEvent, events=(TickEvent,))
+    # Stop thread at teardown
+    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
 
-  def handleHttpResponse(self, event):
+    # Start the polling thread
+    self.pollingActive = True
+    self.pollingThread = threading.Thread(target=self.pollingThreadTarget)
+    self.pollingThread.start()
+
+  def handleTeardownEvent(self, event):
     """
-    Look for HTTP response events that contain a `Marathon-Deployment-Id` header
-    and keep track of the originating event's traceID. We keep it in order to
-    attach it on further marathon events related to the given deployment
+    Stop thread at teardown
     """
-    if 'Marathon-Deployment-Id' in event.headers:
-      self.deploymentTraceIDs[event.headers['Marathon-Deployment-Id']] = event.traceids
+    self.pollingActive = False
+    self.pollingThread.join()
+
+  def pollingThreadTarget(self):
+    """
+    The main polling thread
+    """
+
+    while self.pollingActive:
+      self.checkDeployments()
+      time.sleep(0.125)
 
   @publishesHint()
   def checkDeployments(self):
@@ -73,6 +86,7 @@ class MarathonPollerObserver(Observer):
 
       # Emit MarathonStartedEvent if marathon was not running yet
       if not self.marathonIsAlive:
+        self.logger.info('Marathon web server is responding')
         self.eventbus.publish(MarathonStartedEvent())
         self.marathonIsAlive = True
 
@@ -94,9 +108,11 @@ class MarathonPollerObserver(Observer):
     except requests.exceptions.ConnectionError as e:
       self.logger.debug('Deployments marathon endpoint not accessible')
 
-  def handleTickEvent(self, event):
+  def handleHttpResponse(self, event):
     """
-    On every tick extract metrics
+    Look for HTTP response events that contain a `Marathon-Deployment-Id` header
+    and keep track of the originating event's traceID. We keep it in order to
+    attach it on further marathon events related to the given deployment
     """
-
-    self.checkDeployments()
+    if 'Marathon-Deployment-Id' in event.headers:
+      self.deploymentTraceIDs[event.headers['Marathon-Deployment-Id']] = event.traceids

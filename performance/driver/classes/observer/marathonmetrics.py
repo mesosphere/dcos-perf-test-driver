@@ -1,9 +1,10 @@
 import requests
 import json
 import time
+import threading
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import Event, MetricUpdateEvent, TickEvent, ParameterUpdateEvent
+from performance.driver.core.events import Event, MetricUpdateEvent, TeardownEvent, ParameterUpdateEvent
 from performance.driver.core.decorators import subscribesToHint, publishesHint
 from performance.driver.core.utils import dictDiff
 
@@ -15,10 +16,15 @@ class MarathonMetricsObserver(Observer):
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.eventbus.subscribe(self.handleTickEvent, events=(TickEvent,))
+    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
     self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
     self.previous = {}
     self.forceUpdate = False
+
+    # Start the polling thread
+    self.pollingActive = True
+    self.pollingThread = threading.Thread(target=self.pollingThreadTarget)
+    self.pollingThread.start()
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -26,9 +32,25 @@ class MarathonMetricsObserver(Observer):
     """
     self.forceUpdate = True
 
-  def handleTickEvent(self, event):
+  def pollingThreadTarget(self):
     """
-    On every tick extract metrics
+    The main polling thread
+    """
+
+    while self.pollingActive:
+      self.checkMetrics()
+      time.sleep(0.5)
+
+  def handleTeardownEvent(self, event):
+    """
+    Stop thread at teardown
+    """
+    self.pollingActive = False
+    self.pollingThread.join()
+
+  def checkMetrics(self):
+    """
+    Check for the state of the metrics
     """
 
     definitions = self.getDefinitions()
