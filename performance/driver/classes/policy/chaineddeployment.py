@@ -100,6 +100,7 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # children of the initial request
 
       self.goto(ChainedDeploymentPolicy.Waiting)
+      self.logger.info('Initiating a test sequence')
 
 
   class Waiting(State):

@@ -24,7 +24,7 @@ class EventBus:
   The event bus handles delivery of in-system messages
   """
 
-  def __init__(self, clockFrequency=4):
+  def __init__(self, clockFrequency=1):
     self.logger = logging.getLogger('EventBus')
     self.subscribers = []
     self.queue = Queue()
