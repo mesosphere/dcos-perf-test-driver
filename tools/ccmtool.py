@@ -55,7 +55,7 @@ class CCMClusterApi:
     (code, data) = self.execApi('cluster/%s/' % cluster_id)
     if code == 404:
       return None
-    if code != 204:
+    if code != 200:
       raise IOError('Unable to query cluster (unexpected HTTP code %i)' % code)
     return None
 
@@ -71,7 +71,7 @@ class CCMClusterApi:
     (code, data) = self.execApi('cluster/%s/' % cluster_id, method='delete')
     if code == 404:
       return None
-    if code != 200:
+    if code != 204:
       raise IOError('Unable to delete cluster (unexpected HTTP code %i)' % code)
     return data
 
