@@ -62,8 +62,8 @@ channels:
     body: |
       {
         "cmd": "sleep 1200",
-        "cpus": 0.1,
-        "mem": 16,
+        "cpus": 0.005,
+        "mem": 32,
         "disk": 0,
         "instances": {{instances}},
         "id": "/scale-instances/{{uuid()}}",
