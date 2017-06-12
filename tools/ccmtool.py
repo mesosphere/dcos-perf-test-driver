@@ -60,19 +60,30 @@ class CCMClusterApi:
     return data
 
   def startCluster(self, data):
-    self.logger.debug('Starting a cluster')
+    self.logger.debug('Starting cluster %s' % (data['name'],))
     (code, data) = self.execApi('cluster/', method='post', data=data)
     if code != 201: # CREATED
       raise IOError('Unable to create cluster (unexpected HTTP code %i)' % code)
     return data
 
   def destroyCluster(self, cluster_id):
-    self.logger.debug('Destroying a cluster')
+    self.logger.debug('Destroying cluster %s' % (cluster_id,))
     (code, data) = self.execApi('cluster/%s/' % cluster_id, method='delete')
     if code == 404:
       return None
     if code != 204:
       raise IOError('Unable to delete cluster (unexpected HTTP code %i)' % code)
+    return None
+
+  def extendCluster(self, cluster_id, time):
+    self.logger.debug('Extending cluster %s by %s hours' % (cluster_id, time))
+    (code, data) = self.execApi('cluster/%s/' % cluster_id, method='put', data={
+        'time': time
+      })
+    if code == 404:
+      return None
+    if code != 200:
+      raise IOError('Unable to extend cluster (unexpected HTTP code %i)' % code)
     return None
 
 class CCMClusterConfig:
@@ -165,6 +176,11 @@ class CCMClusterManager:
 
     return cluster
 
+  def extendCluster(self, cluster, time):
+    if cluster is None:
+      return
+    self.api.extendCluster(cluster['id'], str(time * 60))
+
   def extractClusterInfo(self, cluster):
     if not cluster:
       return None
@@ -227,6 +243,8 @@ if __name__ == '__main__':
                       help='Enable verbose logging')
   parser.add_argument('-s', '--silent', action='store_true', dest='silent',
                       help='Disable all output')
+  parser.add_argument('-x', '--extend', default=0, dest='extend',
+                      help='Extend (or reduce) cluster lifetime (hours)')
   parser.add_argument('--id', default='', dest='id',
                       help='The cluster ID to control')
   parser.add_argument('config', nargs='*',
@@ -301,6 +319,10 @@ if __name__ == '__main__':
       elif type(value) is dict:
         value = json.dumps(value)
       print("info-%s: %s" % (key.lower(), value))
+
+  # Extend if requested
+  if args.extend != 0:
+    manager.extendCluster(cluster, int(args.extend))
 
   # Destroy cluster if requested
   if args.destroy:
