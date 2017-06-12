@@ -57,7 +57,7 @@ class CCMClusterApi:
       return None
     if code != 200:
       raise IOError('Unable to query cluster (unexpected HTTP code %i)' % code)
-    return None
+    return data
 
   def startCluster(self, data):
     self.logger.debug('Starting a cluster')
@@ -73,7 +73,7 @@ class CCMClusterApi:
       return None
     if code != 204:
       raise IOError('Unable to delete cluster (unexpected HTTP code %i)' % code)
-    return data
+    return None
 
 class CCMClusterConfig:
 
