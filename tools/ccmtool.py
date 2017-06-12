@@ -1,0 +1,305 @@
+#!/usr/bin/env python
+import argparse
+import json
+import logging
+import os
+import random
+import re
+import requests
+import string
+import sys
+import time
+
+# Running(0) or Creating(3)
+VALID_STATUS = ( 0, 3 )
+
+class CCMClusterApi:
+  """
+  Low-level CCM API
+  """
+
+  def __init__(self, baseUrl, authToken):
+    self.baseUrl = baseUrl
+    self.authToken = authToken
+    self.logger = logging.getLogger('ccm.api')
+
+  def execApi(self, action, method='get', data=None):
+    methodFn = getattr(requests, method)
+    headers = {
+        'Authorization': 'Token %s' % self.authToken
+    }
+
+    self.logger.debug('Executing HTTP %s on %s/%s' % (method, self.baseUrl, action))
+    self.logger.debug('Sending data: %r' % data)
+    result = methodFn('%s/%s' % (self.baseUrl, action),
+      headers=headers,
+      data=data)
+
+    if result.status_code == 204: # NO_CONTENT
+      return (204, None)
+
+    return (
+      result.status_code,
+      result.json()
+    )
+
+  def getAllClusters(self):
+    self.logger.debug('Fetching all clusters')
+    (code, data) = self.execApi('cluster/active/all/')
+    if code != 200:
+      raise IOError('Unable to query clusters (unexpected HTTP code %i)' % code)
+    return data
+
+  def getCluster(self, cluster_id):
+    self.logger.debug('Fetching cluster %i' % cluster_id)
+    (code, data) = self.execApi('cluster/%s/' % cluster_id)
+    if code == 404:
+      return None
+    if code != 200:
+      raise IOError('Unable to query cluster (unexpected HTTP code %i)' % code)
+    return data
+
+  def startCluster(self, data):
+    self.logger.debug('Starting a cluster')
+    (code, data) = self.execApi('cluster/', method='post', data=data)
+    if code != 201: # CREATED
+      raise IOError('Unable to create cluster (unexpected HTTP code %i)' % code)
+    return data
+
+  def destroyCluster(self, cluster_id):
+    self.logger.debug('Destroying a cluster')
+    (code, data) = self.execApi('cluster/%s/' % cluster_id, method='delete')
+    if code == 404:
+      return None
+    if code != 200:
+      raise IOError('Unable to delete cluster (unexpected HTTP code %i)' % code)
+    return data
+
+class CCMClusterConfig:
+
+  def __init__(self, config):
+
+    # Check if we have a 'match' section
+    self.match = None
+    if 'match' in config:
+      self.match = {
+        'prefix': config.get('prefix', ''),
+        'regex': re.compile(config.get('regex', '.*')),
+        'region': config.get('region', '')
+      }
+
+    # Pre-populate configuration variables
+    self.config = {
+      'cloud_provider': config.get('provider', 0),
+      'cluster_desc': config.get('desc', 'DC/OS Test Cluster'),
+      'region': config.get('region', self.guessRegion()),
+      'time': int(config.get('timeout', 1)) * 60,
+      'adminlocation': config.get('adminlocation', '0.0.0.0/0'),
+      'public_agents': config.get('public_agents', 1),
+      'private_agents': config.get('private_agents', 1),
+      'template': config.get('template', 'ee.single-master.cloudformation.json'),
+      'channel': config.get('channel', 'testing/master'),
+      'not_from_pool': bool(config.get('not_from_pool', True))
+    }
+
+    self.namePrefix = config.get('name_prefix', 'dcos-perf-test-')
+    self.create_timeout = config.get('create_timeout', 600)
+
+  def getClusterNamePrefix(self):
+    """
+    Get the cluster prefix that is used
+    """
+    return self.namePrefix
+
+  def getNewClusterName(self):
+    """
+    Return a new unique name for this cluster that can still be
+    resolved if needed
+    """
+    rand = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(10))
+    return '%s-%s' % (self.getClusterNamePrefix(), rand)
+
+  def getClusterConfig(self):
+    config = dict(self.config)
+    config['name'] = self.getNewClusterName()
+
+    return config
+
+  def guessRegion(self):
+    """
+    """
+    return 'us-west-2'
+
+class CCMClusterManager:
+
+  def __init__(self):
+    self.logger = logging.getLogger('cluster.ccm')
+
+    # Locate CCM secret
+    ccm_api_url = 'https://ccm.mesosphere.com/api'
+    ccm_auth_token = os.environ.get('CCM_AUTH_TOKEN')
+
+    # Throw an exception if there is no CCM auth token specified
+    if not ccm_auth_token:
+      raise ValueError('You need to specify a CCM authentication token')
+
+    # Create CCM Cluster API
+    self.logger.debug('Initializing CCM API to %s' % (ccm_api_url,))
+    self.api = CCMClusterApi(ccm_api_url, ccm_auth_token)
+
+  def findCluster(self, config):
+    prefix = config.getClusterNamePrefix()
+    self.logger.debug('Looking for a cluster that matches %s*' % prefix)
+    clusters = self.api.getAllClusters()
+    for c in clusters:
+      # If we have a match directive, use that to resolve the cluster
+      if config.match:
+        if config.match['regex'].search(c['name']):
+          if c['name'].startswith(config.match['prefix']):
+            if (config.match['region'] == '') or (c['region'] == config.match['region']):
+              self.logger.debug('Found matching cluster with id %s (%s)' % (c['id'], c['name']))
+              self.logger.debug('Cluster dump: %r' % c)
+              return c
+
+      # Otherwise fall back to default
+      if c['name'].startswith(prefix):
+        self.logger.debug('Found matching cluster with id %s (%s)' % (c['id'], c['name']))
+        self.logger.debug('Cluster dump: %r' % c)
+        return c
+    return None
+
+  def createCluster(self, config):
+    data = config.getClusterConfig()
+    self.logger.info('Creating cluster %s' % (data['name']))
+    self.logger.debug('Creating new cluster with specs: %r' % data)
+    cluster = self.api.startCluster(data)
+    if (not cluster) or (not type(cluster) is dict) or (not 'id' in cluster):
+      raise IOError('Unexpected startCluster response format')
+
+    return cluster
+
+  def extractClusterInfo(self, cluster):
+    if not cluster:
+      return None
+    if 'cluster_info' not in cluster:
+      return None
+    if not cluster['cluster_info']:
+      return None
+    return json.loads(cluster['cluster_info'])
+
+  def destroyCluster(self, cluster):
+    if not cluster:
+      return None
+    self.logger.info('Destroying cluster %s (%s)' % (cluster['id'], cluster['name']))
+    self.api.destroyCluster(cluster['id'])
+
+  def waitForCluster(self, cluster, config):
+    self.logger.info('Waiting for cluster %s (%s) to become ready' % (cluster['id'], cluster['name']))
+    timeout_time = time.time() + config.create_timeout
+    cluster_id = cluster['id']
+
+    while True:
+
+      # When the cluster becomes available, the cluster_info
+      # structure will be populated
+      cluster_info = self.extractClusterInfo(cluster)
+      if cluster_info:
+        self.logger.info('Cluster is alive')
+        self.logger.debug('Cluster information collected: %r' % cluster_info)
+        return cluster_info
+
+      # Don't wait forever
+      if time.time() > timeout_time:
+        raise IOError('Timed out while waiting for cluster to become ready')
+
+      # Apply some delay
+      self.logger.debug('Sleeping for 30 seconds')
+      time.sleep(30)
+
+      # Update cluster config
+      self.logger.debug('Querying for cluster #%s details' % cluster_id)
+      cluster = self.api.getCluster(cluster_id)
+      self.logger.debug('Cluster dump: %r' % cluster)
+      if cluster is None:
+        return None
+
+if __name__ == '__main__':
+  """
+  Entry point
+  """
+
+  # Parse arguments
+  parser = argparse.ArgumentParser(description='The DC/OS CCM API Tool')
+  parser.add_argument('-c', '--create', action='store_true', dest='create',
+                      help='Create a new cluster')
+  parser.add_argument('-d', '--destroy', action='store_true', dest='destroy',
+                      help='Destroy a cluster')
+  parser.add_argument('-w', '--wait', action='store_true', dest='wait',
+                      help='Wait for cluster and fetch config')
+  parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                      help='Enable verbose logging')
+  parser.add_argument('-s', '--silent', action='store_true', dest='silent',
+                      help='Disable all output')
+  parser.add_argument('config', action='store',
+                      help='The configuration script to use.')
+  args = parser.parse_args()
+
+  # Setup logging
+  level = logging.INFO
+  if args.verbose:
+    level = logging.DEBUG
+  if args.silent:
+    level = logging.CRITICAL
+  logging.basicConfig(format='%(asctime)s: %(message)s', level=level)
+  logger = logging.getLogger('ccm')
+
+  # Load config
+  if not os.path.exists(args.config):
+    logger.error('Cannot find the specified configuration file')
+    sys.exit(1)
+  with open(args.config, 'r') as f:
+    config = CCMClusterConfig(json.loads(f.read()))
+
+  # Initialize cluster manager
+  manager = CCMClusterManager()
+
+  # Handle request flags
+  if args.create:
+    cluster = manager.createCluster(config)
+  else:
+    cluster = manager.findCluster(config)
+    if cluster is None:
+      logger.error('No cluster was found. Perhaps you forgot `--create`?')
+      sys.exit(1)
+
+  # Dump script-friendly informtion regarding the cluster
+  print('cluster-id: %s' % cluster['id'])
+  print('cluster-name: %s' % cluster['name'])
+  print('cluster-status: %s' % cluster['status_text'].lower())
+  print('cluster-stackid: %s' % cluster['stack_id'])
+  print('cluster-template: %s' % cluster['template_url'])
+
+  # Wait until cluster is ready, or try to obtain cluster information asap
+  if args.wait:
+    cluster_info = manager.waitForCluster(cluster, config)
+    if cluster_info is None:
+      logger.error('Cluster was destroyed before it\'s deployment completed')
+      sys.exit(2)
+  else:
+    cluster_info = manager.extractClusterInfo(cluster)
+
+  # Dump cluster info
+  if cluster_info:
+    for key, value in cluster_info.items():
+      if type(value) in (list, tuple):
+        value = ','.join(value)
+      elif type(value) is dict:
+        value = json.dumps(value)
+      print("info-%s: %s" % (key.lower(), value))
+
+  # Destroy cluster if requested
+  if args.destroy:
+    manager.destroyCluster(cluster)
+
+  # Everything OK
+  sys.exit(0)
