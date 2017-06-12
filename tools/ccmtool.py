@@ -51,13 +51,13 @@ class CCMClusterApi:
     return data
 
   def getCluster(self, cluster_id):
-    self.logger.debug('Fetching cluster %i' % cluster_id)
+    self.logger.debug('Fetching cluster %s' % cluster_id)
     (code, data) = self.execApi('cluster/%s/' % cluster_id)
     if code == 404:
       return None
-    if code != 200:
+    if code != 204:
       raise IOError('Unable to query cluster (unexpected HTTP code %i)' % code)
-    return data
+    return None
 
   def startCluster(self, data):
     self.logger.debug('Starting a cluster')
@@ -102,32 +102,21 @@ class CCMClusterConfig:
       'not_from_pool': bool(config.get('not_from_pool', True))
     }
 
-    self.namePrefix = config.get('name_prefix', 'dcos-perf-test-')
     self.create_timeout = config.get('create_timeout', 600)
 
-  def getClusterNamePrefix(self):
-    """
-    Get the cluster prefix that is used
-    """
-    return self.namePrefix
-
-  def getNewClusterName(self):
-    """
-    Return a new unique name for this cluster that can still be
-    resolved if needed
-    """
+    # Compose a random name if `name_prefix` is given, otherwise use `name`
     rand = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(10))
-    return '%s-%s' % (self.getClusterNamePrefix(), rand)
+    self.name = config.get('name_prefix', 'dcos-perf-test-') + rand
+    if 'name' in config:
+      self.name = config['name']
 
   def getClusterConfig(self):
     config = dict(self.config)
-    config['name'] = self.getNewClusterName()
+    config['name'] = self.name
 
     return config
 
   def guessRegion(self):
-    """
-    """
     return 'us-west-2'
 
 class CCMClusterManager:
@@ -147,22 +136,20 @@ class CCMClusterManager:
     self.logger.debug('Initializing CCM API to %s' % (ccm_api_url,))
     self.api = CCMClusterApi(ccm_api_url, ccm_auth_token)
 
-  def findCluster(self, config):
-    prefix = config.getClusterNamePrefix()
-    self.logger.debug('Looking for a cluster that matches %s*' % prefix)
+  def findClusterByName(self, config):
+    self.logger.debug('Looking for cluster \'%s\'' % config.name)
     clusters = self.api.getAllClusters()
     for c in clusters:
-      # If we have a match directive, use that to resolve the cluster
-      if config.match:
-        if config.match['regex'].search(c['name']):
-          if c['name'].startswith(config.match['prefix']):
-            if (config.match['region'] == '') or (c['region'] == config.match['region']):
-              self.logger.debug('Found matching cluster with id %s (%s)' % (c['id'], c['name']))
-              self.logger.debug('Cluster dump: %r' % c)
-              return c
+      if c['name'] == config.name:
+        self.logger.debug('Found matching cluster with id %s (%s)' % (c['id'], c['name']))
+        self.logger.debug('Cluster dump: %r' % c)
+        return c
+    return None
 
-      # Otherwise fall back to default
-      if c['name'].startswith(prefix):
+  def findClusterById(self, cluster_id):
+    self.logger.debug('Looking for cluster with id \'%s\'' % cluster_id)
+    c = self.api.getCluster(cluster_id)
+    if c:
         self.logger.debug('Found matching cluster with id %s (%s)' % (c['id'], c['name']))
         self.logger.debug('Cluster dump: %r' % c)
         return c
@@ -240,7 +227,9 @@ if __name__ == '__main__':
                       help='Enable verbose logging')
   parser.add_argument('-s', '--silent', action='store_true', dest='silent',
                       help='Disable all output')
-  parser.add_argument('config', action='store',
+  parser.add_argument('--id', default='', dest='id',
+                      help='The cluster ID to control')
+  parser.add_argument('config', nargs='*',
                       help='The configuration script to use.')
   args = parser.parse_args()
 
@@ -253,21 +242,37 @@ if __name__ == '__main__':
   logging.basicConfig(format='%(asctime)s: %(message)s', level=level)
   logger = logging.getLogger('ccm')
 
-  # Load config
-  if not os.path.exists(args.config):
-    logger.error('Cannot find the specified configuration file')
+  # Validate
+  if args.id and not args.id.isdigit():
+    logger.error('The cluster ID must be a number')
     sys.exit(1)
-  with open(args.config, 'r') as f:
-    config = CCMClusterConfig(json.loads(f.read()))
+
+  # Load config if specified
+  config = CCMClusterConfig({})
+  if len(args.config) > 0:
+    if not os.path.exists(args.config[0]):
+      logger.error('Cannot find the specified configuration file')
+      sys.exit(1)
+    with open(args.config[0], 'r') as f:
+      config = CCMClusterConfig(json.loads(f.read()))
 
   # Initialize cluster manager
   manager = CCMClusterManager()
 
   # Handle request flags
   if args.create:
+    if len(args.config) == 0:
+      logger.warn('Cluster configuration is missing, using defaults')
     cluster = manager.createCluster(config)
   else:
-    cluster = manager.findCluster(config)
+    if args.id:
+      cluster = manager.findClusterById(args.id)
+    elif len(args.config) == 0:
+      logger.error('Could not locate cluster. Please use a config file (with'
+        ' `name` attribute), or the `--id` argument')
+      sys.exit(3)
+    else:
+      cluster = manager.findClusterByName(config)
     if cluster is None:
       logger.error('No cluster was found. Perhaps you forgot `--create`?')
       sys.exit(1)
