@@ -76,7 +76,7 @@ class CCMClusterApi:
     return None
 
   def extendCluster(self, cluster_id, time):
-    self.logger.debug('Extending cluster %s by %s hours' % (cluster_id, time))
+    self.logger.debug('Extending cluster %s by %s minutes' % (cluster_id, time))
     (code, data) = self.execApi('cluster/%s/' % cluster_id, method='put', data={
         'time': time
       })
@@ -179,6 +179,7 @@ class CCMClusterManager:
   def extendCluster(self, cluster, time):
     if cluster is None:
       return
+    self.logger.info('Extending cluster %s by %s hours' % (cluster['id'], time))
     self.api.extendCluster(cluster['id'], str(time * 60))
 
   def extractClusterInfo(self, cluster):
