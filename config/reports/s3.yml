@@ -1,0 +1,11 @@
+
+#################################################
+# Global test configuration
+#################################################
+reporters:
+
+  # Report raw results to amazon S3
+  - class: reporter.S3Reporter
+    bucket: marathon-artifacts
+    path: "metrics/{{date(%Y%m%d)}}-{{meta:version|unknown}}-results.json"
+    acl: public-read
