@@ -133,7 +133,14 @@ class Configurable:
     self.config = config
 
   def getRenderedConfig(self, macros={}):
-    return TemplateDict(self.config).apply(self.config.definitions.fork(macros))
+    meta = self.getMeta()
+    return TemplateDict(self.config)\
+      .apply(
+        self.config.definitions.fork(
+          macros,
+          dict([('meta:' + kv[0], kv[1]) for kv in meta.items()])
+        )
+      )
 
   def getConfigMacros(self):
     return TemplateDict(self.config).macros()
