@@ -1,4 +1,5 @@
 import re
+import time
 import uuid
 
 MACRO = re.compile(r'{{(.+?)(\|.+)?}}')
@@ -16,6 +17,13 @@ class TemplateMethods:
     """
     return uuid.uuid4().hex
 
+  @staticmethod
+  def date(args):
+    """
+    date() method is generating a timestamp
+    """
+    return time.strftime(args)
+
 
 def toTemplate(obj):
   """
@@ -30,6 +38,17 @@ def toTemplate(obj):
 
   return obj
 
+def evaluateExpr(expr, defaultValue=None):
+  """
+  Evaluate the given macro expression
+  """
+  method = METHOD.match(expr)
+  if method:
+    func = method.group(1)
+    if hasattr(TemplateMethods, func):
+      return getattr(TemplateMethods, func)(method.group(2))
+
+  return defaultValue
 
 class Template:
   """
@@ -71,19 +90,12 @@ class TemplateString(str, Template):
       default = matchobj.group(2)
 
       if default:
-        default = default[1:]
+        default = evaluateExpr(default[1:], default[1:])
 
-      method = METHOD.match(name)
-      if method:
-        func = method.group(1)
-        if hasattr(TemplateMethods, func):
-          return getattr(TemplateMethods, func)(method.group(2))
+      if name in props:
+        return str(props[name])
 
-      else:
-        if name in props:
-          return str(props[name])
-
-      return default
+      return evaluateExpr(name, default)
 
     return MACRO.sub(repl, self)
 
