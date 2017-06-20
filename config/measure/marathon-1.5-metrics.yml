@@ -36,6 +36,31 @@ config:
       summarize: [mean, min, max]
       units: count
 
+    - name: marathonMemTotalUsage
+      desc: Total memory usage of marathon
+      summarize: [mean, min, max]
+      units: Kb
+
+    - name: marathonThreadCount
+      desc: Number of threads in marathon
+      summarize: [mean, min, max]
+      units: threads
+
+    - name: marathonSysCpuWait
+      desc: CPU time spent waiting
+      summarize: [mean, min, max]
+      units: "?"
+
+    - name: marathonSysCpuSystem
+      desc: CPU time spent on system tasks
+      summarize: [mean, min, max]
+      units: "?"
+
+    - name: marathonSysCpuUser
+      desc: CPU time spent on user tasks
+      summarize: [mean, min, max]
+      units: "?"
+
 #################################################
 # Tracker configuration
 #################################################
@@ -50,3 +75,8 @@ trackers:
       gauges.service.mesosphere.marathon.group.count.mean: marathonGroupCount
       gauges.service.mesosphere.marathon.task.mean: marathonTasksCount
       gauges.service.mesosphere.marathon.task.staged.count.mean: marathonTasksStaged
+      system-metric.memory.memory-used.mean: marathonMemTotalUsage
+      system-metric.threads.thread-count.mean: marathonThreadCount
+      system-metric.cpu.cpu-wait.mean: marathonSysCpuWait
+      system-metric.cpu.cpu-system.mean: marathonSysCpuSystem
+      system-metric.cpu.cpu-user.mean: marathonSysCpuUser
