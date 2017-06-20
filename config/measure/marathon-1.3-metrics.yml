@@ -1,0 +1,46 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the metrics we are measuring
+  metrics:
+    - name: marathonMemTotalUsage
+      desc: Total memory usage
+      summarize: [mean, min, max]
+      units: Kb
+
+    - name: marathonMemHeapUsage
+      desc: Heap memory usage
+      summarize: [mean, min, max]
+      units: Kb
+
+    - name: marathonThreadsCount
+      desc: Number of threads in marathon
+      summarize: [mean, min, max]
+      units: threads
+
+    - name: marathonThreadsBlocked
+      desc: Blocked threads in marathon
+      summarize: [mean, min, max]
+      units: threads
+
+    - name: marathonThreadsWaiting
+      desc: Waiting threads in marathon
+      summarize: [mean, min, max]
+      units: threads
+
+#################################################
+# Tracker configuration
+#################################################
+trackers:
+
+  # Re-route metrics collected from marathon to metrics being collected
+  - class: tracker.DumpMetricTracker
+    map:
+      gauges.jvm.memory.total.used.value: marathonMemTotalUsage
+      gauges.jvm.memory.heap.used.value: marathonMemHeapUsage
+      gauges.jvm.threads.count.value: marathonThreadsCount
+      gauges.jvm.threads.blocked.count.value: marathonThreadsBlocked
+      gauges.jvm.threads.waiting.count.value: marathonThreadsWaiting
