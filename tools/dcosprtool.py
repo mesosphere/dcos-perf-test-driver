@@ -71,7 +71,7 @@ def isEndpointWorking(url):
   r = requests.get(url)
   return r.status_code == 200
 
-def getMarathonVersions(auth, owner_repo, branch):
+def getMarathonVersions(auth, owner_repo, branch, filename):
   """
   Download the build info for the given marathon version and look-up
   the marathon versions used there
@@ -82,13 +82,22 @@ def getMarathonVersions(auth, owner_repo, branch):
   logger.info('Requesting buildinfo from %s/%s' % (owner_repo, branch))
   ans = githubApi(
     'https://%sraw.githubusercontent.com/%s/%s/packages/marathon'
-      '/buildinfo.json' % (auth, owner_repo, branch)
+      '/%s' % (auth, owner_repo, branch, filename)
   )
   if ans is None:
     return None
 
-  # Parse version from the single_source
-  url = ans['single_source']['url']
+  # Process marathon version
+  url = None
+  if 'single_source' in ans:
+    url = ans['single_source']['url']
+  elif 'sources' in ans:
+    if 'marathon' in ans['sources']:
+      url = ans['sources']['marathon']['url']
+    else:
+      url = ans['sources'].values()[0]['url']
+
+  # Parse version from the source url
   version = extractVersion(url)
   if version is None:
     logger.error('Could not identify a marathon version from url: %s' % url)
@@ -149,6 +158,9 @@ if __name__ == '__main__':
                       help='Specify the cloudformation template URL to check')
   parser.add_argument('-r', '--repo', default="dcos/dcos", dest='repo',
                       help='Specify the owner/repository (on github) to use')
+  parser.add_argument('-b', '--buildinfo', default="buildinfo.json", dest='buildinfo',
+                      help='Specify the name of the buildinfo.json file to read')
+
   args = parser.parse_args()
 
   # Setup logging
@@ -185,7 +197,7 @@ if __name__ == '__main__':
       continue
 
     # Lookup the marathon version from the build info
-    version = getMarathonVersions(auth, pr['owner_repo'], pr['branch'])
+    version = getMarathonVersions(auth, pr['owner_repo'], pr['branch'], args.buildinfo)
     logger.debug('Found version %s' % version)
     if version is None:
       continue
