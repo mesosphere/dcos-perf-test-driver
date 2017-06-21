@@ -16,6 +16,23 @@ VERSION = re.compile(r"((?:"
   r")(?:[a-z])?(?:-snapshot-[0-9]+)"
   r"?)", re.IGNORECASE)
 
+def extractVersion(string):
+  """
+  Extract version code from the given string
+  """
+  candidates = VERSION.findall(string)
+  if len(candidates) == 0:
+    return None
+
+  # Return version
+  candidate = candidates[-1]
+  version = candidate[0]
+  if candidate[1]:
+    version = candidate[0].replace('-', '.')
+  elif candidate[2]:
+    version = candidate[0].replace('_', '.')
+  return version
+
 def githubApi(url):
   """
   High-level github API calls with rate limiting
@@ -72,18 +89,10 @@ def getMarathonVersions(auth, owner_repo, branch):
 
   # Parse version from the single_source
   url = ans['single_source']['url']
-  candidates = VERSION.findall(url)
-  if len(candidates) == 0:
+  version = extractVersion(url)
+  if version is None:
     logger.error('Could not identify a marathon version from url: %s' % url)
-    return None
 
-  # Return version
-  candidate = candidates[-1]
-  version = candidate[0]
-  if candidate[1]:
-    version = candidate[0].replace('-', '.')
-  elif candidate[2]:
-    version = candidate[0].replace('_', '.')
   return version
 
 def enumAllPrs(auth, owner_repo):
@@ -158,6 +167,12 @@ if __name__ == '__main__':
     if args.password:
       auth = '%s:%s@' % (args.username, args.password)
 
+  # Extract the version to compare against
+  v_compare = extractVersion(args.marathon)
+  if v_compare is None:
+    logger.warn('Did not found a valid version string in -m argument. Assuming "first matching"')
+    v_compare = ''
+
   # Enumerate all PRs
   prs = enumAllPrs(auth, args.repo)
   if prs is None:
@@ -176,7 +191,7 @@ if __name__ == '__main__':
       continue
 
     # Check version
-    if args.marathon in version:
+    if v_compare in version:
       print('dcos-pr: %s' % pr['number'])
       print('marathon-version: %s' % version)
       print('cf-url: %s' % tpl_url)
