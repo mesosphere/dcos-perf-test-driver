@@ -104,7 +104,7 @@ def getMarathonVersions(auth, owner_repo, branch, filename):
 
   return version
 
-def enumAllPrs(auth, owner_repo):
+def enumAllPrs(auth, owner_repo, max_results=500):
   """
   Enumerate all the PRs on the given repository
   """
@@ -112,21 +112,40 @@ def enumAllPrs(auth, owner_repo):
 
   # Request all PRs
   logger.info('Enumerating all open PRs on DC/OS')
-  ans = githubApi(
-    'https://%sapi.github.com/repos/%s/pulls?state=all&per_page=100' % (auth, owner_repo)
-  )
-  if ans is None:
-    return None
+  ans = []
+  page = 1
+  while True:
+    logger.debug('Fetching page %i' % page)
+    page_ans = githubApi(
+      'https://%sapi.github.com/repos/%s/pulls?state=all&per_page=100&page=%i' \
+        % (auth, owner_repo, page)
+    )
+    if page_ans is None:
+      return None
+
+    # Stack page results
+    ans += page_ans
+    if len(page_ans) < 100:
+      break
+    if len(ans) >= max_results:
+      logger.info('Stopping after resolving %i PRs' % len(ans))
+      break
+
+    # Continue to next page
+    page += 1
 
   # Keep only useful info
   logger.info('Found %i PRs' % len(ans))
   ret = []
   for pr in ans:
-    ret.append({
-      'number': pr['number'],
-      'owner_repo': pr['head']['repo']['full_name'],
-      'branch': pr['head']['sha']
-    })
+    try:
+      ret.append({
+        'number': pr['number'],
+        'owner_repo': pr['head']['repo']['full_name'],
+        'branch': pr['head']['sha']
+      })
+    except Exception as e:
+      logger.exception(e)
 
   # Return
   return ret
