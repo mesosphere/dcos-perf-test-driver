@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-from contextlib import closing
+from .utils import RawSSE
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
@@ -94,7 +94,7 @@ class MarathonEventsObserver(Observer):
     self.eventThread = None
     self.deploymentTraceIDs = {}
     self.running = True
-    self.activeRequest = None
+    self.activeSse = None
 
     # # Subscribe into receiving LogLine events, and place us above the
     # # average priority in order to provide translated, high-level events
@@ -140,8 +140,8 @@ class MarathonEventsObserver(Observer):
     self.running = False
 
     # Interrupt any active request
-    if self.activeRequest:
-      self.activeRequest.raw._fp.close()
+    if self.activeSse:
+      self.activeSse.close()
 
     # Join thread
     if self.eventThread:
@@ -219,73 +219,69 @@ class MarathonEventsObserver(Observer):
       # <empty line>
       # ...
       #
-      eventName = None
       try:
-        with closing(requests.get(url, verify=False, stream=True, headers=headers)) as r:
-          self.activeRequest = r
+        self.activeSse = RawSSE(url)
+        with self.activeSse as rawsse:
           try:
-            for chunk in r.iter_lines(decode_unicode=True, chunk_size=1):
+            for event in rawsse:
 
               # Break if exited
               if not self.running:
                 break
 
-              # Process event phases
-              if chunk.startswith('event:'):
-                eventName = chunk[7:]
-              elif chunk.startswith('data:') and not eventName is None:
-                eventData = json.loads(chunk[6:])
-                self.logger.debug('Received event %s: %r' % (eventName, eventData))
+              # Load event name and data
+              eventName = event.get('event')
+              eventData = json.loads(event.get('data'))
 
-                #
-                # deployment_step_success
-                #
-                if eventName == 'deployment_step_success':
-                  deploymentId = eventData['plan']['id']
-                  self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
-                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+              self.logger.debug('Received event %s: %r' % (eventName, eventData))
 
-                #
-                # deployment_step_failure
-                #
-                elif eventName == 'deployment_step_failure':
-                  deploymentId = eventData['plan']['id']
-                  self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
-                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+              #
+              # deployment_step_success
+              #
+              if eventName == 'deployment_step_success':
+                deploymentId = eventData['plan']['id']
+                self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
+                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
 
-                #
-                # deployment_info
-                #
-                elif eventName == 'deployment_info':
-                  deploymentId = eventData['plan']['id']
-                  self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
-                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+              #
+              # deployment_step_failure
+              #
+              elif eventName == 'deployment_step_failure':
+                deploymentId = eventData['plan']['id']
+                self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
+                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
 
-                #
-                # deployment_success
-                #
-                elif eventName == 'deployment_success':
-                  deploymentId = eventData['id']
-                  self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
-                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
-                  if deploymentId in self.deploymentTraceIDs:
-                    del self.deploymentTraceIDs[deploymentId]
+              #
+              # deployment_info
+              #
+              elif eventName == 'deployment_info':
+                deploymentId = eventData['plan']['id']
+                self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
+                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
 
-                #
-                # deployment_failed
-                #
-                elif eventName == 'deployment_failed':
-                  deploymentId = eventData['id']
-                  self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
-                    traceid=self.deploymentTraceIDs.get(deploymentId, None)))
-                  if deploymentId in self.deploymentTraceIDs:
-                    del self.deploymentTraceIDs[deploymentId]
+              #
+              # deployment_success
+              #
+              elif eventName == 'deployment_success':
+                deploymentId = eventData['id']
+                self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
+                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+                if deploymentId in self.deploymentTraceIDs:
+                  del self.deploymentTraceIDs[deploymentId]
 
-                # Warn unknown events
-                else:
-                  self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
+              #
+              # deployment_failed
+              #
+              elif eventName == 'deployment_failed':
+                deploymentId = eventData['id']
+                self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
+                  traceid=self.deploymentTraceIDs.get(deploymentId, None)))
+                if deploymentId in self.deploymentTraceIDs:
+                  del self.deploymentTraceIDs[deploymentId]
 
-                eventName = None
+              # Warn unknown events
+              else:
+                self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
 
           except Exception as e:
             if not self.running:
