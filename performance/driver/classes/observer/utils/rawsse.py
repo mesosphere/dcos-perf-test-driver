@@ -32,7 +32,10 @@ class RawSSE:
 
     # Crate SSL context if we are using https
     if self.url.scheme == 'https':
-      self.sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS)
+      if hasattr(ssl, 'PROTOCOL_SSLv23'):
+        self.sslctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+      elif hasattr(ssl, 'PROTOCOL_TLS'):
+        self.sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS)
       self.verify_mode = ssl.CERT_NONE
       self.check_hostname = False
 
