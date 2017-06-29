@@ -14,7 +14,8 @@ class RawReporter(Reporter):
     # Dump the raw timeseries
     with open(filename, 'w') as f:
       f.write(json.dumps({
-          'values': summarizer.raw(),
+          'raw': summarizer.raw(),
+          'sum': summarizer.sum(),
           'indicators': summarizer.indicators(),
           'meta': self.getMeta()
         }, sort_keys=True, indent=2))
