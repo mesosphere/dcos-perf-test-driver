@@ -13,9 +13,9 @@ This document explains the table schema the `PostgRESTReporter` reporter is expe
 
 ## Tables
 
-### `job` Job Indexing Table
+### `*_job` Job Indexing Table
 
-This table keeps track of the high-level job structure
+This table keeps track of the high-level job structure. Since more than one project will be using the same database, the `project` field should be populated with the name of the project that started this job.
 
 <table>
     <tr>
@@ -23,35 +23,38 @@ This table keeps track of the high-level job structure
         <th>started</th>
         <th>completed</th>
         <th>status</th>
+        <th>project</th>
     </tr>
     <tr>
         <td>Job UUID</td>
         <td>Started Timestamp</td>
         <td>Finished Timestamp</td>
         <td>Job Status</td>
+        <td>Project Name</td>
     </tr>
 </table>
 
 #### DDL
 
 ```sql
-CREATE TABLE public.job
+CREATE TABLE metric_data.perf_test_job
 (
     jid uuid NOT NULL,
     started timestamp without time zone NOT NULL,
     completed timestamp without time zone NOT NULL,
     status integer NOT NULL,
+    project character varying(128) NOT NULL,
     PRIMARY KEY (jid)
 )
 WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.job
+ALTER TABLE metric_data.perf_test_job
     OWNER to postgrest;
 ```
 
-### `job_meta` Job Metadata
+### `*_job_meta` Job Metadata
 
 Each job has a set of metadata that can be used to identify the process being executed. For example `environment`, `version`, `git_hash` etc.
 
@@ -75,7 +78,7 @@ They are unique for every run, therefore they are groupped with the run ID.
 #### DDL
 
 ```sql
-CREATE TABLE public.job_meta
+CREATE TABLE metric_data.perf_test_job_meta
 (
     id serial NOT NULL,
     jid uuid NOT NULL,
@@ -83,7 +86,7 @@ CREATE TABLE public.job_meta
     value character varying(128) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT jid FOREIGN KEY (jid)
-        REFERENCES public.job (jid) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_job (jid) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
@@ -91,11 +94,11 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.job_meta
+ALTER TABLE metric_data.perf_test_job_meta
     OWNER to postgrest;
 ```
 
-### `job_phases` Job Phases
+### `*_job_phases` Job Phases
 
 Eventually the test will go through various _phases_ that are repeated during every _run_. Since the _phase_ is groupping various parameter/metric combinations, we are using the `job_phases` table to index them.
 
@@ -119,7 +122,7 @@ _(This table could actually be merged into the `phase_` tables below)_
 #### DDL
 
 ```sql
-CREATE TABLE public.job_phases
+CREATE TABLE metric_data.perf_test_job_phases
 (
     pid uuid NOT NULL,
     jid uuid NOT NULL,
@@ -127,7 +130,7 @@ CREATE TABLE public.job_phases
     "timestamp" timestamp without time zone NOT NULL,
     PRIMARY KEY (pid),
     CONSTRAINT jid FOREIGN KEY (jid)
-        REFERENCES public.job (jid) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_job (jid) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
@@ -135,11 +138,11 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.job_phases
+ALTER TABLE metric_data.perf_test_job_phases
     OWNER to postgresql;
 ```
 
-### `lookup_metrics` Metric lookup table
+### `*_lookup_metrics` Metric lookup table
 
 Since a metric might be renamed or changed over time, we are using UUIDs to refer to metrics. This table contains the lookup information between the UUID and the metric name.
 
@@ -159,7 +162,7 @@ Since a metric might be renamed or changed over time, we are using UUIDs to refe
 </table>
 
 ```sql
-CREATE TABLE public.lookup_metrics
+CREATE TABLE metric_data.perf_test_lookup_metrics
 (
     metric uuid NOT NULL,
     name character varying(32) NOT NULL,
@@ -171,11 +174,11 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.lookup_metrics
+ALTER TABLE metric_data.perf_test_lookup_metrics
     OWNER to postgrest;
 ```
 
-### `lookup_parameters` Parameter lookup table
+### `*_lookup_parameters` Parameter lookup table
 
 Like the _lookup metrics_ table, this table contains the lookup information between the UUID and the parameter name.
 
@@ -195,7 +198,7 @@ Like the _lookup metrics_ table, this table contains the lookup information betw
 </table>
 
 ```sql
-CREATE TABLE public.lookup_parameters
+CREATE TABLE metric_data.perf_test_lookup_parameters
 (
     parameter uuid NOT NULL,
     name character varying(32) NOT NULL,
@@ -207,11 +210,11 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.lookup_parameters
+ALTER TABLE metric_data.perf_test_lookup_parameters
     OWNER to postgrest;
 ```
 
-### `phase_flags` Phase Flags
+### `*_phase_flags` Phase Flags
 
 During each _phase_ one or more status _flags_ might be raised, indicating internal failures or other status information. These flags are submitted when the phase is completed and it's useful to collect them.
 
@@ -231,7 +234,7 @@ During each _phase_ one or more status _flags_ might be raised, indicating inter
 </table>
 
 ```sql
-CREATE TABLE public.phase_flags
+CREATE TABLE metric_data.perf_test_phase_flags
 (
     id serial NOT NULL,
     pid uuid NOT NULL,
@@ -239,7 +242,7 @@ CREATE TABLE public.phase_flags
     value character varying(128) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT pid FOREIGN KEY (pid)
-        REFERENCES public.job_phases (pid) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_job_phases (pid) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
@@ -247,11 +250,11 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.phase_flags
+ALTER TABLE metric_data.perf_test_phase_flags
     OWNER to postgrest;
 ```
 
-### `phase_params` Phase Parameters
+### `*_phase_params` Phase Parameters
 
 During each _phase_ the _test_ is given some _parameters_. These _parameters_ are usually the plot axis that we are interested in. (ex. `instances`)
 
@@ -273,7 +276,7 @@ During each _phase_ the _test_ is given some _parameters_. These _parameters_ ar
 #### DDL
 
 ```sql
-CREATE TABLE public.phase_params
+CREATE TABLE metric_data.perf_test_phase_params
 (
     id serial NOT NULL,
     pid uuid NOT NULL,
@@ -281,11 +284,11 @@ CREATE TABLE public.phase_params
     value character varying(128) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT pid FOREIGN KEY (pid)
-        REFERENCES public.job_phases (pid) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_job_phases (pid) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
     CONSTRAINT parameter FOREIGN KEY (parameter)
-        REFERENCES public.lookup_parameters (parameter) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_lookup_parameters (parameter) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
@@ -293,11 +296,11 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.phase_flags
+ALTER TABLE metric_data.perf_test_phase_flags
     OWNER to postgrest;
 ```
 
-### `phase_metrics` Phase Metrics
+### `*_phase_metrics` Phase Metrics
 
 During the _test_ various _metrics_ are extracted and emmited the moment their sampling is completed. These metrics are effectively the results of the test.
 
@@ -321,7 +324,7 @@ During the _test_ various _metrics_ are extracted and emmited the moment their s
 #### DDL
 
 ```sql
-CREATE TABLE public.phase_metrics
+CREATE TABLE metric_data.perf_test_phase_metrics
 (
     id serial NOT NULL,
     pid uuid NOT NULL,
@@ -330,11 +333,11 @@ CREATE TABLE public.phase_metrics
     timestamp timestamp without time zone NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT pid FOREIGN KEY (pid)
-        REFERENCES public.job_phases (pid) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_job_phases (pid) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
     CONSTRAINT metric FOREIGN KEY (metric)
-        REFERENCES public.lookup_metrics (metric) MATCH SIMPLE
+        REFERENCES metric_data.perf_test_lookup_metrics (metric) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
@@ -342,7 +345,7 @@ WITH (
     OIDS = FALSE
 );
 
-ALTER TABLE public.phase_flags
+ALTER TABLE metric_data.perf_test_phase_flags
     OWNER to postgrest;
 ```
 
@@ -352,34 +355,39 @@ The following query can be used to fetch a 1D plot for jobs that have only 1 axi
 
 ```sql
 SELECT
-    "public"."job_phases".jid,
-    "public"."phase_params"."value" AS "x",
-    "public"."phase_metrics"."value" AS "y"
+    "metric_data"."perf_test_job_phases".jid,
+    "metric_data"."perf_test_phase_params"."value" AS "x",
+    "metric_data"."perf_test_phase_metrics"."value" AS "y"
 
 FROM
-    "public"."phase_params"
-    JOIN "public"."phase_metrics"
-        ON "public"."phase_params".pid = "public"."phase_metrics".pid
-    JOIN "public"."job_phases"
-        ON "public"."phase_params".pid = "public"."job_phases".pid
+    "metric_data"."perf_test_phase_params"
+    JOIN "metric_data"."perf_test_phase_metrics"
+        ON "metric_data"."perf_test_phase_params".pid = 
+           "metric_data"."perf_test_phase_metrics".pid
+    JOIN "metric_data"."perf_test_job_phases"
+        ON "metric_data"."perf_test_phase_params".pid = 
+           "metric_data"."perf_test_job_phases".pid
 WHERE
     -- The axis you want to view (assuming only 1 dimention)
-    "public"."phase_params"."parameter" = '4a003e85-e8bb-4a95-a340-eec1727cfd0d' AND
+    "metric_data"."perf_test_phase_params"."parameter" = 
+        '4a003e85-e8bb-4a95-a340-eec1727cfd0d' AND
 
-  -- The metric you want to plot
-    "public"."phase_metrics"."metric" = 'cfac77fc-eb24-4862-aedd-89066441c416' AND
+    -- The metric you want to plot
+    "metric_data"."perf_test_phase_metrics"."metric" = 
+        'cfac77fc-eb24-4862-aedd-89066441c416' AND
 
-  -- Job selection based on it's metadata
-    "public"."job_phases".jid IN (
+    -- Job selection based on it's metadata.
+    -- In this example we are selecting the latest `master` version.
+    "metric_data"."perf_test_job_phases".jid IN (
         SELECT
-            "public"."job_meta".jid
+            "metric_data"."perf_test_job_meta".jid
         FROM
-            "public"."job_meta"
+            "metric_data"."perf_test_job_meta"
         WHERE
-            "public"."job_meta"."name" = 'version' AND
-            "public"."job_meta"."value" = 'master'
+            "metric_data"."perf_test_job_meta"."name" = 'version' AND
+            "metric_data"."perf_test_job_meta"."value" = 'master'
         ORDER BY
-            "public"."job_meta".id DESC
+            "metric_data"."perf_test_job_meta".id DESC
         LIMIT 1
     )
 ```

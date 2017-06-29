@@ -82,7 +82,8 @@ class PostgRESTReporter(Reporter):
         'jid': jid,
         'started': datetime.datetime.fromtimestamp(started).isoformat(),
         'completed': datetime.datetime.now().isoformat(),
-        'status': 0
+        'status': 0,
+        'project': self.getConfig('project', '')
       }):
       return
 
