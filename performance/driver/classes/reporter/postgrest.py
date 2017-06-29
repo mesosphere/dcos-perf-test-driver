@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import requests
+import time
 import uuid
 
 from performance.driver.core.classes import Reporter
@@ -70,13 +71,30 @@ class PostgRESTReporter(Reporter):
         return
       param_uuid[parameter] = config['uuid']
 
+    # Get the time the test was started
+    # (We are assuming the test stops at this moment)
+    started = time.time()
+    if summarizer.started:
+      started = summarizer.started
+
     # Create job record
     if not self.insert('job', {
         'jid': jid,
-        'started': datetime.datetime.fromtimestamp(summarizer.started).isoformat(),
+        'started': datetime.datetime.fromtimestamp(started).isoformat(),
         'completed': datetime.datetime.now().isoformat(),
         'status': 0
       }):
+      return
+
+    # Create job metadata
+    data_job_meta = []
+    for (name, value) in self.getMeta().items():
+      data_job_meta.append({
+        'jid': jid,
+        'name': name,
+        'value': value
+      })
+    if not self.insert('job_meta', data_job_meta):
       return
 
     # Prepare bulk insertion of phase data

@@ -345,3 +345,42 @@ WITH (
 ALTER TABLE public.phase_flags
     OWNER to postgrest;
 ```
+
+## Querying
+
+The following query can be used to fetch a 1D plot for jobs that have only 1 axis on it's parameters:
+
+```sql
+SELECT
+    "public"."job_phases".jid,
+    "public"."phase_params"."value" AS "x",
+    "public"."phase_metrics"."value" AS "y"
+
+FROM
+    "public"."phase_params"
+    JOIN "public"."phase_metrics"
+        ON "public"."phase_params".pid = "public"."phase_metrics".pid
+    JOIN "public"."job_phases"
+        ON "public"."phase_params".pid = "public"."job_phases".pid
+WHERE
+    -- The axis you want to view (assuming only 1 dimention)
+    "public"."phase_params"."parameter" = '4a003e85-e8bb-4a95-a340-eec1727cfd0d' AND
+
+  -- The metric you want to plot
+    "public"."phase_metrics"."metric" = 'cfac77fc-eb24-4862-aedd-89066441c416' AND
+
+  -- Job selection based on it's metadata
+    "public"."job_phases".jid IN (
+        SELECT
+            "public"."job_meta".jid
+        FROM
+            "public"."job_meta"
+        WHERE
+            "public"."job_meta"."name" = 'version' AND
+            "public"."job_meta"."value" = 'master'
+        ORDER BY
+            "public"."job_meta".id DESC
+        LIMIT 1
+    )
+```
+
