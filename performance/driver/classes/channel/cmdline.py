@@ -7,10 +7,20 @@ import threading
 
 from subprocess import Popen, PIPE
 
-from performance.driver.core.events import LogLineEvent, ParameterUpdateEvent, TeardownEvent, StartEvent
+from performance.driver.core.events import Event, LogLineEvent, ParameterUpdateEvent, TeardownEvent, StartEvent
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
 from performance.driver.core.decorators import subscribesToHint, publishesHint
+
+class CmdlineProcessCompleted(Event):
+  """
+  This event is submitted when the process launched through the cmdline channel
+  has completed. The exit code is tracked.
+  """
+
+  def __init__(self, exitcode, **kwargs):
+    super().__init__(**kwargs)
+    self.exitcode = exitcode
 
 class CmdlineChannel(Channel):
 
@@ -20,6 +30,7 @@ class CmdlineChannel(Channel):
     self.activeTask = None
     self.activeParameters = {}
     self.killing = False
+    self.lastTraceId = None
 
     # Receive parameter updates and clean-up on teardown
     self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
@@ -32,7 +43,7 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
 
-  @publishesHint(LogLineEvent)
+  @publishesHint(LogLineEvent, CmdlineProcessCompleted)
   def monitor(self, sourceName, proc, stdin=None):
     """
     Oversees the execution of the process
@@ -63,14 +74,16 @@ class CmdlineChannel(Channel):
           lines[0] += block.decode('utf-8')
           while '\n' in lines[0]:
             (line, lines[0]) = lines[0].split('\n', 1)
-            self.eventbus.publish(LogLineEvent(line, sourceName, 'stdin'))
+            self.eventbus.publish(LogLineEvent(line, sourceName, 'stdin',
+                                    traceid=self.lastTraceId))
 
         if proc.stderr in rlist:
           block = proc.stderr.read(1024)
           lines[1] += block.decode('utf-8')
           while '\n' in lines[1]:
             (line, lines[1]) = lines[1].split('\n', 1)
-            self.eventbus.publish(LogLineEvent(line, sourceName, 'stdout'))
+            self.eventbus.publish(LogLineEvent(line, sourceName, 'stdout',
+                                    traceid=self.lastTraceId))
 
       else:
 
@@ -81,14 +94,16 @@ class CmdlineChannel(Channel):
           lines[0] += block.decode('utf-8')
           for line in lines[0].split('\n'):
             if line.strip():
-              self.eventbus.publish(LogLineEvent(line, sourceName, 'stdin'))
+              self.eventbus.publish(LogLineEvent(line, sourceName, 'stdin',
+                                      traceid=self.lastTraceId))
 
         block = proc.stderr.read()
         if block:
           lines[1] += block.decode('utf-8')
           for line in lines[0].split('\n'):
             if line.strip():
-              self.eventbus.publish(LogLineEvent(line, sourceName, 'stdout'))
+              self.eventbus.publish(LogLineEvent(line, sourceName, 'stdout',
+                                      traceid=self.lastTraceId))
 
         # Break loop
         break
@@ -96,8 +111,13 @@ class CmdlineChannel(Channel):
     # Mark as stopped
     self.activeTask = None
     if not self.killing:
-      self.logger.warn('Process exited prematurely')
-      self.launch(self.activeParameters)
+      if self.getConfig('relaunch', True):
+        self.logger.warn('Process exited prematurely')
+        self.launch(self.activeParameters)
+      else:
+        self.logger.info('Process completed')
+        self.eventbus.publish(CmdlineProcessCompleted(proc.returncode,
+                                traceid=self.lastTraceId))
 
   def kill(self):
     """
@@ -109,8 +129,11 @@ class CmdlineChannel(Channel):
     # Stop process and join
     self.killing = True
     proc, thread = self.activeTask
-    if proc.poll() is None:
-      os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+    try:
+      if proc.poll() is None:
+        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+    except ProcessLookupError:
+      pass
     thread.join()
 
     # Unset active task
@@ -170,7 +193,7 @@ class CmdlineChannel(Channel):
     """
 
     # If this app is instructed to launch at start, satisfy this requirement now
-    atstart = self.getConfig('atstart', default='no')
+    atstart = self.getConfig('atstart', default=False)
     if atstart:
       self.handleParameterUpdate(ParameterUpdateEvent({}, {}, {}))
 
@@ -195,6 +218,10 @@ class CmdlineChannel(Channel):
       # We have a parameter change, kill the process
       # and schedule a new execution later
       self.kill()
+
+    # Keep track of the traceid that initiated the process. This way we can
+    # track the events that were derrived from this parameter update.
+    self.lastTraceId = event.traceids
 
     # Launch new process
     self.launch(event.parameters)
