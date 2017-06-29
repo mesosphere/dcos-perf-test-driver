@@ -1,5 +1,8 @@
+# Postgres SQL Schema
 
-# Terminology
+This document explains the table schema the `PostgRESTReporter` reporter is expected to which to report the data.
+
+## Terminology
 
 * **job** : A scale test job
 * **run** : A repeating scale test sampling process in order to collect statistics. One or more _runs_ are executed within a single _job_.
@@ -8,9 +11,9 @@
 * **parameter** : An input value to the _test_. For example `instances=10`.
 * **mmetric** : An output value from the _test_. For example `deployTime=1.42s`
 
-# Tables
+## Tables
 
-## `*_job` Job Indexing Table
+### `job` Job Indexing Table
 
 This table keeps track of the high-level job structure
 
@@ -18,18 +21,37 @@ This table keeps track of the high-level job structure
     <tr>
         <th><u>jid</u></th>
         <th>started</th>
-        <th>finished</th>
+        <th>completed</th>
         <th>status</th>
     </tr>
     <tr>
-        <td>Job ID</td>
-        <th>Started Timestamp</th>
-        <th>Finished Timestamp</th>
-        <th>Job Status</th>
+        <td>Job UUID</td>
+        <td>Started Timestamp</td>
+        <td>Finished Timestamp</td>
+        <td>Job Status</td>
     </tr>
 </table>
 
-## `*_job_meta` Job Metadata
+#### DDL
+
+```sql
+CREATE TABLE public.job
+(
+    jid uuid NOT NULL,
+    started timestamp without time zone NOT NULL,
+    completed timestamp without time zone NOT NULL,
+    status integer NOT NULL,
+    PRIMARY KEY (jid)
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.job
+    OWNER to postgrest;
+```
+
+### `job_meta` Job Metadata
 
 Each job has a set of metadata that can be used to identify the process being executed. For example `environment`, `version`, `git_hash` etc.
 
@@ -44,13 +66,36 @@ They are unique for every run, therefore they are groupped with the run ID.
     </tr>
     <tr>
         <td>Index</td>
-        <td>Run ID</td>
+        <td>Run UUID</td>
         <td>Name</td>
         <td>Value</td>
     </tr>
 </table>
 
-## `*_job_phases` Job Phases
+#### DDL
+
+```sql
+CREATE TABLE public.job_meta
+(
+    id serial NOT NULL,
+    jid uuid NOT NULL,
+    name character varying(32) NOT NULL,
+    value character varying(128) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT jid FOREIGN KEY (jid)
+        REFERENCES public.job (jid) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.job_meta
+    OWNER to postgrest;
+```
+
+### `job_phases` Job Phases
 
 Eventually the test will go through various _phases_ that are repeated during every _run_. Since the _phase_ is groupping various parameter/metric combinations, we are using the `job_phases` table to index them.
 
@@ -64,100 +109,239 @@ _(This table could actually be merged into the `phase_` tables below)_
         <th>timestamp</th>
     </tr>
     <tr>
-        <td>Phase ID</td>
-        <td>Job ID</td>
-        <td>Run Index</td>
-        <td>Timestamp</td>
+        <td>Phase UUID</td>
+        <td>Job UUID</td>
+        <td><strike>Run Index</strike></td>
+        <td><strike>Timestamp</strike></td>
     </tr>
 </table>
 
-## `*_phase_flags` Job Flags
+#### DDL
+
+```sql
+CREATE TABLE public.job_phases
+(
+    pid uuid NOT NULL,
+    jid uuid NOT NULL,
+    run integer NOT NULL,
+    "timestamp" timestamp without time zone NOT NULL,
+    PRIMARY KEY (pid),
+    CONSTRAINT jid FOREIGN KEY (jid)
+        REFERENCES public.job (jid) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.job_phases
+    OWNER to postgresql;
+```
+
+### `lookup_metrics` Metric lookup table
+
+Since a metric might be renamed or changed over time, we are using UUIDs to refer to metrics. This table contains the lookup information between the UUID and the metric name.
+
+<table>
+    <tr>
+        <th><u>metric</u></th>
+        <th>name</th>
+        <th>title</th>
+        <th>units</th>
+    </tr>
+    <tr>
+        <td>Metric UUID</td>
+        <td>Name</td>
+        <td>Axis Title</td>
+        <td>Units</td>
+    </tr>
+</table>
+
+```sql
+CREATE TABLE public.lookup_metrics
+(
+    metric uuid NOT NULL,
+    name character varying(32) NOT NULL,
+    title character varying(128) NOT NULL,
+    units character varying(16),
+    PRIMARY KEY (metric)
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.lookup_metrics
+    OWNER to postgrest;
+```
+
+### `lookup_parameters` Parameter lookup table
+
+Like the _lookup metrics_ table, this table contains the lookup information between the UUID and the parameter name.
+
+<table>
+    <tr>
+        <th><u>parameter</u></th>
+        <th>name</th>
+        <th>title</th>
+        <th>units</th>
+    </tr>
+    <tr>
+        <td>Parameter UUID</td>
+        <td>Name</td>
+        <td>Title</td>
+        <td>Units</td>
+    </tr>
+</table>
+
+```sql
+CREATE TABLE public.lookup_parameters
+(
+    parameter uuid NOT NULL,
+    name character varying(32) NOT NULL,
+    title character varying(128) NOT NULL,
+    units character varying(16),
+    PRIMARY KEY (parameter)
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.lookup_parameters
+    OWNER to postgrest;
+```
+
+### `phase_flags` Phase Flags
 
 During each _phase_ one or more status _flags_ might be raised, indicating internal failures or other status information. These flags are submitted when the phase is completed and it's useful to collect them.
 
 <table>
     <tr>
-        <th><u>pid</u></th>
-        <th>jid</th>
-        <th>run</th>
-        <th>timestamp</th>
+        <th><u>id</u></th>
+        <th>pid</th>
+        <th>name</th>
+        <th>value</th>
     </tr>
     <tr>
-        <td>Phase ID</td>
-        <td>Job ID</td>
-        <td>Run Index</td>
-        <td>Timestamp</td>
+        <td>Index</td>
+        <td>Phase UUID</td>
+        <td>Name</td>
+        <td>Value</td>
     </tr>
 </table>
 
-## `*_phase_params` Phase Parameters
+```sql
+CREATE TABLE public.phase_flags
+(
+    id serial NOT NULL,
+    pid uuid NOT NULL,
+    name character varying(32) NOT NULL,
+    value character varying(128) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT pid FOREIGN KEY (pid)
+        REFERENCES public.job_phases (pid) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.phase_flags
+    OWNER to postgrest;
+```
+
+### `phase_params` Phase Parameters
 
 During each _phase_ the _test_ is given some _parameters_. These _parameters_ are usually the plot axis that we are interested in. (ex. `instances`)
 
 <table>
     <tr>
-        <th><u>pid</u></th>
-        <th>name</th>
+        <th><u>id</u></th>
+        <th>pid<th>
+        <th>parameter</th>
         <th>value</th>
     </tr>
     <tr>
+        <td>Index</td>
         <td>Phase ID</td>
-        <td>Parameter name</td>
+        <td>Parameter UUID</td>
         <td>Parameter value</td>
     </tr>
 </table>
 
-## `*_phase_metrics` Phase Metrics
+#### DDL
+
+```sql
+CREATE TABLE public.phase_params
+(
+    id serial NOT NULL,
+    pid uuid NOT NULL,
+    parameter uuid NOT NULL,
+    value character varying(128) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT pid FOREIGN KEY (pid)
+        REFERENCES public.job_phases (pid) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT parameter FOREIGN KEY (parameter)
+        REFERENCES public.lookup_parameters (parameter) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.phase_flags
+    OWNER to postgrest;
+```
+
+### `phase_metrics` Phase Metrics
 
 During the _test_ various _metrics_ are extracted and emmited the moment their sampling is completed. These metrics are effectively the results of the test.
 
 <table>
     <tr>
-        <th><u>pid</u></th>
-        <th>name</th>
+        <th><u>id</u></th>
+        <th>pid</th>
+        <th>metric</th>
         <th>value</th>
         <th>timestamp</th>
     </tr>
     <tr>
-        <td>Phase ID</td>
-        <td>Metric name</td>
-        <td>Metric value</td>
-        <td>Sample Timestamp</td>
+        <td>Index</td>
+        <td>Phase UUID</td>
+        <td>Metric UUID</td>
+        <td>Value</td>
+        <td>Timestamp</td>
     </tr>
 </table>
 
-# PostgREST requests
+#### DDL
 
-When the job is completed, the reporter will do the following:
+```sql
+CREATE TABLE public.phase_metrics
+(
+    id serial NOT NULL,
+    pid uuid NOT NULL,
+    metric uuid NOT NULL,
+    value numeric NOT NULL,
+    timestamp timestamp without time zone NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT pid FOREIGN KEY (pid)
+        REFERENCES public.job_phases (pid) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT metric FOREIGN KEY (metric)
+        REFERENCES public.lookup_metrics (metric) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+);
 
-1. Allocate a new job record and get back the `jid`
-
-    ```js
-    POST /job HTTP/1.1
-    
-    { "started": 1234.12, "finished": 1234.412, "status": 0 }
-    ```
-
-2. Bulk-submit the job metadata
-
-    ```js
-    POST /job_meta HTTP/1.1
-
-    [
-        { "jid": 123, "name": "..", "value": "..." }
-    ]
-    ```
-
-2. Bulk-submit the phases
-
-    ```js
-    POST /job_phases HTTP/1.1
-
-    [
-        { "jid": 123, "name": "..", "value": "..." }
-    ]
-    ```
-
-
-
-
+ALTER TABLE public.phase_flags
+    OWNER to postgrest;
+```
