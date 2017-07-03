@@ -9,7 +9,7 @@ from .events import StartEvent, RestartEvent, TeardownEvent, InterruptEvent, \
 from .parameters import ParameterBatch
 from .summarizer import Summarizer
 
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class Session(EventBusSubscriber):
 
@@ -70,6 +70,7 @@ class Session(EventBusSubscriber):
       .Thread(target=self.runTask, args=(event,), daemon=True) \
       .start()
 
+  @publishesHint(RunTaskCompletedEvent)
   def runTask(self, event):
     """
     Run the handlers for the task "at" handlers
@@ -106,7 +107,7 @@ class Session(EventBusSubscriber):
     self.interrupted = True
     self.eventbus.publish(InterruptEvent())
 
-  @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent)
+  @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent, RunTaskEvent)
   def run(self):
     """
     Entry point for the test session

@@ -9,7 +9,7 @@ from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.events import Event, LogLineEvent, TeardownEvent, StartEvent
 from performance.driver.core.utils.http import is_accessible
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 from performance.driver.classes.channel.http import HTTPResponseEndEvent
 
@@ -86,7 +86,7 @@ class MarathonEventsObserver(Observer):
   reached a ready state.
   """
 
-  @subscribesToHint(LogLineEvent, HTTPResponseEndEvent, TeardownEvent, StartEvent)
+  @subscribesToHint(HTTPResponseEndEvent, TeardownEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.urlTpl = TemplateString(self.getConfig('url'))

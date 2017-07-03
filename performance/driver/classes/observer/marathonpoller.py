@@ -6,8 +6,8 @@ import time
 from .marathonevents import MarathonDeploymentSuccessEvent, MarathonStartedEvent
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import TickEvent, TeardownEvent
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.events import TickEvent, TeardownEvent, StartEvent
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.core.utils import dictDiff
 
 from performance.driver.classes.channel.http import HTTPResponseEndEvent
@@ -22,12 +22,14 @@ class MarathonPollerObserver(Observer):
                     short deployments! Usually a value of 4 Hz is enough.
   """
 
-  @subscribesToHint(TickEvent)
+  @subscribesToHint(HTTPResponseEndEvent, TeardownEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.prevDeployments = set()
     self.deploymentTraceIDs = {}
     self.marathonIsAlive = False
+    self.pollingActive = False
+    self.pollingThread = None
 
     # When an HTTP request is completed and a marathon deployment is started,
     # we have to keep track of the traceids of the event that initiated the
@@ -37,7 +39,13 @@ class MarathonPollerObserver(Observer):
     # Stop thread at teardown
     self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
 
-    # Start the polling thread
+    # Start polling thread at start
+    self.eventbus.subscribe(self.handleStart, events=(StartEvent,))
+
+  def handleStartEvent(self, event):
+    """
+    Start main thread at start
+    """
     self.pollingActive = True
     self.pollingThread = threading.Thread(target=self.pollingThreadTarget)
     self.pollingThread.start()
@@ -58,7 +66,7 @@ class MarathonPollerObserver(Observer):
       self.checkDeployments()
       time.sleep(0.125)
 
-  @publishesHint()
+  @publishesHint(MarathonStartedEvent, MarathonDeploymentSuccessEvent)
   def checkDeployments(self):
     """
     Check the deployments endpoint

@@ -4,8 +4,9 @@ import time
 import threading
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import Event, MetricUpdateEvent, TeardownEvent, ParameterUpdateEvent
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.events import Event, MetricUpdateEvent, \
+                              TeardownEvent, ParameterUpdateEvent, StartEvent
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.core.utils import dictDiff
 
 class MarathonMetricsObserver(Observer):
@@ -14,17 +15,25 @@ class MarathonMetricsObserver(Observer):
   their values to the event bus according to it's configuration
   """
 
+  @subscribesToHint(TeardownEvent, ParameterUpdateEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
     self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
+    self.eventbus.subscribe(self.handleStart, events=(StartEvent,))
     self.previous = {}
     self.forceUpdate = False
+    self.pollingActive = False
+    self.pollingThread = None
 
-    # Start the polling thread
+  def handleStart(self, event):
+    """
+    Start main thread at start
+    """
     self.pollingActive = True
     self.pollingThread = threading.Thread(target=self.pollingThreadTarget)
     self.pollingThread.start()
+
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -48,6 +57,7 @@ class MarathonMetricsObserver(Observer):
     self.pollingActive = False
     self.pollingThread.join()
 
+  @publishesHint(MetricUpdateEvent)
   def checkMetrics(self):
     """
     Check for the state of the metrics

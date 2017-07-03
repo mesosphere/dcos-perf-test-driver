@@ -5,6 +5,7 @@ from threading import Thread, Timer
 from queue import Queue
 
 from .events import Event, TickEvent, isEventMatching
+from .reflection import publishesHint
 
 class ExitEvent(Event):
   """
@@ -100,6 +101,7 @@ class EventBus:
     if not self.queue.empty():
       self.queue.join()
 
+  @publishesHint(TickEvent)
   def _clockthread(self):
     """
     Helper thread that dispatches a clock tick every second

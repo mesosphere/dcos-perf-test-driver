@@ -10,7 +10,7 @@ from subprocess import Popen, PIPE
 from performance.driver.core.events import Event, LogLineEvent, ParameterUpdateEvent, TeardownEvent, StartEvent
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class CmdlineProcessCompleted(Event):
   """

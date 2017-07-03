@@ -3,7 +3,7 @@ import time
 
 from .axis import SummarizerAxis
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, FlagUpdateEvent
-from performance.driver.core.decorators import subscribesToHint
+from performance.driver.core.reflection import subscribesToHint
 from performance.driver.core.eventbus import EventBusSubscriber
 
 class Summarizer(EventBusSubscriber):
@@ -18,6 +18,7 @@ class Summarizer(EventBusSubscriber):
     self.config = config
     self.axes = []
     self.axisLookup = {}
+    self.started = None
 
     # Every time we have a ParameterUpdateEvent we construct a new axis
     # and we track the traceids
@@ -88,6 +89,10 @@ class Summarizer(EventBusSubscriber):
     if len(event.traceids) == 0:
       self.logger.error('Ignoring ParameterUpdateEvent without track ID')
       return
+
+    # If that's the first event, track when we were initially started
+    if self.started is None:
+      self.started = event.ts
 
     # Locate the axis whose parameters match the ones received
     axis = None

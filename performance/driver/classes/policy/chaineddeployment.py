@@ -1,6 +1,7 @@
 import time
 from performance.driver.core.events import RunTaskEvent, isEventMatching
 from performance.driver.core.classes import PolicyFSM, State
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class ChainedDeploymentPolicy(PolicyFSM):
 
@@ -108,6 +109,7 @@ class ChainedDeploymentPolicy(PolicyFSM):
     Waiting for the test to complete
     """
 
+    @publishesHint(RunTaskEvent)
     def onEvent(self, event):
       """
       Process all relevant events

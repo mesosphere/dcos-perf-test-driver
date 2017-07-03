@@ -4,7 +4,7 @@ import uuid
 
 from .events import ParameterUpdateEvent, FlagUpdateEvent
 from performance.driver.core.eventbus import EventBusSubscriber
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class ParameterBatch(EventBusSubscriber):
   """

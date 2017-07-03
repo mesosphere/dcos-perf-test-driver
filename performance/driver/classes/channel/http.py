@@ -4,7 +4,7 @@ import time
 from performance.driver.core.events import Event, TickEvent, ParameterUpdateEvent, TeardownEvent
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
-from performance.driver.core.decorators import subscribesToHint, publishesHint
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 ###############################
 # Events
@@ -125,8 +125,20 @@ class HTTPRequestState:
     parameters = { 'i': self.completedCounter }
     parameters.update(self.eventParameters)
 
+    # Render body
+    body = self.channel.getRenderedConfig(parameters).get('body')
+
+    # Apply conditionals on body
+    if type(body) is list:
+      for case in body:
+        if not 'if' in case or not eval(case['if'], parameters):
+          continue
+        return case['value']
+
+      raise ValueError('Could not find a matching body case for parameters: %r' % body)
+
     # Render config and get body
-    return self.channel.getRenderedConfig(parameters).get('body')
+    return body
 
 ###############################
 # Entry Point
@@ -167,6 +179,12 @@ class HTTPChannel(Channel):
     self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
     self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent,))
 
+  @publishesHint(HTTPFirstRequestEndEvent, HTTPLastRequestEndEvent,
+    HTTPRequestEndEvent, HTTPFirstResponseStartEvent,
+    HTTPLastResponseStartEvent, HTTPResponseStartEvent,
+    HTTPFirstRequestStartEvent, HTTPLastRequestStartEvent,
+    HTTPRequestStartEvent, HTTPFirstResponseEndEvent,
+    HTTPLastResponseEndEvent, HTTPResponseEndEvent)
   def handleRequest(self):
     req = self.requestState
     if req is None:
@@ -269,7 +287,6 @@ class HTTPChannel(Channel):
     if self.requestState and self.requestState.activeRequest:
       self.requestState.activeRequest.raw._fp.close()
 
-  @publishesHint(HTTPRequestStartEvent, HTTPRequestEndEvent, HTTPResponseStartEvent, HTTPResponseEndEvent)
   def handleParameterUpdate(self, event):
     """
     Handle a property update

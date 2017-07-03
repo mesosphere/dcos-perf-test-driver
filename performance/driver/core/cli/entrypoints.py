@@ -6,6 +6,7 @@ from .cmdline import parse_cmdline
 from performance.driver.core.config import loadConfig, RootConfig
 from performance.driver.core.session import Session
 from performance.driver.core.classes.reporter import ConsoleReporter
+from performance.driver.core.reflection import validateEventSubscriptions
 
 def dcos_perf_test_driver(args=None):
   """
@@ -84,6 +85,19 @@ def dcos_perf_test_driver(args=None):
 
     # Start a test session
     session = Session(config)
+
+    # Before we start the tests we need to make sure that all the event
+    # subscribers are listening for valid events. Otherwise we are going to
+    # have unexpected results in the process
+    invalidSubscriptions = validateEventSubscriptions()
+    if invalidSubscriptions:
+      for name, locations in invalidSubscriptions.items():
+        for location in locations:
+          logger.error('Event "%s" used in %s is never published' %
+            (name, location))
+      return 1
+
+    # Run the tests
     session.run()
 
     # Instantiate reporters
