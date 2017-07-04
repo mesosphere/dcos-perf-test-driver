@@ -1,5 +1,8 @@
 .. _classref:
 
+This section contains the detailed configuration and description of every
+class available in the DC/OS Performance Test Driver.
+
 Class Reference
 ===============
 
@@ -9,6 +12,8 @@ Class Reference
 
    Policies
    Channels
+   Indicators
    Observers
    Trackers
+   Tasks
    Reporters
