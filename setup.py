@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
 
 setup(
-  name = "dcos-system-test-driver",
+  name = "dcos-perf-test-driver",
   version = "0.1",
 
   author = "Ioannis Charalampidis",
   author_email = "icharalampidis@mesosphere.com",
-  description = "DC/OS System Integration Tests Driver",
-  long_description="A tool that initiates and oversees the execution of system integration tests of every DC/OS component against real clusters",
+  description = "DC/OS Performance Tests Driver",
+  long_description="This utility is the test harness that drives the Performance and Scale tests.",
   keywords = "",
   license = "Apache 2",
-  url = "https://github.com/mesosphere/dcos-system-test-driver",
+  url = "https://github.com/mesosphere/dcos-perf-test-driver",
 
   packages = find_packages(),
   install_requires = [
@@ -29,8 +29,6 @@ setup(
     'decorator==4.0.11',
     'humanfriendly==3.0',
     'idna==2.5',
-    'Jinja2==2.9.6',
-    'MarkupSafe==1.0',
     'matplotlib==2.0.2',
     'numpy==1.12.1',
     'packaging==16.8',
@@ -51,7 +49,7 @@ setup(
 
   entry_points={
     'console_scripts': [
-      'dcos-system-test-driver = systemtestdriver.cli.entrypoints:dcos_system_test_driver'
+      'dcos-perf-test-driver = performance.driver.core.cli.entrypoints:dcos_perf_test_driver'
     ]
   }
 )
