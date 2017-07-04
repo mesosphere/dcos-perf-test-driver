@@ -112,8 +112,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
 
       # If we don't have a startup event, go directly to `Run`
       # Otherwise, wait for it
-      self.startEvent = eventsConfig.get('start', None)
-      if self.startEvent is None:
+      self.startEvent = eventsConfig.get('start', False)
+      if self.startEvent == False:
         self.goto(MultivariableExplorerPolicy.Run)
         return
 
@@ -140,7 +140,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = len(self.parameterValues)
       self.progressCurrent = 0
 
-      self.logger.info('Exploring %i variables with %i samples' % \
+      self.logger.info('Exploring %i variables with %i permutations' % \
         (len(self.parameterNames), self.progressTotal))
 
       self.goto(MultivariableExplorerPolicy.Deploy)
