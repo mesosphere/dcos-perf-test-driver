@@ -124,6 +124,9 @@ class MultivariableExplorerPolicy(PolicyFSM):
       If we have a `startEvent` defined, wait until the event is received
       before switching into driving the policy
       """
+      if self.startEvent == False:
+        return
+
       if isEventMatching(event, self.startEvent):
         self.goto(MultivariableExplorerPolicy.Run)
 
