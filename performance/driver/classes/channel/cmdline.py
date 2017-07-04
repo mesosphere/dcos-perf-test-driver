@@ -122,6 +122,7 @@ class CmdlineChannel(Channel):
         self.logger.warn('Process exited prematurely')
         self.launch(self.activeParameters)
       else:
+        self.logger.debug('Process exited with code %i' % proc.returncode)
         self.logger.info('Process completed')
         if proc.returncode == 0:
           self.eventbus.publish(CmdlineProcessCompletedSuccessfully(
