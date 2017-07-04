@@ -1,10 +1,20 @@
 import os
 import json
-import boto3
 
 from performance.driver.core.classes import Reporter
 
+try:
+  import boto3
+except ModuleNotFoundError:
+  import logging
+  logging.error('One or more libraries required by S3Reporter were not'
+    'installed. The reporter will not work.')
+
 class S3Reporter(Reporter):
+  """
+  The **S3 Reporter** is uploading a raw dump of the results in a bucket in
+  Amazon's S3 services
+  """
 
   def dump(self, summarizer):
     """

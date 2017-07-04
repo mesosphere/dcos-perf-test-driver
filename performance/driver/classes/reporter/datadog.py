@@ -1,10 +1,24 @@
 import time
 import socket
 
-from datadog import initialize, api
 from performance.driver.core.classes import Reporter
 
+try:
+  from datadog import initialize, api
+except ModuleNotFoundError:
+  import logging
+  logging.error('One or more libraries required by DataDogReporter were not'
+    'installed. The reporter will not work.')
+
 class DataDogReporter(Reporter):
+  """
+  The **DataDog Reporter** is uploading the indicators into DataDog for
+  archiving and alerting usage.
+
+  .. note::
+     This reporter is **only** collecting the ``indicators``. Metric values
+     or summaries cannot be reported to DataDog.
+  """
 
   def dump(self, summarizer):
     """

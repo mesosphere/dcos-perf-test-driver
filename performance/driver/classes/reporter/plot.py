@@ -1,11 +1,16 @@
-import matplotlib
-matplotlib.use('Agg')
-
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-
 from performance.driver.core.classes import Reporter
+
+try:
+  import matplotlib
+  matplotlib.use('Agg')
+
+  import numpy as np
+  import matplotlib.pyplot as plt
+  import matplotlib.cm as cm
+except ModuleNotFoundError:
+  import logging
+  logging.error('One or more libraries required by PlotReporter were not'
+    'installed. The reporter will not work.')
 
 def norm(v, vmin, vmax, tomin=0.0, tomax=1.0, wrap=True):
   if v < vmin and wrap:
@@ -67,6 +72,10 @@ class PlotGroup:
     return self.valueSeries[name]
 
 class PlotReporter(Reporter):
+  """
+  The **Plot Reporter** is creating a PNG plot with the measured values
+  and storing it in the results folder.
+  """
 
   def normalizeAxisValues(self, inputValues):
     values = {}

@@ -4,6 +4,29 @@ from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, MetricUpdateEvent
 
 class DumpMetricTracker(Tracker):
+  """
+  The *Dump Metric Tracker* is dumping metrics collected by observers into
+  the results.
+
+  ::
+
+    trackers:
+      - class: tracker.DumpMetricTracker
+
+        # The mapping between the marathon metric and the configured metric
+        map:
+          gauges.jvm.memory.total.used.value: marathonMemTotalUsage
+          gauges.jvm.memory.heap.used.value: marathonMemHeapUsage
+          gauges.jvm.threads.count.value: marathonThreadsCount
+          gauges.jvm.threads.blocked.count.value: marathonThreadsBlocked
+          gauges.jvm.threads.waiting.count.value: marathonThreadsWaiting
+
+
+  This tracker is simply translating the name of the metric collected by
+  an observer (usually the ``MarathonMetricsObserver``) into the metric
+  collected by the scale test.
+  """
+
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.activeTraceids = None

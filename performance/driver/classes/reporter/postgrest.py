@@ -8,6 +8,10 @@ import uuid
 from performance.driver.core.classes import Reporter
 
 class PostgRESTReporter(Reporter):
+  """
+  The **PostgREST Reporter** is uploading the full set of results in a
+  structured manner in a Postgres database using a PostgREST API endpoint.
+  """
 
   def insert(self, table, data, acceptStatus=[]):
     """

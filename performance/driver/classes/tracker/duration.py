@@ -43,6 +43,10 @@ class EdgeDurationTrace(DurationTrace):
     return self.completedFlag
 
 class DurationTracker(Tracker):
+  """
+  Tracks the duration between a ``start`` and an ``end`` event.
+  """
+
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.activeTraces = []

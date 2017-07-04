@@ -10,4 +10,5 @@ Class Reference
    Policies
    Channels
    Observers
-
+   Trackers
+   Reporters

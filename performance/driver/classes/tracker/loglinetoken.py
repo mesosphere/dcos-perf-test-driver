@@ -7,6 +7,29 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.classes.observer.logline import LogLineTokenMatchEvent
 
 class LogLineTokenTracker(Tracker):
+  """
+  The *LogLine Token Tracker* is forwarding the values of the LogLine tokens
+  int result metrics.
+
+  ::
+
+    trackers:
+      - class: tracker.LogLineTokenTracker
+
+        # Which tokens to collect
+        tokens:
+
+          # The name of the token and to which metric to store it
+          - token: latency
+            metric: latency
+
+            # Convert this metric into an integer.
+            # Possible values are: `int`, `float`, `str`, `bool`
+            type: int
+
+  You can use this tracker in combination with ``LogLineObserver`` in order
+  to collect metrics dumped in the log lines of the application being tested.
+  """
 
   @subscribesToHint(LogLineTokenMatchEvent)
   def __init__(self, *args, **kwargs):

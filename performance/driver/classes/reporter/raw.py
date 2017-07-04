@@ -2,6 +2,10 @@ import json
 from performance.driver.core.classes import Reporter
 
 class RawReporter(Reporter):
+  """
+  The **Raw Reporter** is creating a raw dump of the results in the results
+  folder
+  """
 
   def dump(self, summarizer):
     """

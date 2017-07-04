@@ -50,6 +50,10 @@ class CSVFile:
         f.write("%s\n" % row)
 
 class CSVReporter(Reporter):
+  """
+  The **CSV Reporter** is creating a comma-separated value (.csv) file with
+  the axis values and summarised metric values for every run.
+  """
 
   def dump(self, summarizer):
     """
