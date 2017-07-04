@@ -2,19 +2,17 @@
 
 .. _classref-channel:
 
-Channel
-=======
+Channels
+========
 
 The ``channel`` classes are responsible for passing parameter changes down to the application being tested.
 
-The following channels are available:
-
-channel.CmdlineChannel
-----------------------
+CmdlineChannel
+--------------
 
 .. autoclass:: performance.driver.classes.channel.CmdlineChannel
 
-channel.HTTPChannel
-----------------------
+HTTPChannel
+-----------
 
 .. autoclass:: performance.driver.classes.channel.HTTPChannel

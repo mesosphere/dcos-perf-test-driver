@@ -226,6 +226,13 @@ class HTTPChannel(Channel):
   Therefore it's possble to track the progress of the entire repeat batch, aswell
   as the progress of an individual HTTP event.
 
+  .. note::
+     This channel will automatically inject an ``Authorization`` header if
+     a ``dcos_auth_token`` definition exists, so you don't have to specify
+     it through the ``headers`` configuration.
+
+     Note that a ``dcos_auth_token`` can be dynamically injected via an
+     authentication task.
   """
 
   @subscribesToHint(ParameterUpdateEvent, TeardownEvent)

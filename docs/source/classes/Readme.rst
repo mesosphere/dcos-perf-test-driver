@@ -7,4 +7,7 @@ Class Reference
    :maxdepth: 2
    :caption: Contents:
 
-   Channel
+   Policies
+   Channels
+   Observers
+

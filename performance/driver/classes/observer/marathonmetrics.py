@@ -11,8 +11,56 @@ from performance.driver.core.utils import dictDiff
 
 class MarathonMetricsObserver(Observer):
   """
-  This observer is extracting stats from the `/stats` endpoint and is emmiting
-  their values to the event bus according to it's configuration
+  The *Marathon Metrics Observer* is observing for changes in the marathon
+  `/stats` endpoint and is emitting events according to it's configuration
+
+  ::
+
+    observers:
+      - class: observer.MarathonMetricsObserver
+
+        # The URL to the marathon metrics endpoint
+        url: "{{marathon_url}}/metrics"
+
+        # [Optional] Additional headers to send
+        headers:
+          Accept: test/plain
+
+  This observer is polling the ``/metrics`` endpoint 2 times per second and
+  for every value that is changed, a ``MetricUpdateEvent`` event is published.
+
+  .. note::
+
+    The name of the parameter is always the flattened name in the JSON response.
+    For example, a parameter change in the following path:
+
+    .. highlight:: json
+
+    ::
+
+      {
+        "foo": {
+          "bar.baz": {
+            "bax": 1
+          }
+        }
+      }
+
+    Will be broadcasted as a change in the following path:
+
+    .. highlight:: yaml
+
+    ::
+
+      foo.bar.baz.bax: 1
+
+  .. note::
+     This observer will automatically inject an ``Authorization`` header if
+     a ``dcos_auth_token`` definition exists, so you don't have to specify
+     it through the ``headers`` configuration.
+
+     Note that a ``dcos_auth_token`` can be dynamically injected via an
+     authentication task.
   """
 
   @subscribesToHint(TeardownEvent, ParameterUpdateEvent, StartEvent)

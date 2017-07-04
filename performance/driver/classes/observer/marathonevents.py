@@ -80,10 +80,41 @@ class MarathonDeploymentInfoEvent(MarathonDeploymentEvent):
 
 class MarathonEventsObserver(Observer):
   """
-  This observer is responsible for extracking high-level events by observing
-  the marathon event stream. Since this observer requires an active HTTP server
-  from marathon, it also tracks the log events until it detects that marathon
-  reached a ready state.
+  The *Marathon Events Observer* is extracting high-level events by subscribing
+  to the Server-Side Events endpoint on marathon.
+
+  ::
+
+    observers:
+      - class: observer.MarathonEventsObserver
+
+        # The URL to the marathon SSE endpoint
+        url: "{{marathon_url}}/v2/events"
+
+        # [Optional] Additional headers to send
+        headers:
+          Accept: test/plain
+
+  Since this observer requires an active HTTP session to marathon, it also
+  publishes the ``MarathonStartedEvent`` when an HTTP connection was
+  successfully established.
+
+  The following events are forwarded from the event bus:
+
+   * ``MarathonDeploymentStepSuccessEvent``
+   * ``MarathonDeploymentStepFailureEvent``
+   * ``MarathonDeploymentInfoEvent``
+   * ``MarathonDeploymentSuccessEvent``
+   * ``MarathonDeploymentFailedEvent``
+
+  .. note::
+     This observer will automatically inject an ``Authorization`` header if
+     a ``dcos_auth_token`` definition exists, so you don't have to specify
+     it through the ``headers`` configuration.
+
+     Note that a ``dcos_auth_token`` can be dynamically injected via an
+     authentication task.
+
   """
 
   @subscribesToHint(HTTPResponseEndEvent, TeardownEvent, StartEvent)

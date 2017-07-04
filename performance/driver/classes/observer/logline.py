@@ -12,8 +12,43 @@ class LogLineTokenMatchEvent(Event):
 
 class LogLineObserver(Observer):
   """
-  This observer processes log lines and extracts log line events that can be
+  The **Log Line Observer** is post-processing every ``LogLineEvent`` and
+  extracts tokens that can be later converted into metrics.
 
+  ::
+
+    observers:
+      - class: observer.LogLineObserver
+
+        # An array of the matching rules to apply on every line
+        rules:
+
+          # A rule is activated when the `match` regexp is matching
+          # the line.
+          - match: "^status:"
+
+            # The `regex` expression defines the groups to capture
+            regex: "^status:([^,]+),([^,]+),([^,]+),$"
+
+            # The `groups` array specifies the token names for the
+            # equivalent captured group
+            groups:
+              - status
+              - time
+              - latency
+
+  This observer is going to apply the full set of rules for every log line
+  broadcasted in the bus and is going to extract tokens for every match.
+
+  It first ries to match the ``match`` regular expression against the line
+  and it then applies the ``regex`` regular expression in order to extract
+  one or more capturing groups. It then uses the ``groups`` array to assign
+  token names to each captured group.
+
+  A ``LogLineTokenMatchEvent`` will be published for every captured group,
+  allowing a tracker to collect these values as metrics.
+
+  Otherwise such events can be used for synchronisation purposes.
   """
 
   @subscribesToHint(LogLineEvent)

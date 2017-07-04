@@ -14,12 +14,43 @@ from performance.driver.classes.channel.http import HTTPResponseEndEvent
 
 class MarathonPollerObserver(Observer):
   """
-  This observer is polling various endpoints of marathon in order to extract
-  events. This observer works as an alternative to `MarathonEventsObserver`.
+  The *Marathon Poller Observer* is a polling-based fallback observer that can
+  fully replace the ``MarathonEventsObserver`` when the SSE event bus is not
+  available.
 
-  /!\ WARNING /!\ : Make sure `eventbus` clock operates on a high enough
-                    frequenty, in order to track appearance and completion of
-                    short deployments! Usually a value of 4 Hz is enough.
+  ::
+
+    observers:
+      - class: observer.MarathonPollerObserver
+
+        # The URL to the marathon base
+        url: "{{marathon_url}}"
+
+        # [Optional] Additional headers to send
+        headers:
+          Accept: test/plain
+
+  This observer is polling the ``/deployments`` endpoint 8 times per second in
+  order to detect changes in the deployments and is publishing the following
+  events:
+
+   * ``MarathonDeploymentSuccessEvent``
+   * ``MarathonDeploymentFailedEvent``
+
+  .. warning::
+     It is cruicial that a low-lattency connection is used between the test
+     driver and the marathon instance. Failing to do so a deployment might
+     appear and vanish inbetween the polling probes, failing to detect them.
+
+     Such case will likely cause a stalled test and introduce wrong results.
+
+  .. note::
+     This observer will automatically inject an ``Authorization`` header if
+     a ``dcos_auth_token`` definition exists, so you don't have to specify
+     it through the ``headers`` configuration.
+
+     Note that a ``dcos_auth_token`` can be dynamically injected via an
+     authentication task.
   """
 
   @subscribesToHint(HTTPResponseEndEvent, TeardownEvent, StartEvent)

@@ -7,41 +7,82 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class MultivariableExplorerPolicy(PolicyFSM):
   """
-  A policy that explores the parameter space of more than one axis
-  Configuration:
+  The **Multi-Variable Exploration Policy** is running one scale test for every
+  product of the parameters defined in the ``matrix``.
 
-  - class: policy.MultivariableExplorerPolicy
+  ::
 
-    # The following rules describe the permutation matrix
-    matrix:
-      apps:
-        type: discreet
-        values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
-      instances:
-        type: discreet
-        values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
-      kind:
-        type: discreet
-        values: [app, pod]
-      complexity:
-        type: discreet
-        values: [dummy, simple, regular, complex]
+    policy:
+      - class: policy.MultivariableExplorerPolicy
 
-    # The event binding configuration
-    events:
+        # The following rules describe the permutation matrix
+        matrix:
+          # The key is the name of the parameter to control
+          param:
+            ...
 
-      # Start the tests with this event is received
-      start: EventToWaitUntilReady
+          # A "discreet" parameter can take one of the specified values
+          apps:
+            type: discreet
+            values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
 
-      # Signal the status of the following events
-      signal:
-        success: MarathonDeploymentSuccessEvent
-        failure: MarathonDeploymentFailedEvent
-        ... : ...
+          # A "scalar" parameter takes any value within a numerical range
+          size:
+            type: scalar
+            min: 0 # Default
+            max: 1 # Default
+            step: 0.1 # Default
+            samples: 10 # Default
 
-      # Wait for the given number of events (evaluated at run-time)
-      signalEventCount: 1
+        # The event binding configuration
+        events:
 
+          # Signals are events that define a terminal condition and it's status
+          #
+          # For example, in this case when the `MarathonDeploymentSuccessEvent`
+          # is received, the test will be completed with status `OK`
+          #
+          signal:
+            OK: MarathonDeploymentSuccessEvent
+            FAILED: MarathonDeploymentFailedEvent
+            ... : ...
+
+          # [Optional] Wait for the given number of signal events before
+          # considering the test complete.
+          #
+          # This parameter is an expression evaluated at run-time, so you
+          # could use anything that can go within a python's `eval` statement
+          #
+          # For example: "discreet + 2"
+          #
+          signalEventCount: 1
+
+          # [Optional] Start the tests with this event is received
+          start: EventToWaitUntilReady
+
+  This policy is first computing all possible combinations of the parameter
+  matrix given and is then running the tests for every one.
+
+  The policy will start immediately when the test driver is ready unless the
+  ``start`` event is specified. In that case the policy will wait for this event
+  before starting with the first test.
+
+  The policy continues with the next test only when a *signal* event is
+  received. Such events are defined in the ``signal`` dictionary. Since a test
+  can either complete successfully or fail you are expected to provide the
+  status indication for every signal event.
+
+  It is also possible to wait for more than one signal event before considering
+  the test complete. To specify the number of events to expect you can use
+  the ``signalEventCount`` parameter.
+
+  However since the number of events to expect depends on an arbitrary number of
+  factors, it's possible to use an expression instead of a value. For the
+  expression you can use the names of the parameters taking part in the matrix
+  and the special variable ``_i`` that contains the number of the test, starting
+  from 1.
+
+  For example ``signalEventCount: "apps + size/2"``
   """
 
   class Start(State):
@@ -164,12 +205,15 @@ class MultivariableExplorerPolicy(PolicyFSM):
         return
 
       # Fetch the next case to process
+      self.progressCurrent += 1
       values = self.parameterValues.pop(0)
       parameters = dict(zip(self.parameterNames, list(values)))
 
       # If we have to wait as many events as the value, update
       # `eventsRemaining` accordingly
-      self.eventsRemaining = eval(str(self.signalEventCount), {}, dict(parameters))
+      evalVars = dict(parameters)
+      evalVars['_i'] = self.progressCurrent
+      self.eventsRemaining = eval(str(self.signalEventCount), {}, evalVars)
 
       # Dispatch the request to update the test parameter. All such updates
       # are batched together into a single event in the bus at the end of the
