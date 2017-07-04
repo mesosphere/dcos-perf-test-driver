@@ -22,6 +22,12 @@ class CmdlineProcessCompleted(Event):
     super().__init__(**kwargs)
     self.exitcode = exitcode
 
+class CmdlineProcessCompletedSuccessfully(CmdlineProcessCompleted):
+  pass
+
+class CmdlineProcessCompletedWithError(CmdlineProcessCompleted):
+  pass
+
 class CmdlineChannel(Channel):
 
   @subscribesToHint(ParameterUpdateEvent, TeardownEvent, StartEvent)
@@ -43,7 +49,8 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
 
-  @publishesHint(LogLineEvent, CmdlineProcessCompleted)
+  @publishesHint(LogLineEvent, CmdlineProcessCompleted,
+    CmdlineProcessCompletedSuccessfully, CmdlineProcessCompletedWithError)
   def monitor(self, sourceName, proc, stdin=None):
     """
     Oversees the execution of the process
@@ -116,8 +123,12 @@ class CmdlineChannel(Channel):
         self.launch(self.activeParameters)
       else:
         self.logger.info('Process completed')
-        self.eventbus.publish(CmdlineProcessCompleted(proc.returncode,
-                                traceid=self.lastTraceId))
+        if proc.returncode == 0:
+          self.eventbus.publish(CmdlineProcessCompletedSuccessfully(
+            proc.returncode, traceid=self.lastTraceId))
+        else:
+          self.eventbus.publish(CmdlineProcessCompletedWithError(
+            proc.returncode, traceid=self.lastTraceId))
 
   def kill(self):
     """
