@@ -12,7 +12,7 @@ from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
-class CmdlineProcessCompleted(Event):
+class CmdlineExitEvent(Event):
   """
   This event is submitted when the process launched through the cmdline channel
   has completed. The exit code is tracked.
@@ -22,13 +22,71 @@ class CmdlineProcessCompleted(Event):
     super().__init__(**kwargs)
     self.exitcode = exitcode
 
-class CmdlineProcessCompletedSuccessfully(CmdlineProcessCompleted):
+class CmdlineExitZeroEvent(CmdlineExitEvent):
   pass
 
-class CmdlineProcessCompletedWithError(CmdlineProcessCompleted):
+class CmdlineExitNonzeroEvent(CmdlineExitEvent):
   pass
 
 class CmdlineChannel(Channel):
+  """
+  The *Command-line Channel* launches an application, passes the test parameters
+  through command-line arguments and monitors it's standard output and error.
+
+  ::
+
+    channels:
+      - class: channel.CmdlineChannel
+
+        # The command-line to launch.
+        cmdline: "path/to/app --args {{macros}}"
+
+        # [Optional] The standard input to send to the application
+        stdin: |
+          some arbitrary payload with {{macros}}
+          in it's body.
+
+        # [Optional] Environment variables to define
+        env:
+          variable: value
+          other: "value with {{macros}}"
+
+        # [Optional] The directory to launch this app in
+        cwd: "{{marathon_repo_dir}}"
+
+        # [Optional] If set to `yes` the app will be launched as soon
+        # as the driver is up and running.
+        atstart: yes
+
+        # [Optional] If set to `yes` (default) the app will be re-launched
+        # if it exits on it's own.
+        relaunch: yes
+
+  When a parameter is changed, the channel will kill the process and re-launch
+  it with the new command-line.
+
+  For every line in standard inout or output, a ``LogLineEvent`` is emitted
+  with the contents of the line.
+
+  When the application launched through this channel exits the channel can take
+  two actions depending on it's configuration:
+
+  * If ``relaunch: yes`` is specitied (default), the channel will re-launch the
+    application in oder to always keep it running.
+
+  * If ``relaunch: no`` is specified, the channel will give up and publish a
+    ``CmdlineExitZeroEvent`` or a ``CmdlineExitNonzeroEvent`` according to the
+    exit code of the application.
+
+  .. note::
+     Note that if there are no ``{{macro}}`` defined anywhere in the body of
+     the configuration this channel will not be triggered when a parameter
+     is updated and thus the application will never be launched.
+
+     If you still want the application to be launched, use the ``atstart: yes``
+     parameter to instruct the channel to launch the application at start.
+
+  """
 
   @subscribesToHint(ParameterUpdateEvent, TeardownEvent, StartEvent)
   def __init__(self, *args, **kwargs):
@@ -49,8 +107,8 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
 
-  @publishesHint(LogLineEvent, CmdlineProcessCompleted,
-    CmdlineProcessCompletedSuccessfully, CmdlineProcessCompletedWithError)
+  @publishesHint(LogLineEvent, CmdlineExitEvent,
+    CmdlineExitZeroEvent, CmdlineExitNonzeroEvent)
   def monitor(self, sourceName, proc, stdin=None):
     """
     Oversees the execution of the process
@@ -125,10 +183,10 @@ class CmdlineChannel(Channel):
         self.logger.debug('Process exited with code %i' % proc.returncode)
         self.logger.info('Process completed')
         if proc.returncode == 0:
-          self.eventbus.publish(CmdlineProcessCompletedSuccessfully(
+          self.eventbus.publish(CmdlineExitZeroEvent(
             proc.returncode, traceid=self.lastTraceId))
         else:
-          self.eventbus.publish(CmdlineProcessCompletedWithError(
+          self.eventbus.publish(CmdlineExitNonzeroEvent(
             proc.returncode, traceid=self.lastTraceId))
 
   def kill(self):

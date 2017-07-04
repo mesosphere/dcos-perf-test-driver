@@ -1,4 +1,4 @@
-.. _class-reference:
+.. _classref:
 
 Class Reference
 ===============
@@ -7,4 +7,4 @@ Class Reference
    :maxdepth: 2
    :caption: Contents:
 
-   channel/CmdlineChannel
+   Channel

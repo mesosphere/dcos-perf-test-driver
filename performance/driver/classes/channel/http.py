@@ -146,26 +146,85 @@ class HTTPRequestState:
 
 class HTTPChannel(Channel):
   """
-  The HTTP channel performs HTTP Requests when a property is changed.
-  It accepts the following paramters:
+  The *HTTP Channel* performs an HTTP Requests when a property is changed.
 
-  - class: channel.HTTPChannel
-    url: http://127.0.0.1:8080/v2/apps
-    verb: POST
-    body: |
-      {
-        "cmd": "sleep 1200",
-        "cpus": 0.1,
-        "mem": 64,
-        "disk": 0,
-        "instances": {{instances}},
-        "id": "/scale-instances/{{uuid()}}",
-        "backoffFactor": 1.0,
-        "backoffSeconds": 0
-      }
-    repeat: 1234
-    repeatInterval: 1234
-    repeatAfter: event
+  ::
+
+    channels:
+      - class: channel.HTTPChannel
+
+        # The URL to send the requests at
+        url: http://127.0.0.1:8080/v2/apps
+
+        # The body of the HTTP request
+        body: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.1,
+            "mem": 64,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+        # [Optional] The HTTP Verb to use (Defaults to 'GET')
+        verb: POST
+
+        # [Optional] The HTTP headers to send
+        headers:
+          Accept: text/plain
+
+        # [Optional] How many times to re-send the request (can be
+        # a macro value)
+        repeat: 1234
+
+        # [Optional] How long to wait between re-sends (in seconds)
+        # If missing the next request will be sent as soon as the previous
+        # has completed
+        repeatInterval: 1234
+
+        # [Optional] For which event to wait before re-sending the request.
+        repeatAfter: event
+
+  When a parameter is changed, a new HTTP request is made. If a ``repeat``
+  parameter is specified, the same HTTP request will be sent again, that many
+  times.
+
+  Various events are published from this channel, that can be used to synchronise
+  other components or track metrics.
+
+  * When an HTTP request is initiated an ``HTTPRequestStartEvent`` is published.
+  * When an HTTP request is completed and the response is pending, an
+    ``HTTPFirstRequestEndEvent`` is published.
+  * When the HTTP response is starting, an ``HTTPFirstResponseStartEvent`` is
+    published.
+  * When the HTTP response is completed, an ``HTTPResponseEndEvent`` is
+    published.
+
+  If you are using the ``repeat`` configuration parameter you can also use the
+  following events:
+
+  * When the first HTTP request is started, the ``HTTPFirstRequestStartEvent``
+    is published.
+  * When the last HTTP request is started, the ``HTTPLastRequestStartEvent``
+    is published.
+  * When the first HTTP request is completed, the ``HTTPFirstRequestEndEvent``
+    is published.
+  * When the last HTTP request is completed, the ``HTTPLastRequestEndEvent``
+    is published.
+  * When the first HTTP response is started, the ``HTTPFirstResponseStartEvent``
+    is published.
+  * When the last HTTP response is started, the ``HTTPLastResponseStartEvent``
+    is published.
+  * When the first HTTP response is completed, the ``HTTPFirstResponseEndEvent``
+    is published.
+  * When the last HTTP response is completed, the ``HTTPLastResponseEndEvent``
+    is published.
+
+  Therefore it's possble to track the progress of the entire repeat batch, aswell
+  as the progress of an individual HTTP event.
 
   """
 
