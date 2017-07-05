@@ -22,8 +22,8 @@ class MarathonDeploymentMonitorTask(Task):
 
     # Get config parameters
     config = self.getRenderedConfig()
-    self.cluster_url = config.get('url', None)
-    if self.cluster_url is None:
+    self.url = config.get('url', None)
+    if self.url is None:
       raise ValueError('Missing `url` parameter')
 
     # Track delpoyments
@@ -68,6 +68,23 @@ class MarathonDeploymentMonitorTask(Task):
 class RemoveAllApps(MarathonDeploymentMonitorTask):
   """
   Remove matching apps from marathon
+
+  ::
+
+    tasks:
+      - class: tasks.marathon.RemoveAllApps
+        at: ...
+
+        # The base url to marathon
+        url: "{{marathon_url}}"
+
+  This task is enumerating all apps in the root group and delets each one
+  of them.
+
+  .. note::
+     This task will block the execution of other tasks until all deployments
+     are completed. This is intentional in order allow other tasks to be
+     executed in series.
   """
 
   def run(self):
@@ -75,7 +92,7 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 
     # Request list of apps
     self.logger.debug('Enumerating all apps')
-    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.cluster_url, verify=False, headers=self.getHeaders())
+    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.url, verify=False, headers=self.getHeaders())
     if response.status_code != 200:
       raise RuntimeError('Unable to enumerate running apps')
 
@@ -84,7 +101,7 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
     try:
       for app in response.json()['apps']:
         self.logger.info('Removing app %s' % app['id'])
-        response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
+        response = requests.delete('%s/v2/apps/%s?force=true' % (self.url, app['id']), verify=False, headers=self.getHeaders())
         if response.status_code != 200:
           self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
         else:
@@ -99,6 +116,26 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 class RemoveMatchingApps(MarathonDeploymentMonitorTask):
   """
   Removes matching apps from marathon
+
+  ::
+
+    tasks:
+      - class: tasks.marathon.RemoveAllApps
+        at: ...
+
+        # The base url to marathon
+        url: "{{marathon_url}}"
+
+        # The string portion in the app name to match
+        match: "test-01-"
+
+  This task is enumerating all apps in the root group, checking wich ones
+  contain the string contained in the ``match`` parameter and removes them.
+
+  .. note::
+     This task will block the execution of other tasks until all deployments
+     are completed. This is intentional in order allow other tasks to be
+     executed in series.
   """
 
   def run(self):
@@ -110,7 +147,7 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
 
     # Request list of apps
     self.logger.debug('Enumerating all apps')
-    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.cluster_url, verify=False, headers=self.getHeaders())
+    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.url, verify=False, headers=self.getHeaders())
     if response.status_code != 200:
       raise RuntimeError('Unable to enumerate running apps')
 
@@ -121,7 +158,7 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
         if not match.search(app['id']):
           continue
         self.logger.info('Removing app %s' % app['id'])
-        response = requests.delete('%s/v2/apps/%s?force=true' % (self.cluster_url, app['id']), verify=False, headers=self.getHeaders())
+        response = requests.delete('%s/v2/apps/%s?force=true' % (self.url, app['id']), verify=False, headers=self.getHeaders())
         if response.status_code != 200:
           self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
         else:
@@ -136,6 +173,25 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
 class RemoveGroup(MarathonDeploymentMonitorTask):
   """
   Removes a specific group from marathon
+
+  ::
+
+    tasks:
+      - class: tasks.marathon.RemoveAllApps
+        at: ...
+
+        # The base url to marathon
+        url: "{{marathon_url}}"
+
+        # The group to remove
+        group: "tests/01"
+
+  This task removes the given group from marathon.
+
+  .. note::
+     This task will block the execution of other tasks until all deployments
+     are completed. This is intentional in order allow other tasks to be
+     executed in series.
   """
 
   def run(self):
@@ -145,7 +201,7 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
     # Destroy group
     self.logger.debug('Removing group %s' % group_name)
     try:
-      response = requests.delete('%s/v2/groups/%s/?force=true' % (self.cluster_url, group_name), verify=False, headers=self.getHeaders())
+      response = requests.delete('%s/v2/groups/%s/?force=true' % (self.url, group_name), verify=False, headers=self.getHeaders())
       if response.status_code != 200:
         self.logger.warn('Unable to remove group %s (HTTP response %i)' % (group_name, response.status_code))
       else:

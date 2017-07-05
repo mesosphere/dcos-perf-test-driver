@@ -1,10 +1,10 @@
 .. _classref:
 
-This section contains the detailed configuration and description of every
-class available in the DC/OS Performance Test Driver.
-
 Class Reference
 ===============
+
+This section contains the detailed configuration and description of every
+class available in the DC/OS Performance Test Driver.
 
 .. toctree::
    :maxdepth: 2
@@ -12,8 +12,8 @@ Class Reference
 
    Policies
    Channels
-   Indicators
    Observers
    Trackers
    Tasks
    Reporters
+   Indicators

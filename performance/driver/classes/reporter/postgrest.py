@@ -11,6 +11,29 @@ class PostgRESTReporter(Reporter):
   """
   The **PostgREST Reporter** is uploading the full set of results in a
   structured manner in a Postgres database using a PostgREST API endpoint.
+
+  ::
+
+    reporters:
+      - class: reporter.PostgRESTReporter
+
+        # The URL to the PostgREST endpoint
+        url: "http://127.0.0.1:4000"
+
+        # [Optional] The database table prefix
+        prefix: "profile_data_"
+
+  This reporter is uploading the following information
+
+  .. important::
+     The Postgres database is using uuid-based lookup for every parameter
+     and metric. Therefire it's required to include the ``uuid`` parameter
+     in the :ref:`statements-config-metrics` and
+     :ref:`statements-config-parameters` configuration.
+
+     This de-couples the representation of the metric across different projects
+     or versions of the same project.
+
   """
 
   def insert(self, table, data, acceptStatus=[]):

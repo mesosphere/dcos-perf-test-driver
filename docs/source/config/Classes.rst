@@ -33,7 +33,7 @@ The policies drive the evolution of the performance test. They are receiving syn
 
 Every change to the test parameters is triggering a state change to the application being tested. The change is applied to the application through :ref:`statements-channels`.
 
-The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`class-reference` for more details.
+The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
 .. _statements-channels:
 
@@ -49,7 +49,7 @@ channels
 
 Channels apply the changes of the parameters to the application being tested.
 
-The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`class-reference` for more details.
+The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
 .. _statements-observers:
 
@@ -65,7 +65,7 @@ observers
 
 The observers are monitoring the application being tested and they are extracing useful events into the message bus. Such events are usually used by the policy class to steer the evolution of the test and by the tracker classes to extract metric measurements.
 
-The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`class-reference` for more details.
+The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
 .. _statements-trackers:
 
@@ -81,7 +81,7 @@ trackers
 
 The trackers are extracting metric values by analysing the events emmited by the observers and other components in the bus.
 
-The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`class-reference` for more details.
+The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
 .. _statements-reporters:
 
@@ -97,7 +97,7 @@ reporters
 
 The reporters collecting the test results and createing a report. This could mean either writing some results to the local filesystem, or reporting the data to an online service.
 
-The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`class-reference` for more details.
+The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
 .. _statements-tasks:
 
@@ -114,7 +114,7 @@ tasks
 The tasks are one-time operations that are executed at some trigger and do not participate in the actual scale test process. Such
 tasks can be used to log-in into a DC/OS cluster, clean-up some test traces or prepare the environment.
 
-The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`class-reference` for more details.
+The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
 The ``at`` parameter selects the trigger to use. Supported values for this parameter are:
 

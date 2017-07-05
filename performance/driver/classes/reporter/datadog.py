@@ -15,6 +15,35 @@ class DataDogReporter(Reporter):
   The **DataDog Reporter** is uploading the indicators into DataDog for
   archiving and alerting usage.
 
+  ::
+
+    reporters:
+      - class: reporter.DataDogReporter
+
+        # The API Key to use
+        api_key: 1234567890abcdef
+
+        # The App Key to use
+        app_key: 1234567890abcdef
+
+        # The data points to submit
+        points:
+
+          # The name of the metric to submit to DataDog and the
+          # indicator to read the data from
+          - name: memory
+            indicator: meanMemoryUsage
+
+        # [Optional] The hostname to use as the agent name in datadog
+        # If missing the network name of the machine will be used
+        hostname: test.host
+
+        # [Optional] Prefix of the metrics (Defaults to `dcos.perf.`)
+        prefix: "dcos.perf."
+
+  The DataDog reporter is using the DataDog API to submit one or more
+  indicator values as data points.
+
   .. note::
      This reporter is **only** collecting the ``indicators``. Metric values
      or summaries cannot be reported to DataDog.

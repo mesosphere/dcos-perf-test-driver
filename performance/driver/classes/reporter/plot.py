@@ -75,6 +75,32 @@ class PlotReporter(Reporter):
   """
   The **Plot Reporter** is creating a PNG plot with the measured values
   and storing it in the results folder.
+
+  ::
+
+    reporters:
+      - class: reporter.PlotReporter
+
+        # [Optional] Default parameter value to use if not specified
+        default: 0
+
+        # [Optional] Filename prefix and suffix (without the extension)
+        prefix: "plot-"
+        suffix: ""
+
+        # [Optional] The X and Y axis scale (for all plots)
+        # Can be one of: 'linear', 'log', 'log2', 'log10'
+        xscale: linear
+        yscale: log2
+
+  This reporter will generate an image plot for every metric defined. The axis
+  is the 1 or 2 parameters of the test.
+
+  .. warning::
+     The ``PlotReporter`` can be used only if the total number of parameters
+     is 1 or 2, since it's not possible to display plots with more than 3 axes.
+
+     Trying to use it otherwise will result in an exception being thrown.
   """
 
   def normalizeAxisValues(self, inputValues):

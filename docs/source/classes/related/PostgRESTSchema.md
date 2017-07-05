@@ -17,21 +17,25 @@ This document explains the table schema the `PostgRESTReporter` reporter is expe
 
 This table keeps track of the high-level job structure. Since more than one project will be using the same database, the `project` field should be populated with the name of the project that started this job.
 
-<table>
-    <tr>
-        <th><u>jid</u></th>
-        <th>started</th>
-        <th>completed</th>
-        <th>status</th>
-        <th>project</th>
-    </tr>
-    <tr>
-        <td>Job UUID</td>
-        <td>Started Timestamp</td>
-        <td>Finished Timestamp</td>
-        <td>Job Status</td>
-        <td>Project Name</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>jid</u></th>
+            <th class="head">started</th>
+            <th class="head">completed</th>
+            <th class="head">status</th>
+            <th class="head">project</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Job UUID</td>
+            <td>Started Timestamp</td>
+            <td>Finished Timestamp</td>
+            <td>Job Status</td>
+            <td>Project Name</td>
+        </tr>
+    </tbody>
 </table>
 
 #### DDL
@@ -60,19 +64,23 @@ Each job has a set of metadata that can be used to identify the process being ex
 
 They are unique for every run, therefore they are groupped with the run ID.
 
-<table>
-    <tr>
-        <th><u>id</u></th>
-        <th>jid</th>
-        <th>name</th>
-        <th>value</th>
-    </tr>
-    <tr>
-        <td>Index</td>
-        <td>Run UUID</td>
-        <td>Name</td>
-        <td>Value</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">jid</th>
+            <th class="head">name</th>
+            <th class="head">value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Run UUID</td>
+            <td>Name</td>
+            <td>Value</td>
+        </tr>
+    </tbody>
 </table>
 
 #### DDL
@@ -104,19 +112,23 @@ Eventually the test will go through various _phases_ that are repeated during ev
 
 _(This table could actually be merged into the `phase_` tables below)_
 
-<table>
-    <tr>
-        <th><u>pid</u></th>
-        <th>jid</th>
-        <th>run</th>
-        <th>timestamp</th>
-    </tr>
-    <tr>
-        <td>Phase UUID</td>
-        <td>Job UUID</td>
-        <td><strike>Run Index</strike></td>
-        <td><strike>Timestamp</strike></td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>pid</u></th>
+            <th class="head">jid</th>
+            <th class="head">run</th>
+            <th class="head">timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Phase UUID</td>
+            <td>Job UUID</td>
+            <td><strike>Run Index</strike></td>
+            <td><strike>Timestamp</strike></td>
+        </tr>
+    <tbody>
 </table>
 
 #### DDL
@@ -146,19 +158,23 @@ ALTER TABLE metric_data.perf_test_job_phases
 
 Since a metric might be renamed or changed over time, we are using UUIDs to refer to metrics. This table contains the lookup information between the UUID and the metric name.
 
-<table>
-    <tr>
-        <th><u>metric</u></th>
-        <th>name</th>
-        <th>title</th>
-        <th>units</th>
-    </tr>
-    <tr>
-        <td>Metric UUID</td>
-        <td>Name</td>
-        <td>Axis Title</td>
-        <td>Units</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>metric</u></th>
+            <th class="head">name</th>
+            <th class="head">title</th>
+            <th class="head">units</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Metric UUID</td>
+            <td>Name</td>
+            <td>Axis Title</td>
+            <td>Units</td>
+        </tr>
+    </tbody>
 </table>
 
 ```sql
@@ -182,19 +198,23 @@ ALTER TABLE metric_data.perf_test_lookup_metrics
 
 Like the _lookup metrics_ table, this table contains the lookup information between the UUID and the parameter name.
 
-<table>
-    <tr>
-        <th><u>parameter</u></th>
-        <th>name</th>
-        <th>title</th>
-        <th>units</th>
-    </tr>
-    <tr>
-        <td>Parameter UUID</td>
-        <td>Name</td>
-        <td>Title</td>
-        <td>Units</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>parameter</u></th>
+            <th class="head">name</th>
+            <th class="head">title</th>
+            <th class="head">units</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Parameter UUID</td>
+            <td>Name</td>
+            <td>Title</td>
+            <td>Units</td>
+        </tr>
+    </tbody>
 </table>
 
 ```sql
@@ -218,19 +238,23 @@ ALTER TABLE metric_data.perf_test_lookup_parameters
 
 During each _phase_ one or more status _flags_ might be raised, indicating internal failures or other status information. These flags are submitted when the phase is completed and it's useful to collect them.
 
-<table>
-    <tr>
-        <th><u>id</u></th>
-        <th>pid</th>
-        <th>name</th>
-        <th>value</th>
-    </tr>
-    <tr>
-        <td>Index</td>
-        <td>Phase UUID</td>
-        <td>Name</td>
-        <td>Value</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">pid</th>
+            <th class="head">name</th>
+            <th class="head">value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Phase UUID</td>
+            <td>Name</td>
+            <td>Value</td>
+        </tr>
+    </tbody>
 </table>
 
 ```sql
@@ -258,19 +282,23 @@ ALTER TABLE metric_data.perf_test_phase_flags
 
 During each _phase_ the _test_ is given some _parameters_. These _parameters_ are usually the plot axis that we are interested in. (ex. `instances`)
 
-<table>
-    <tr>
-        <th><u>id</u></th>
-        <th>pid<th>
-        <th>parameter</th>
-        <th>value</th>
-    </tr>
-    <tr>
-        <td>Index</td>
-        <td>Phase ID</td>
-        <td>Parameter UUID</td>
-        <td>Parameter value</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">pid</th>
+            <th class="head">parameter</th>
+            <th class="head">value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Phase ID</td>
+            <td>Parameter UUID</td>
+            <td>Parameter value</td>
+        </tr>
+    </tbody>
 </table>
 
 #### DDL
@@ -304,21 +332,25 @@ ALTER TABLE metric_data.perf_test_phase_flags
 
 During the _test_ various _metrics_ are extracted and emmited the moment their sampling is completed. These metrics are effectively the results of the test.
 
-<table>
-    <tr>
-        <th><u>id</u></th>
-        <th>pid</th>
-        <th>metric</th>
-        <th>value</th>
-        <th>timestamp</th>
-    </tr>
-    <tr>
-        <td>Index</td>
-        <td>Phase UUID</td>
-        <td>Metric UUID</td>
-        <td>Value</td>
-        <td>Timestamp</td>
-    </tr>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">pid</th>
+            <th class="head">metric</th>
+            <th class="head">value</th>
+            <th class="head">timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Phase UUID</td>
+            <td>Metric UUID</td>
+            <td>Value</td>
+            <td>Timestamp</td>
+        </tr>
+    </tbody>
 </table>
 
 #### DDL

@@ -1,4 +1,6 @@
 
+.. _configuration:
+
 Configuration
 =============
 
@@ -10,11 +12,11 @@ overall scale test.
 Ideally, the task of every class should quite abstract and can be configured
 into fit any testing scenario. In detail, there are two major configuration groups:
 
-* The :ref:`statements-global` configuration -- that is used by the test harness and
-  the reporting services in order to steer the test process.
+* The :ref:`statements-global` configuration -- that is used by the test harness
+  and the reporting services in order to steer the test process.
 
-* The :ref:`statements-per-class` configuration -- that provides detailed configuration for every
-  class plugged into the harness.
+* The :ref:`statements-per-class` configuration -- that provides detailed
+  configuration for every class plugged into the harness.
 
 .. toctree::
    :maxdepth: 2
@@ -25,4 +27,3 @@ into fit any testing scenario. In detail, there are two major configuration grou
    Separating
    Macros
    Example
-   Cmdline

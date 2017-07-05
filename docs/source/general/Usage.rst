@@ -1,11 +1,36 @@
 .. highlight:: yaml
 
-.. cmdline:
+.. _cmdline:
 
-Command-line Arguments
-======================
+Usage
+=====
 
-The DC/OS Scale Test Driver is accepting a variety of command-line arguments:
+The DC/OS Scale Test Driver is accepting one or more configuration files as it's
+only positional argument. The :ref:`configuration` files describe which classes
+to activate and how to run the tests.
+
+In addition, some parameters or metadata can be added as optional arguments
+via the :ref:`cmdline-define` and :ref:`cmdline-meta` flags.
+
+.. code-block:: bash
+
+  usage: dcos-perf-test-driver [-h] [-r RESULTS] [-v] [-D DEFS] [-M META]
+                               [config [config ...]]
+
+  The DC/OS Performance Tests Driver.
+
+  positional arguments:
+    config                The configuration script to use.
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    -r RESULTS, --results RESULTS
+                          The directory where to collect the results into
+                          (default "results")
+    -v, --verbose         Show verbose messages for every operation
+    -D DEFS, --define DEFS
+                          Define one or more macro values for the tests.
+    -M META, --meta META  Define one or more metadata value.
 
 .. _cmdline-define:
 

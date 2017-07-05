@@ -11,19 +11,46 @@ requests.packages.urllib3.disable_warnings()
 
 class AuthEE(Task):
   """
-  Authenticate against an enterprise cluster
+  Authenticate against an Enterprise-Edition cluster
+
+  ::
+
+    tasks:
+      - class: tasks.auth.AuthEE
+        at: ...
+
+        # The username to authenticate against
+        user: bootstrapuser
+
+        # The password to use
+        password: deleteme
+
+        # [Optional] The base cluster URL
+        # Instead of specifying this configuration parameter you can specify
+        # the `cluster_url` definition (not recommended)
+        cluster_url: "https://cluster.dcos.io"
+
+  This task authenticates against the enterprise cluster and obtains an
+  authentication token.
+
+  This task sets the ``dcos_auth_token`` definition and makes it available
+  for other components to use.
   """
 
   def run(self):
+    config = self.getRenderedConfig()
     credentials = {
-      'uid': self.getConfig('user'),
-      'password': self.getConfig('password')
+      'uid': config['user'],
+      'password': config['password']
     }
 
     # Get cluster
-    cluster = self.getDefinition('cluster_url', None)
-    if cluster is None:
-      raise KeyError('Missing `cluster_url` definition')
+    if 'cluster_url' in config:
+      cluster = config['cluster_url']
+    else:
+      cluster = self.getDefinition('cluster_url', None)
+      if cluster is None:
+        raise KeyError('Missing `cluster_url` definition')
 
     # Try to login
     self.logger.info('Authenticating to cluster')
@@ -37,18 +64,42 @@ class AuthEE(Task):
 
 class AuthOpen(Task):
   """
-  Authenticate against an open cluster
+  Authenticate against an Open-Source Edition cluster
+
+  ::
+
+    tasks:
+      - class: tasks.auth.AuthOpen
+        at: ...
+
+        # The user token to (re-)use
+        token: bootstrapuser
+
+        # [Optional] The base cluster URL
+        # Instead of specifying this configuration parameter you can specify
+        # the `cluster_url` definition (not recommended)
+        cluster_url: "https://cluster.dcos.io"
+
+  This task authenticates against the enterprise cluster and obtains an
+  authentication token.
+
+  This task sets the ``dcos_auth_token`` definition and makes it available
+  for other components to use.
   """
 
   def run(self):
+    config = self.getRenderedConfig()
     credentials = {
-      'token': self.getConfig('token')
+      'token': config['token']
     }
 
     # Get cluster
-    cluster = self.getDefinition('cluster_url', None)
-    if cluster is None:
-      raise KeyError('Missing `cluster_url` definition')
+    if 'cluster_url' in config:
+      cluster = config['cluster_url']
+    else:
+      cluster = self.getDefinition('cluster_url', None)
+      if cluster is None:
+        raise KeyError('Missing `cluster_url` definition')
 
     # Try to login
     self.logger.info('Authenticating to cluster')

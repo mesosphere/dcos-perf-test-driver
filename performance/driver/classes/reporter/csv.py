@@ -53,6 +53,36 @@ class CSVReporter(Reporter):
   """
   The **CSV Reporter** is creating a comma-separated value (.csv) file with
   the axis values and summarised metric values for every run.
+
+  ::
+
+    reporters:
+      - class: reporter.CSVReporter
+
+        # [Optional] The filename to write the csv file into
+        filename: results.csv
+
+        # [Optional] The column separator character to use
+        separator: ","
+
+        # [Optional] Which value to use if a parameter is missing
+        default: 0
+
+  This reporter is writing the **summarised** results in a CSV file.
+  The resulting file will have the following columns:
+
+  ====  ====  =====  ===========  ===========  =====  ====  ====  =====
+  Parameters         Summarised Metrics               Flags
+  =================  ===============================  =================
+   p1    p2    ...     m1 (sum)     m2 (sum)    ...    f1    f2    ...
+  ====  ====  =====  ===========  ===========  =====  ====  ====  =====
+
+  The first line will contain the names of the parameters, metrics and flags.
+
+  .. note::
+     To configure which summariser(s) to use on every metric, use the
+     ``summarize`` parameter in the :ref:`statements-config-metrics` config.
+
   """
 
   def dump(self, summarizer):
