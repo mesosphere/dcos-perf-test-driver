@@ -175,6 +175,7 @@ class MetricConfig:
     self.logger = logging.getLogger('MetricConfig')
     self.config = metricConfig
     self.summarizers = []
+    self.summarizersInstanes = None
 
     # Extract summarizer configuration
     for summ in metricConfig.get('summarize', []):
@@ -191,7 +192,12 @@ class MetricConfig:
     """
     Return an array with all the summarizers
     """
-    summarizerInstances = []
+    # Re-use cached instances
+    if not self.summarizersInstanes is None:
+      return self.summarizersInstanes
+
+    # Compose instances and cache them
+    self.summarizersInstanes = []
     for summConfig in self.summarizers:
 
       # De-compose class path to module and class name
@@ -212,10 +218,10 @@ class MetricConfig:
       classType = getattr(module, className)
 
       # Instantiate with the config class as first argument
-      summarizerInstances.append(classType(summConfig))
+      self.summarizersInstanes.append(classType(summConfig))
 
     # Return summarizer instances
-    return summarizerInstances
+    return self.summarizersInstanes
 
 class GeneralConfig:
   """
