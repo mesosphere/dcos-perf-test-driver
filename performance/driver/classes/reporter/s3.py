@@ -14,6 +14,34 @@ class S3Reporter(Reporter):
   """
   The **S3 Reporter** is uploading a raw dump of the results in a bucket in
   Amazon's S3 services
+
+  ::
+
+    reporters:
+      - class: reporter.S3Reporter
+
+        # The name of the S3 bucket
+        bucket: dcos-perf-test-results
+
+        # [Optional] If ommited, you must provide the AWS_ACCESS_KEY_ID
+        # environment variable
+        aws_access_key_id: ...
+
+        # [Optional] If ommited, you must provide the AWS_SECRET_ACCESS_KEY
+        # environment variable
+        aws_secret_access_key: ...
+
+        # [Optional] The path in the bucket where to save the file
+        path: results-raw.json
+
+        # [Optional] A canned ACL. One of: private, public-read,
+        # public-read-write, authenticated-read, bucket-owner-read,
+        # bucket-owner-full-control
+        acl: private
+
+  This reporter behaves exactly like :ref:`classref-reporter-RawReporter`, but
+  the generated JSON blob is uploaded to an S3 bucket instead of a file
+  in your local filesystem.
   """
 
   def dump(self, summarizer):

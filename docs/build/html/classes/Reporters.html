@@ -97,7 +97,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../general/Metrics.html">Metrics Processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Class Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Policies.html">Policies</a></li>
@@ -192,7 +191,7 @@
 <span id="classref-reporter-csvreporter"></span><h2>CSVReporter<a class="headerlink" href="#csvreporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.CSVReporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">CSVReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/csv.html#CSVReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.CSVReporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">CSVReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/csv.html#CSVReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.CSVReporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>CSV Reporter</strong> is creating a comma-separated value (.csv) file with
 the axis values and summarised metric values for every run.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
@@ -254,7 +253,7 @@ The resulting file will have the following columns:</p>
 <span id="classref-reporter-datadogreporter"></span><h2>DataDogReporter<a class="headerlink" href="#datadogreporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.DataDogReporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">DataDogReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/datadog.html#DataDogReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.DataDogReporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">DataDogReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/datadog.html#DataDogReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.DataDogReporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>DataDog Reporter</strong> is uploading the indicators into DataDog for
 archiving and alerting usage.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
@@ -296,7 +295,7 @@ or summaries cannot be reported to DataDog.</p>
 <span id="classref-reporter-plotreporter"></span><h2>PlotReporter<a class="headerlink" href="#plotreporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.PlotReporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">PlotReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/plot.html#PlotReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.PlotReporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">PlotReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/plot.html#PlotReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.PlotReporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>Plot Reporter</strong> is creating a PNG plot with the measured values
 and storing it in the results folder.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
@@ -313,6 +312,10 @@ and storing it in the results folder.</p>
     <span class="c1"># Can be one of: &#39;linear&#39;, &#39;log&#39;, &#39;log2&#39;, &#39;log10&#39;</span>
     <span class="l l-Scalar l-Scalar-Plain">xscale</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">linear</span>
     <span class="l l-Scalar l-Scalar-Plain">yscale</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">log2</span>
+
+    <span class="c1"># [Optional] The colormap to use when plotting 2D plots</span>
+    <span class="c1"># Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html</span>
+    <span class="l l-Scalar l-Scalar-Plain">colormap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">plasma</span>
 </pre></div>
 </div>
 <p>This reporter will generate an image plot for every metric defined. The axis
@@ -330,7 +333,7 @@ is 1 or 2, since it’s not possible to display plots with more than 3 axes.</p>
 <span id="classref-reporter-postgrestreporter"></span><h2>PostgRESTReporter<a class="headerlink" href="#postgrestreporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.PostgRESTReporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">PostgRESTReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/postgrest.html#PostgRESTReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.PostgRESTReporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">PostgRESTReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/postgrest.html#PostgRESTReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.PostgRESTReporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>PostgREST Reporter</strong> is uploading the full set of results in a
 structured manner in a Postgres database using a PostgREST API endpoint.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
@@ -371,9 +374,94 @@ or versions of the same project.</p>
 <span id="classref-reporter-rawreporter"></span><h2>RawReporter<a class="headerlink" href="#rawreporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.RawReporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">RawReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/raw.html#RawReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.RawReporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">RawReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/raw.html#RawReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.RawReporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>Raw Reporter</strong> is creating a raw dump of the results in the results
-folder</p>
+folder in JSON format.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.RawReporter</span>
+
+    <span class="c1"># Where to dump the results</span>
+    <span class="l l-Scalar l-Scalar-Plain">filename</span><span class="p p-Indicator">:</span> <span class="s">&quot;results-raw.json&quot;</span>
+</pre></div>
+</div>
+<p>The JSON structure of the data included is the following:</p>
+<div class="highlight-js"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="c1">// The values for the indicators</span>
+  <span class="s2">&quot;indicators&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;indicator&quot;</span><span class="o">:</span> <span class="mf">1.23</span><span class="p">,</span>
+    <span class="p">...</span>
+  <span class="p">},</span>
+
+  <span class="c1">// The metadata of the run</span>
+  <span class="s2">&quot;meta&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;test&quot;</span><span class="o">:</span> <span class="s2">&quot;1-app-n-instances&quot;</span><span class="p">,</span>
+    <span class="p">...</span>
+  <span class="p">},</span>
+
+  <span class="c1">// Raw dump of the timeseries for every phase</span>
+  <span class="s2">&quot;raw&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+
+      <span class="c1">// One or more status flags collected in this phase</span>
+      <span class="s2">&quot;flags&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;status&quot;</span><span class="o">:</span> <span class="s2">&quot;OK&quot;</span>
+      <span class="p">},</span>
+
+      <span class="c1">// The values of all parameter (axes) in this phase</span>
+      <span class="s2">&quot;parameters&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;apps&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;instances&quot;</span><span class="o">:</span> <span class="mi">1</span>
+      <span class="p">},</span>
+
+      <span class="c1">// The time-series values for every phase</span>
+      <span class="s2">&quot;values&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;metricName&quot;</span><span class="o">:</span> <span class="p">[</span>
+
+          <span class="c1">// Each metric is composed of the timestamp of it&#39;s</span>
+          <span class="c1">// sampling time and the value</span>
+          <span class="p">[</span>
+            <span class="mf">1499696193.822527</span><span class="p">,</span>
+            <span class="mi">11</span>
+          <span class="p">],</span>
+          <span class="p">...</span>
+
+        <span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+
+  <span class="c1">// Summarised dump of the raw timeseries above, in the same</span>
+  <span class="c1">// structure</span>
+  <span class="s2">&quot;sum&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+
+      <span class="c1">// One or more status flags collected in this phase</span>
+      <span class="s2">&quot;flags&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;status&quot;</span><span class="o">:</span> <span class="s2">&quot;OK&quot;</span>
+      <span class="p">},</span>
+
+      <span class="c1">// The values of all parameter (axes) in this phase</span>
+      <span class="s2">&quot;parameters&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;apps&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;instances&quot;</span><span class="o">:</span> <span class="mi">1</span>
+      <span class="p">},</span>
+
+      <span class="c1">// The summarised values of each timeseries</span>
+      <span class="s2">&quot;values&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;metricName&quot;</span><span class="o">:</span> <span class="p">{</span>
+
+          <span class="c1">// Here are the summarisers you selected in the `metric`</span>
+          <span class="c1">// configuration parameter.</span>
+          <span class="s2">&quot;sum&quot;</span><span class="o">:</span> <span class="mf">123.4</span><span class="p">,</span>
+          <span class="s2">&quot;mean&quot;</span><span class="o">:</span> <span class="mf">123.4</span><span class="p">,</span>
+          <span class="p">...</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -381,9 +469,35 @@ folder</p>
 <span id="classref-reporter-s3reporter"></span><h2>S3Reporter<a class="headerlink" href="#s3reporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.S3Reporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">S3Reporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/s3.html#S3Reporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.S3Reporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">S3Reporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/s3.html#S3Reporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.S3Reporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>S3 Reporter</strong> is uploading a raw dump of the results in a bucket in
 Amazon’s S3 services</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.S3Reporter</span>
+
+    <span class="c1"># The name of the S3 bucket</span>
+    <span class="l l-Scalar l-Scalar-Plain">bucket</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">dcos-perf-test-results</span>
+
+    <span class="c1"># [Optional] If ommited, you must provide the AWS_ACCESS_KEY_ID</span>
+    <span class="c1"># environment variable</span>
+    <span class="l l-Scalar l-Scalar-Plain">aws_access_key_id</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># [Optional] If ommited, you must provide the AWS_SECRET_ACCESS_KEY</span>
+    <span class="c1"># environment variable</span>
+    <span class="l l-Scalar l-Scalar-Plain">aws_secret_access_key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># [Optional] The path in the bucket where to save the file</span>
+    <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">results-raw.json</span>
+
+    <span class="c1"># [Optional] A canned ACL. One of: private, public-read,</span>
+    <span class="c1"># public-read-write, authenticated-read, bucket-owner-read,</span>
+    <span class="c1"># bucket-owner-full-control</span>
+    <span class="l l-Scalar l-Scalar-Plain">acl</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">private</span>
+</pre></div>
+</div>
+<p>This reporter behaves exactly like <a class="reference internal" href="#classref-reporter-rawreporter"><span class="std std-ref">RawReporter</span></a>, but
+the generated JSON blob is uploaded to an S3 bucket instead of a file
+in your local filesystem.</p>
 </dd></dl>
 
 </div>

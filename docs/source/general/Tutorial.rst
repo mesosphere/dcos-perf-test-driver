@@ -10,7 +10,7 @@ concepts and help you getting started with your own scale test.
 In this tutorial we are not going to use a specific example, rather help you
 getting started with your own test case.
 
-01 - The Black Box abstraction
+The Black Box abstraction
 ------------------------------
 
 One of the most important terms in the test driver is the *black-box
@@ -57,7 +57,7 @@ For example, consider the following case:
    do so will likely become conceptually troublesome in the later steps.
 
 
-02 - Parameters and Metrics
+Parameters and Metrics
 ---------------------------
 
 Continuing from the previous reasoning the next logical step is to define which
@@ -97,7 +97,7 @@ metrics (output) to collect:
 The ``summarize`` parameter is an array of summarising values to extract from
 the metrics samples collected duringt he run(s).
 
-03 - Channels
+Channels
 -------------
 
 As the next step we are going to define *how* the parameters are applied to
@@ -148,7 +148,7 @@ changed:
           required: yes
 
 
-04 - Parameter Evolution
+Parameter Evolution
 ------------------------
 
 Now that we have defined our input and output, the next step is to define how
@@ -196,7 +196,7 @@ The above configuration is instructing the ``MultivariableExplorerPolicy`` to:
 But who is emitting these events?
 
 
-05 - Observers
+Observers
 --------------
 
 The :ref:`classref-observers` are classes that observer the application being
@@ -220,7 +220,7 @@ Now we have all the interesting events in the bus! Let's try to measure
 now something useful.
 
 
-06 - Trackers
+Trackers
 -------------
 
 The :ref:`classref-tracker` are classes that measure the resulting metrics. They
@@ -250,7 +250,7 @@ The above configuration is instructing the ``DurationTracker`` to:
 2. Store the measured result (in seconds) to the ``deploymentTime`` metric.
 
 
-07 - Reporting the results
+Reporting the results
 --------------------------
 
 Even though everything should be configured by now, there are no results
@@ -267,11 +267,11 @@ order to generate some nice plots with the results:
       prefix: results/plot-
 
 This reporer is going to generate a ``.png`` file for every ``metric`` that we
-defined, using the ``parameter``s as axes. In our case we have only 1 parameter
+defined, using the ``parameter`` as axes. In our case we have only 1 parameter
 and 1 metric, therefore we will get only 1 plot with ``instances`` on the X axis
 and ``deploymentTime`` on the Y axis.
 
-08 - Increasing the stats
+Increasing the stats
 -------------------------
 
 Most of the times you are going to get quite noisy results if you are running
@@ -283,7 +283,7 @@ your tests only once. So let's repeat the tests for 5 times:
     ...
     repeat: 5
 
-09 - Running the test
+Running the test
 ---------------------
 
 By now you should have something like the following ``config.yml``:
@@ -360,3 +360,7 @@ following command:
 If something went wrong, re-run the tests with the ``--verbose`` argument
 and check the logs in the console.
 
+If everything went as expected you will see a ``plot-deploymentTime.png`` file
+that looks something like this:
+
+.. image:: ../_static/plot-deploymentTime.png

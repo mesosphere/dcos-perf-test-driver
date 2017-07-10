@@ -95,7 +95,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Metrics.html">Metrics Processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
 </ul>
@@ -168,7 +167,96 @@
 <div class="viewcode-block" id="RawReporter"><a class="viewcode-back" href="../../../../../classes/Reporters.html#performance.driver.classes.reporter.RawReporter">[docs]</a><span class="k">class</span> <span class="nc">RawReporter</span><span class="p">(</span><span class="n">Reporter</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The **Raw Reporter** is creating a raw dump of the results in the results</span>
-<span class="sd">  folder</span>
+<span class="sd">  folder in JSON format.</span>
+
+<span class="sd">  ::</span>
+
+<span class="sd">    reporters:</span>
+<span class="sd">      - class: reporter.RawReporter</span>
+
+<span class="sd">        # Where to dump the results</span>
+<span class="sd">        filename: &quot;results-raw.json&quot;</span>
+
+<span class="sd">  The JSON structure of the data included is the following:</span>
+
+<span class="sd">  .. code-block:: js</span>
+
+<span class="sd">    {</span>
+<span class="sd">      // The values for the indicators</span>
+<span class="sd">      &quot;indicators&quot;: {</span>
+<span class="sd">        &quot;indicator&quot;: 1.23,</span>
+<span class="sd">        ...</span>
+<span class="sd">      },</span>
+
+<span class="sd">      // The metadata of the run</span>
+<span class="sd">      &quot;meta&quot;: {</span>
+<span class="sd">        &quot;test&quot;: &quot;1-app-n-instances&quot;,</span>
+<span class="sd">        ...</span>
+<span class="sd">      },</span>
+
+<span class="sd">      // Raw dump of the timeseries for every phase</span>
+<span class="sd">      &quot;raw&quot;: [</span>
+<span class="sd">        {</span>
+
+<span class="sd">          // One or more status flags collected in this phase</span>
+<span class="sd">          &quot;flags&quot;: {</span>
+<span class="sd">            &quot;status&quot;: &quot;OK&quot;</span>
+<span class="sd">          },</span>
+
+<span class="sd">          // The values of all parameter (axes) in this phase</span>
+<span class="sd">          &quot;parameters&quot;: {</span>
+<span class="sd">            &quot;apps&quot;: 1,</span>
+<span class="sd">            &quot;instances&quot;: 1</span>
+<span class="sd">          },</span>
+
+<span class="sd">          // The time-series values for every phase</span>
+<span class="sd">          &quot;values&quot;: {</span>
+<span class="sd">            &quot;metricName&quot;: [</span>
+
+<span class="sd">              // Each metric is composed of the timestamp of it&#39;s</span>
+<span class="sd">              // sampling time and the value</span>
+<span class="sd">              [</span>
+<span class="sd">                1499696193.822527,</span>
+<span class="sd">                11</span>
+<span class="sd">              ],</span>
+<span class="sd">              ...</span>
+
+<span class="sd">            ]</span>
+<span class="sd">          }</span>
+<span class="sd">        }</span>
+<span class="sd">      ],</span>
+
+<span class="sd">      // Summarised dump of the raw timeseries above, in the same</span>
+<span class="sd">      // structure</span>
+<span class="sd">      &quot;sum&quot;: [</span>
+<span class="sd">        {</span>
+
+<span class="sd">          // One or more status flags collected in this phase</span>
+<span class="sd">          &quot;flags&quot;: {</span>
+<span class="sd">            &quot;status&quot;: &quot;OK&quot;</span>
+<span class="sd">          },</span>
+
+<span class="sd">          // The values of all parameter (axes) in this phase</span>
+<span class="sd">          &quot;parameters&quot;: {</span>
+<span class="sd">            &quot;apps&quot;: 1,</span>
+<span class="sd">            &quot;instances&quot;: 1</span>
+<span class="sd">          },</span>
+
+<span class="sd">          // The summarised values of each timeseries</span>
+<span class="sd">          &quot;values&quot;: {</span>
+<span class="sd">            &quot;metricName&quot;: {</span>
+
+<span class="sd">              // Here are the summarisers you selected in the `metric`</span>
+<span class="sd">              // configuration parameter.</span>
+<span class="sd">              &quot;sum&quot;: 123.4,</span>
+<span class="sd">              &quot;mean&quot;: 123.4,</span>
+<span class="sd">              ...</span>
+<span class="sd">            }</span>
+<span class="sd">          }</span>
+<span class="sd">        }</span>
+<span class="sd">      ]</span>
+<span class="sd">    }</span>
+
 <span class="sd">  &quot;&quot;&quot;</span>
 
   <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">):</span>

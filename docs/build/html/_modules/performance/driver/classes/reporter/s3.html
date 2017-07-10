@@ -95,7 +95,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Metrics.html">Metrics Processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
 </ul>
@@ -178,6 +177,34 @@
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The **S3 Reporter** is uploading a raw dump of the results in a bucket in</span>
 <span class="sd">  Amazon&#39;s S3 services</span>
+
+<span class="sd">  ::</span>
+
+<span class="sd">    reporters:</span>
+<span class="sd">      - class: reporter.S3Reporter</span>
+
+<span class="sd">        # The name of the S3 bucket</span>
+<span class="sd">        bucket: dcos-perf-test-results</span>
+
+<span class="sd">        # [Optional] If ommited, you must provide the AWS_ACCESS_KEY_ID</span>
+<span class="sd">        # environment variable</span>
+<span class="sd">        aws_access_key_id: ...</span>
+
+<span class="sd">        # [Optional] If ommited, you must provide the AWS_SECRET_ACCESS_KEY</span>
+<span class="sd">        # environment variable</span>
+<span class="sd">        aws_secret_access_key: ...</span>
+
+<span class="sd">        # [Optional] The path in the bucket where to save the file</span>
+<span class="sd">        path: results-raw.json</span>
+
+<span class="sd">        # [Optional] A canned ACL. One of: private, public-read,</span>
+<span class="sd">        # public-read-write, authenticated-read, bucket-owner-read,</span>
+<span class="sd">        # bucket-owner-full-control</span>
+<span class="sd">        acl: private</span>
+
+<span class="sd">  This reporter behaves exactly like :ref:`classref-reporter-RawReporter`, but</span>
+<span class="sd">  the generated JSON blob is uploaded to an S3 bucket instead of a file</span>
+<span class="sd">  in your local filesystem.</span>
 <span class="sd">  &quot;&quot;&quot;</span>
 
   <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">):</span>

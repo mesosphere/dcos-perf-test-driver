@@ -33,7 +33,6 @@ it's simple to configure it to match your needs.
    general/Usage
    general/Tutorial
    general/Architecture
-   general/Metrics
    config/Readme
    classes/Readme
 
