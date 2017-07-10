@@ -194,7 +194,7 @@ class PlotReporter(Reporter):
       fig, ax = self.createPlot()
       im = ax.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(cmapName))
       ax.set_aspect("equal")
-      ax.scatter(x, y, c=z, linewidths=1, edgecolors='black')
+      ax.scatter(x, y, c=z, linewidths=1, edgecolors='black', cmap=plt.get_cmap(cmapName))
       cbar = fig.colorbar(im, ax=ax)
       cbar.set_label('%s (%s)' % (plotGroup.title, plotGroup.units))
 
