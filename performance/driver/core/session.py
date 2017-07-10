@@ -36,28 +36,35 @@ class Session(EventBusSubscriber):
       self.policies.append(instance)
 
     self.channels = []
-    for policy in config.channels():
-      instance = policy.instance(self.eventbus)
+    for channel in config.channels():
+      instance = channel.instance(self.eventbus)
       self.logger.debug('Registered \'%s\' channel' % type(instance).__name__)
       self.channels.append(instance)
 
     self.observers = []
-    for policy in config.observers():
-      instance = policy.instance(self.eventbus)
+    for observer in config.observers():
+      instance = observer.instance(self.eventbus)
       self.logger.debug('Registered \'%s\' observer' % type(instance).__name__)
       self.observers.append(instance)
 
     self.trackers = []
-    for policy in config.trackers():
-      instance = policy.instance(self.eventbus, self.summarizer)
+    for tracker in config.trackers():
+      instance = tracker.instance(self.eventbus, self.summarizer)
       self.logger.debug('Registered \'%s\' tracker' % type(instance).__name__)
       self.trackers.append(instance)
 
     self.tasks = []
-    for policy in config.tasks():
-      instance = policy.instance(self.eventbus)
+    for task in config.tasks():
+      instance = task.instance(self.eventbus)
       self.logger.debug('Registered \'%s\' task' % type(instance).__name__)
       self.tasks.append(instance)
+
+    self.reporters = []
+    generalConfig = self.config.general()
+    for reporter in config.reporters():
+      instance = reporter.instance(generalConfig, self.eventbus)
+      self.logger.debug('Registered \'%s\' reporter' % type(instance).__name__)
+      self.reporters.append(instance)
 
   def handleRunTaskEvent(self, event):
     """

@@ -101,9 +101,8 @@ def dcos_perf_test_driver(args=None):
     session.run()
 
     # Instantiate reporters
-    for reporterConfig in config.reporters():
-      reporter = reporterConfig.instance(generalConfig)
-      logger.debug('Instantiated \'%s\' reporter' % type(reporter).__name__)
+    for reporter in session.reporters:
+      logger.debug('Reporting to \'%s\' reporter' % type(reporter).__name__)
       reporter.dump(session.summarizer)
 
     # Success
