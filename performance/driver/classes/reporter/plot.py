@@ -7,6 +7,7 @@ try:
   import numpy as np
   import matplotlib.pyplot as plt
   import matplotlib.cm as cm
+  import scipy.interpolate
 except ModuleNotFoundError:
   import logging
   logging.error('One or more libraries required by PlotReporter were not'
@@ -93,6 +94,10 @@ class PlotReporter(Reporter):
         xscale: linear
         yscale: log2
 
+        # [Optional] The colormap to use when plotting 2D plots
+        # Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html
+        colormap: plasma
+
   This reporter will generate an image plot for every metric defined. The axis
   is the 1 or 2 parameters of the test.
 
@@ -163,44 +168,45 @@ class PlotReporter(Reporter):
     Dump an 2-D plot group
     """
 
+    # Configurable variables
+    cmapName = self.getConfig('colormap', 'plasma')
+
     # Populate axis values
     p = list(self.generalConfig.parameters.values())
     p1 = p[0]
     p2 = p[1]
-    x1 = list(map(lambda x: float(x.get(p1['name'])), axisValues))
-    x2 = list(map(lambda x: float(x.get(p2['name'])), axisValues))
+    x = np.array(list(map(lambda x: float(x.get(p1['name'])), axisValues)))
+    y = np.array(list(map(lambda x: float(x.get(p2['name'])), axisValues)))
 
-    # Calculate value bounds
-    v_min = None
-    v_max = None
-    for name, values in plotGroup.valueSeries.items():
-      s_min = min(values)
-      s_max = max(values)
-      if v_min is None or s_min < v_min:
-        v_min = s_min
-      if v_max is None or s_max > v_max:
-        v_max = s_max
+    # Set up a regular grid of interpolation points
+    xi, yi = np.linspace(x.min(), x.max(), 100), np.linspace(y.min(), y.max(), 100)
+    xi, yi = np.meshgrid(xi, yi)
 
     # Create sub-plots
-    fig, ax = self.createPlot()
-    i = 0
     for name, values in plotGroup.valueSeries.items():
-      ax.scatter(x1, x2,
-        s=list(map(lambda v: norm(v, v_min, v_max, tomax=200), values)),
-        c=cm.viridis(i),
-        label=name,
-        alpha=1.0 / len(plotGroup.valueSeries), edgecolors='none')
-      i += 1
 
-    # Show legend
-    ax.grid(True)
-    ax.set_title("%s [%s (%s)]" % (self.generalConfig.title, plotGroup.title, plotGroup.units))
-    ax.legend(loc='lower right')
-    ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
-    ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
+      # Interpolate
+      z = np.array(list(values))
+      rbf = scipy.interpolate.Rbf(x, y, z, function='linear')
+      zi = rbf(xi, yi)
 
-    # Dump
-    plt.savefig(filename)
+      # Create plot
+      fig, ax = self.createPlot()
+      im = ax.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(cmapName))
+      ax.set_aspect("equal")
+      ax.scatter(x, y, c=z, linewidths=1, edgecolors='black')
+      cbar = fig.colorbar(im, ax=ax)
+      cbar.set_label('%s (%s)' % (plotGroup.title, plotGroup.units))
+
+      # Show legend
+      ax.grid(True)
+      ax.set_title("%s [%s]" % (self.generalConfig.title, name))
+      ax.legend(loc='lower right')
+      ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
+      ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
+
+      # Dump
+      plt.savefig('%s-%s.png' % (filename[:-4], name))
 
   def dumpPlot_3d(self, axisValues, plotGroup, filename):
     """
