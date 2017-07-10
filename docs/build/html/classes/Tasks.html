@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tasks &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Class Reference" href="Readme.html"/>
+        <link rel="next" title="Reporters" href="Reporters.html"/>
+        <link rel="prev" title="Trackers" href="Trackers.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Policies.html">Policies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Observers.html">Observers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trackers.html">Trackers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tasks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#auth-authee">auth.AuthEE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#auth-authopen">auth.AuthOpen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removeallapps">RemoveAllApps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removematchingapps">RemoveMatchingApps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removegroup">RemoveGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Readme.html">Class Reference</a> &raquo;</li>
+        
+      <li>Tasks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/classes/Tasks.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tasks">
+<span id="classref-tasks"></span><h1>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal"><span class="pre">tasks</span></code> classes contain micro-actions that are executed at some phase
+of the test and do not participate in the final result.</p>
+<div class="section" id="auth-authee">
+<h2>auth.AuthEE<a class="headerlink" href="#auth-authee" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tasks.auth.AuthEE">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.auth.</code><code class="descname">AuthEE</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/auth.html#AuthEE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.auth.AuthEE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticate against an Enterprise-Edition cluster</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.auth.AuthEE</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># The username to authenticate against</span>
+    <span class="l l-Scalar l-Scalar-Plain">user</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">bootstrapuser</span>
+
+    <span class="c1"># The password to use</span>
+    <span class="l l-Scalar l-Scalar-Plain">password</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">deleteme</span>
+
+    <span class="c1"># [Optional] The base cluster URL</span>
+    <span class="c1"># Instead of specifying this configuration parameter you can specify</span>
+    <span class="c1"># the `cluster_url` definition (not recommended)</span>
+    <span class="l l-Scalar l-Scalar-Plain">cluster_url</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://cluster.dcos.io&quot;</span>
+</pre></div>
+</div>
+<p>This task authenticates against the enterprise cluster and obtains an
+authentication token.</p>
+<p>This task sets the <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> definition and makes it available
+for other components to use.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="auth-authopen">
+<h2>auth.AuthOpen<a class="headerlink" href="#auth-authopen" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tasks.auth.AuthOpen">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.auth.</code><code class="descname">AuthOpen</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/auth.html#AuthOpen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.auth.AuthOpen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticate against an Open-Source Edition cluster</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.auth.AuthOpen</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># The user token to (re-)use</span>
+    <span class="l l-Scalar l-Scalar-Plain">token</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">bootstrapuser</span>
+
+    <span class="c1"># [Optional] The base cluster URL</span>
+    <span class="c1"># Instead of specifying this configuration parameter you can specify</span>
+    <span class="c1"># the `cluster_url` definition (not recommended)</span>
+    <span class="l l-Scalar l-Scalar-Plain">cluster_url</span><span class="p p-Indicator">:</span> <span class="s">&quot;https://cluster.dcos.io&quot;</span>
+</pre></div>
+</div>
+<p>This task authenticates against the enterprise cluster and obtains an
+authentication token.</p>
+<p>This task sets the <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> definition and makes it available
+for other components to use.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="removeallapps">
+<h2>RemoveAllApps<a class="headerlink" href="#removeallapps" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tasks.marathon.RemoveAllApps">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.marathon.</code><code class="descname">RemoveAllApps</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/marathon.html#RemoveAllApps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.marathon.RemoveAllApps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove matching apps from marathon</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveAllApps</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># The base url to marathon</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+</pre></div>
+</div>
+<p>This task is enumerating all apps in the root group and delets each one
+of them.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This task will block the execution of other tasks until all deployments
+are completed. This is intentional in order allow other tasks to be
+executed in series.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="removematchingapps">
+<h2>RemoveMatchingApps<a class="headerlink" href="#removematchingapps" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tasks.marathon.RemoveMatchingApps">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.marathon.</code><code class="descname">RemoveMatchingApps</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/marathon.html#RemoveMatchingApps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.marathon.RemoveMatchingApps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes matching apps from marathon</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveAllApps</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># The base url to marathon</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+
+    <span class="c1"># The string portion in the app name to match</span>
+    <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span> <span class="s">&quot;test-01-&quot;</span>
+</pre></div>
+</div>
+<p>This task is enumerating all apps in the root group, checking wich ones
+contain the string contained in the <code class="docutils literal"><span class="pre">match</span></code> parameter and removes them.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This task will block the execution of other tasks until all deployments
+are completed. This is intentional in order allow other tasks to be
+executed in series.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="removegroup">
+<h2>RemoveGroup<a class="headerlink" href="#removegroup" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tasks.marathon.RemoveGroup">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.marathon.</code><code class="descname">RemoveGroup</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/marathon.html#RemoveGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.marathon.RemoveGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a specific group from marathon</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveAllApps</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># The base url to marathon</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+
+    <span class="c1"># The group to remove</span>
+    <span class="l l-Scalar l-Scalar-Plain">group</span><span class="p p-Indicator">:</span> <span class="s">&quot;tests/01&quot;</span>
+</pre></div>
+</div>
+<p>This task removes the given group from marathon.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This task will block the execution of other tasks until all deployments
+are completed. This is intentional in order allow other tasks to be
+executed in series.</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Reporters.html" class="btn btn-neutral float-right" title="Reporters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Trackers.html" class="btn btn-neutral" title="Trackers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

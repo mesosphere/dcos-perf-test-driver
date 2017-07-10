@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>performance.driver.classes.observer.marathonpoller &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../../index.html"/> 
+
+  
+  <script src="../../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>performance.driver.classes.observer.marathonpoller</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for performance.driver.classes.observer.marathonpoller</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">.marathonevents</span> <span class="k">import</span> <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">,</span> <span class="n">MarathonStartedEvent</span>
+
+<span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Observer</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.events</span> <span class="k">import</span> <span class="n">TickEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.utils</span> <span class="k">import</span> <span class="n">dictDiff</span>
+
+<span class="kn">from</span> <span class="nn">performance.driver.classes.channel.http</span> <span class="k">import</span> <span class="n">HTTPResponseEndEvent</span>
+
+<div class="viewcode-block" id="MarathonPollerObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.MarathonPollerObserver">[docs]</a><span class="k">class</span> <span class="nc">MarathonPollerObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  The *Marathon Poller Observer* is a polling-based fallback observer that can</span>
+<span class="sd">  fully replace the ``MarathonEventsObserver`` when the SSE event bus is not</span>
+<span class="sd">  available.</span>
+
+<span class="sd">  ::</span>
+
+<span class="sd">    observers:</span>
+<span class="sd">      - class: observer.MarathonPollerObserver</span>
+
+<span class="sd">        # The URL to the marathon base</span>
+<span class="sd">        url: &quot;{{marathon_url}}&quot;</span>
+
+<span class="sd">        # [Optional] Additional headers to send</span>
+<span class="sd">        headers:</span>
+<span class="sd">          Accept: test/plain</span>
+
+<span class="sd">  This observer is polling the ``/deployments`` endpoint 8 times per second in</span>
+<span class="sd">  order to detect changes in the deployments and is publishing the following</span>
+<span class="sd">  events:</span>
+
+<span class="sd">   * ``MarathonDeploymentSuccessEvent``</span>
+<span class="sd">   * ``MarathonDeploymentFailedEvent``</span>
+
+<span class="sd">  .. warning::</span>
+<span class="sd">     It is cruicial that a low-lattency connection is used between the test</span>
+<span class="sd">     driver and the marathon instance. Failing to do so a deployment might</span>
+<span class="sd">     appear and vanish inbetween the polling probes, failing to detect them.</span>
+
+<span class="sd">     Such case will likely cause a stalled test and introduce wrong results.</span>
+
+<span class="sd">  .. note::</span>
+<span class="sd">     This observer will automatically inject an ``Authorization`` header if</span>
+<span class="sd">     a ``dcos_auth_token`` definition exists, so you don&#39;t have to specify</span>
+<span class="sd">     it through the ``headers`` configuration.</span>
+
+<span class="sd">     Note that a ``dcos_auth_token`` can be dynamically injected via an</span>
+<span class="sd">     authentication task.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="nd">@subscribesToHint</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span><span class="p">)</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">prevDeployments</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">marathonIsAlive</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingActive</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingThread</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># When an HTTP request is completed and a marathon deployment is started,</span>
+    <span class="c1"># we have to keep track of the traceids of the event that initiated the</span>
+    <span class="c1"># request in order to trace it back to the source event.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleHttpResponse</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">,),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Stop thread at teardown</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,))</span>
+
+    <span class="c1"># Start polling thread at start</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStart</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,))</span>
+
+  <span class="k">def</span> <span class="nf">handleStartEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start main thread at start</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingActive</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pollingThreadTarget</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingThread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">handleTeardownEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stop thread at teardown</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingActive</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pollingThread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">pollingThreadTarget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main polling thread</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">pollingActive</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">checkDeployments</span><span class="p">()</span>
+      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.125</span><span class="p">)</span>
+
+  <span class="nd">@publishesHint</span><span class="p">(</span><span class="n">MarathonStartedEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">)</span>
+  <span class="k">def</span> <span class="nf">checkDeployments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check the deployments endpoint</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">definitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDefinitions</span><span class="p">()</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
+
+    <span class="n">url</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">)</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="c1"># If we are missing an `Authorization` header but we have a</span>
+    <span class="c1"># `dcos_auth_token` definition, allocate an `Authorization` header now</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Authorization&#39;</span> <span class="ow">in</span> <span class="n">headers</span> \
+       <span class="ow">and</span> <span class="s1">&#39;dcos_auth_token&#39;</span> <span class="ow">in</span> <span class="n">definitions</span><span class="p">:</span>
+      <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Fetch metrics</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/deployments&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Deployments marathon endpoint not accessible &#39;</span>
+          <span class="s1">&#39;(Received </span><span class="si">%i</span><span class="s1"> HTTP status code)&#39;</span> <span class="o">%</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+        <span class="k">return</span>
+
+      <span class="c1"># Emit MarathonStartedEvent if marathon was not running yet</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">marathonIsAlive</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Marathon web server is responding&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonStartedEvent</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marathonIsAlive</span> <span class="o">=</span> <span class="kc">True</span>
+
+      <span class="c1"># Emit one event for every parameter value</span>
+      <span class="n">value</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+      <span class="n">deploymentIds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">value</span><span class="p">))</span>
+      <span class="k">for</span> <span class="n">addedId</span> <span class="ow">in</span> <span class="n">deploymentIds</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prevDeployments</span><span class="p">):</span>
+        <span class="k">pass</span>
+      <span class="k">for</span> <span class="n">removedId</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prevDeployments</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">deploymentIds</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+          <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">(</span>
+            <span class="n">removedId</span><span class="p">,</span>
+            <span class="p">{},</span>
+            <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">removedId</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+          <span class="p">)</span>
+        <span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">prevDeployments</span> <span class="o">=</span> <span class="n">deploymentIds</span>
+
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Deployments marathon endpoint not accessible&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">handleHttpResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Look for HTTP response events that contain a `Marathon-Deployment-Id` header</span>
+<span class="sd">    and keep track of the originating event&#39;s traceID. We keep it in order to</span>
+<span class="sd">    attach it on further marathon events related to the given deployment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

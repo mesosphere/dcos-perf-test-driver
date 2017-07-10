@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>performance.driver.classes.channel.cmdline &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../../index.html"/> 
+
+  
+  <script src="../../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>performance.driver.classes.channel.cmdline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for performance.driver.classes.channel.cmdline</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">fcntl</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">select</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">Popen</span><span class="p">,</span> <span class="n">PIPE</span>
+
+<span class="kn">from</span> <span class="nn">performance.driver.core.events</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">LogLineEvent</span><span class="p">,</span> <span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.template</span> <span class="k">import</span> <span class="n">TemplateString</span><span class="p">,</span> <span class="n">TemplateDict</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Channel</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
+
+<span class="k">class</span> <span class="nc">CmdlineExitEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  This event is submitted when the process launched through the cmdline channel</span>
+<span class="sd">  has completed. The exit code is tracked.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exitcode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="n">exitcode</span>
+
+<span class="k">class</span> <span class="nc">CmdlineExitZeroEvent</span><span class="p">(</span><span class="n">CmdlineExitEvent</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">CmdlineExitNonzeroEvent</span><span class="p">(</span><span class="n">CmdlineExitEvent</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+<div class="viewcode-block" id="CmdlineChannel"><a class="viewcode-back" href="../../../../../classes/Channels.html#performance.driver.classes.channel.CmdlineChannel">[docs]</a><span class="k">class</span> <span class="nc">CmdlineChannel</span><span class="p">(</span><span class="n">Channel</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  The *Command-line Channel* launches an application, passes the test parameters</span>
+<span class="sd">  through command-line arguments and monitors it&#39;s standard output and error.</span>
+
+<span class="sd">  ::</span>
+
+<span class="sd">    channels:</span>
+<span class="sd">      - class: channel.CmdlineChannel</span>
+
+<span class="sd">        # The command-line to launch.</span>
+<span class="sd">        cmdline: &quot;path/to/app --args {{macros}}&quot;</span>
+
+<span class="sd">        # [Optional] The standard input to send to the application</span>
+<span class="sd">        stdin: |</span>
+<span class="sd">          some arbitrary payload with {{macros}}</span>
+<span class="sd">          in it&#39;s body.</span>
+
+<span class="sd">        # [Optional] Environment variables to define</span>
+<span class="sd">        env:</span>
+<span class="sd">          variable: value</span>
+<span class="sd">          other: &quot;value with {{macros}}&quot;</span>
+
+<span class="sd">        # [Optional] The directory to launch this app in</span>
+<span class="sd">        cwd: &quot;{{marathon_repo_dir}}&quot;</span>
+
+<span class="sd">        # [Optional] If set to `yes` the app will be launched as soon</span>
+<span class="sd">        # as the driver is up and running.</span>
+<span class="sd">        atstart: yes</span>
+
+<span class="sd">        # [Optional] If set to `yes` (default) the app will be re-launched</span>
+<span class="sd">        # if it exits on it&#39;s own.</span>
+<span class="sd">        relaunch: yes</span>
+
+<span class="sd">  When a parameter is changed, the channel will kill the process and re-launch</span>
+<span class="sd">  it with the new command-line.</span>
+
+<span class="sd">  For every line in standard inout or output, a ``LogLineEvent`` is emitted</span>
+<span class="sd">  with the contents of the line.</span>
+
+<span class="sd">  When the application launched through this channel exits the channel can take</span>
+<span class="sd">  two actions depending on it&#39;s configuration:</span>
+
+<span class="sd">  * If ``relaunch: yes`` is specitied (default), the channel will re-launch the</span>
+<span class="sd">    application in oder to always keep it running.</span>
+
+<span class="sd">  * If ``relaunch: no`` is specified, the channel will give up and publish a</span>
+<span class="sd">    ``CmdlineExitZeroEvent`` or a ``CmdlineExitNonzeroEvent`` according to the</span>
+<span class="sd">    exit code of the application.</span>
+
+<span class="sd">  .. note::</span>
+<span class="sd">     Note that if there are no ``{{macro}}`` defined anywhere in the body of</span>
+<span class="sd">     the configuration this channel will not be triggered when a parameter</span>
+<span class="sd">     is updated and thus the application will never be launched.</span>
+
+<span class="sd">     If you still want the application to be launched, use the ``atstart: yes``</span>
+<span class="sd">     parameter to instruct the channel to launch the application at start.</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="nd">@subscribesToHint</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span><span class="p">)</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">activeParameters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">killing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Receive parameter updates and clean-up on teardown</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleParameterUpdate</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardown</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStart</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,))</span>
+
+    <span class="c1"># Get some template</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cmdlineTpl</span> <span class="o">=</span> <span class="n">TemplateString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;cmdline&#39;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">stdinTpl</span> <span class="o">=</span> <span class="n">TemplateString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;stdin&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">envTpl</span> <span class="o">=</span> <span class="n">TemplateDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;env&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cwdTpl</span> <span class="o">=</span> <span class="n">TemplateString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;cwd&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+
+  <span class="nd">@publishesHint</span><span class="p">(</span><span class="n">LogLineEvent</span><span class="p">,</span> <span class="n">CmdlineExitEvent</span><span class="p">,</span>
+    <span class="n">CmdlineExitZeroEvent</span><span class="p">,</span> <span class="n">CmdlineExitNonzeroEvent</span><span class="p">)</span>
+  <span class="k">def</span> <span class="nf">monitor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sourceName</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Oversees the execution of the process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Make read operations non-blocking</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_GETFD</span><span class="p">)</span>
+    <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_SETFL</span><span class="p">,</span> <span class="n">flag</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">O_NONBLOCK</span><span class="p">)</span>
+
+    <span class="n">flag</span> <span class="o">=</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_GETFD</span><span class="p">)</span>
+    <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_SETFL</span><span class="p">,</span> <span class="n">flag</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">O_NONBLOCK</span><span class="p">)</span>
+
+    <span class="c1"># Send stdin</span>
+    <span class="k">if</span> <span class="n">stdin</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">proc</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stdin</span><span class="p">)</span>
+      <span class="n">proc</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Wait for input in the FDs</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="c1"># While process is running, use `select` to wait for an stdout/err</span>
+        <span class="c1"># FD event before reading.</span>
+        <span class="p">(</span><span class="n">rlist</span><span class="p">,</span> <span class="n">wlist</span><span class="p">,</span> <span class="n">xlist</span><span class="p">)</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">in</span> <span class="n">rlist</span><span class="p">:</span>
+          <span class="n">block</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+          <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+          <span class="k">while</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">LogLineEvent</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">sourceName</span><span class="p">,</span> <span class="s1">&#39;stdin&#39;</span><span class="p">,</span>
+                                    <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">in</span> <span class="n">rlist</span><span class="p">:</span>
+          <span class="n">block</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+          <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+          <span class="k">while</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">LogLineEvent</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">sourceName</span><span class="p">,</span> <span class="s1">&#39;stdout&#39;</span><span class="p">,</span>
+                                    <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span><span class="p">))</span>
+
+      <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># Drain buffers since after the process has exited, select might not work</span>
+        <span class="c1"># and some remaining bytes will remain not processed.</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+          <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+          <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">LogLineEvent</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">sourceName</span><span class="p">,</span> <span class="s1">&#39;stdin&#39;</span><span class="p">,</span>
+                                      <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span><span class="p">))</span>
+
+        <span class="n">block</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+          <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+          <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">LogLineEvent</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">sourceName</span><span class="p">,</span> <span class="s1">&#39;stdout&#39;</span><span class="p">,</span>
+                                      <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span><span class="p">))</span>
+
+        <span class="c1"># Break loop</span>
+        <span class="k">break</span>
+
+    <span class="c1"># Mark as stopped</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">killing</span><span class="p">:</span>
+
+      <span class="c1"># Dispatch the correct exit message</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Process exited with code </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">CmdlineExitZeroEvent</span><span class="p">(</span>
+          <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">CmdlineExitNonzeroEvent</span><span class="p">(</span>
+          <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span><span class="p">))</span>
+
+      <span class="c1"># Relaunch if configured</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;relaunch&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Process exited prematurely&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activeParameters</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Process completed&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Kill the currently running proc</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="c1"># Stop process and join</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">killing</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">proc</span><span class="p">,</span> <span class="n">thread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpgid</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">),</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
+      <span class="k">pass</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="c1"># Unset active task</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">killing</span> <span class="o">=</span> <span class="kc">False</span>
+
+  <span class="k">def</span> <span class="nf">launch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Launch process with the given command-line</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Compose the arguments for the execution</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;cwd&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;cwd&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Combine parameters with the definitions</span>
+    <span class="n">macroValues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDefinitions</span><span class="p">()</span><span class="o">.</span><span class="n">fork</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+
+    <span class="c1"># Compile arguments</span>
+    <span class="n">cmdline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmdlineTpl</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">macroValues</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmdline</span><span class="p">)</span>
+    <span class="n">stdin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdinTpl</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">macroValues</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">envTpl</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">macroValues</span><span class="p">)</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cwdTpl</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">macroValues</span><span class="p">)</span>
+
+    <span class="c1"># Reset empty arguments to `None`</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">stdin</span><span class="p">:</span>
+      <span class="n">stdin</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cwd</span><span class="p">:</span>
+      <span class="n">cwd</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">:</span>
+      <span class="n">env</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Launch</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Starting process: </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">activeParameters</span> <span class="o">=</span> <span class="n">parameters</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span><span class="p">)</span>
+
+    <span class="c1"># Launch a thread to monitor it&#39;s output</span>
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">proc</span><span class="p">,</span> <span class="n">stdin</span><span class="p">))</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="c1"># Keep track of the active task</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span> <span class="o">=</span> <span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">thread</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">handleTeardown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Kill process at teardown</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Killing running process&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">handleStart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the start event</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If this app is instructed to launch at start, satisfy this requirement now</span>
+    <span class="n">atstart</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;atstart&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">atstart</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">handleParameterUpdate</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">({},</span> <span class="p">{},</span> <span class="p">{}))</span>
+
+  <span class="k">def</span> <span class="nf">handleParameterUpdate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle a property update</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If we have already a task running don&#39;t re-launch it unless</span>
+    <span class="c1"># the received properties are actually updating one or more parameters</span>
+    <span class="c1"># in our template</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTask</span><span class="p">:</span>
+      <span class="n">hasChanges</span> <span class="o">=</span> <span class="kc">False</span>
+      <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmdlineTpl</span><span class="o">.</span><span class="n">macros</span><span class="p">()</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdinTpl</span><span class="o">.</span><span class="n">macros</span><span class="p">()</span> <span class="ow">or</span>\
+           <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envTpl</span><span class="o">.</span><span class="n">macros</span><span class="p">()</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cwdTpl</span><span class="o">.</span><span class="n">macros</span><span class="p">():</span>
+          <span class="n">hasChanges</span> <span class="o">=</span> <span class="kc">True</span>
+          <span class="k">break</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">hasChanges</span><span class="p">:</span>
+        <span class="k">return</span>
+
+      <span class="c1"># We have a parameter change, kill the process</span>
+      <span class="c1"># and schedule a new execution later</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+
+    <span class="c1"># Keep track of the traceid that initiated the process. This way we can</span>
+    <span class="c1"># track the events that were derrived from this parameter update.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lastTraceId</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span>
+
+    <span class="c1"># Launch new process</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

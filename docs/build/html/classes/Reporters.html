@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Reporters &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Class Reference" href="Readme.html"/>
+        <link rel="next" title="Postgres SQL Schema" href="related/PostgRESTSchema.html"/>
+        <link rel="prev" title="Tasks" href="Tasks.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Policies.html">Policies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Observers.html">Observers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trackers.html">Trackers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tasks.html">Tasks</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Reporters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#csvreporter">CSVReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#datadogreporter">DataDogReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotreporter">PlotReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#postgrestreporter">PostgRESTReporter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="related/PostgRESTSchema.html">Postgres SQL Schema</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#rawreporter">RawReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#s3reporter">S3Reporter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Readme.html">Class Reference</a> &raquo;</li>
+        
+      <li>Reporters</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/classes/Reporters.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="reporters">
+<span id="classref-reporter"></span><h1>Reporters<a class="headerlink" href="#reporters" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal"><span class="pre">reporter</span></code> classes collect the test results and report them to a particular endpoint.</p>
+<div class="section" id="csvreporter">
+<span id="classref-reporter-csvreporter"></span><h2>CSVReporter<a class="headerlink" href="#csvreporter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.reporter.CSVReporter">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">CSVReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/csv.html#CSVReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.CSVReporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>CSV Reporter</strong> is creating a comma-separated value (.csv) file with
+the axis values and summarised metric values for every run.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.CSVReporter</span>
+
+    <span class="c1"># [Optional] The filename to write the csv file into</span>
+    <span class="l l-Scalar l-Scalar-Plain">filename</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">results.csv</span>
+
+    <span class="c1"># [Optional] The column separator character to use</span>
+    <span class="l l-Scalar l-Scalar-Plain">separator</span><span class="p p-Indicator">:</span> <span class="s">&quot;,&quot;</span>
+
+    <span class="c1"># [Optional] Which value to use if a parameter is missing</span>
+    <span class="l l-Scalar l-Scalar-Plain">default</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+</pre></div>
+</div>
+<p>This reporter is writing the <strong>summarised</strong> results in a CSV file.
+The resulting file will have the following columns:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="8%" />
+<col width="9%" />
+<col width="21%" />
+<col width="21%" />
+<col width="9%" />
+<col width="8%" />
+<col width="8%" />
+<col width="9%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="3">Parameters</th>
+<th class="head" colspan="3">Summarised Metrics</th>
+<th class="head" colspan="3">Flags</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>p1</td>
+<td>p2</td>
+<td>…</td>
+<td>m1 (sum)</td>
+<td>m2 (sum)</td>
+<td>…</td>
+<td>f1</td>
+<td>f2</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>The first line will contain the names of the parameters, metrics and flags.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To configure which summariser(s) to use on every metric, use the
+<code class="docutils literal"><span class="pre">summarize</span></code> parameter in the <a class="reference internal" href="../config/Global.html#statements-config-metrics"><span class="std std-ref">config.metrics</span></a> config.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="datadogreporter">
+<span id="classref-reporter-datadogreporter"></span><h2>DataDogReporter<a class="headerlink" href="#datadogreporter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.reporter.DataDogReporter">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">DataDogReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/datadog.html#DataDogReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.DataDogReporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>DataDog Reporter</strong> is uploading the indicators into DataDog for
+archiving and alerting usage.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.DataDogReporter</span>
+
+    <span class="c1"># The API Key to use</span>
+    <span class="l l-Scalar l-Scalar-Plain">api_key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1234567890abcdef</span>
+
+    <span class="c1"># The App Key to use</span>
+    <span class="l l-Scalar l-Scalar-Plain">app_key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1234567890abcdef</span>
+
+    <span class="c1"># The data points to submit</span>
+    <span class="l l-Scalar l-Scalar-Plain">points</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># The name of the metric to submit to DataDog and the</span>
+      <span class="c1"># indicator to read the data from</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">memory</span>
+        <span class="l l-Scalar l-Scalar-Plain">indicator</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">meanMemoryUsage</span>
+
+    <span class="c1"># [Optional] The hostname to use as the agent name in datadog</span>
+    <span class="c1"># If missing the network name of the machine will be used</span>
+    <span class="l l-Scalar l-Scalar-Plain">hostname</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test.host</span>
+
+    <span class="c1"># [Optional] Prefix of the metrics (Defaults to `dcos.perf.`)</span>
+    <span class="l l-Scalar l-Scalar-Plain">prefix</span><span class="p p-Indicator">:</span> <span class="s">&quot;dcos.perf.&quot;</span>
+</pre></div>
+</div>
+<p>The DataDog reporter is using the DataDog API to submit one or more
+indicator values as data points.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This reporter is <strong>only</strong> collecting the <code class="docutils literal"><span class="pre">indicators</span></code>. Metric values
+or summaries cannot be reported to DataDog.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="plotreporter">
+<span id="classref-reporter-plotreporter"></span><h2>PlotReporter<a class="headerlink" href="#plotreporter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.reporter.PlotReporter">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">PlotReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/plot.html#PlotReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.PlotReporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>Plot Reporter</strong> is creating a PNG plot with the measured values
+and storing it in the results folder.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.PlotReporter</span>
+
+    <span class="c1"># [Optional] Default parameter value to use if not specified</span>
+    <span class="l l-Scalar l-Scalar-Plain">default</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+
+    <span class="c1"># [Optional] Filename prefix and suffix (without the extension)</span>
+    <span class="l l-Scalar l-Scalar-Plain">prefix</span><span class="p p-Indicator">:</span> <span class="s">&quot;plot-&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">suffix</span><span class="p p-Indicator">:</span> <span class="s">&quot;&quot;</span>
+
+    <span class="c1"># [Optional] The X and Y axis scale (for all plots)</span>
+    <span class="c1"># Can be one of: &#39;linear&#39;, &#39;log&#39;, &#39;log2&#39;, &#39;log10&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">xscale</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">linear</span>
+    <span class="l l-Scalar l-Scalar-Plain">yscale</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">log2</span>
+</pre></div>
+</div>
+<p>This reporter will generate an image plot for every metric defined. The axis
+is the 1 or 2 parameters of the test.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>The <code class="docutils literal"><span class="pre">PlotReporter</span></code> can be used only if the total number of parameters
+is 1 or 2, since it’s not possible to display plots with more than 3 axes.</p>
+<p class="last">Trying to use it otherwise will result in an exception being thrown.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="postgrestreporter">
+<span id="classref-reporter-postgrestreporter"></span><h2>PostgRESTReporter<a class="headerlink" href="#postgrestreporter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.reporter.PostgRESTReporter">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">PostgRESTReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/postgrest.html#PostgRESTReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.PostgRESTReporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>PostgREST Reporter</strong> is uploading the full set of results in a
+structured manner in a Postgres database using a PostgREST API endpoint.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.PostgRESTReporter</span>
+
+    <span class="c1"># The URL to the PostgREST endpoint</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;http://127.0.0.1:4000&quot;</span>
+
+    <span class="c1"># [Optional] The database table prefix</span>
+    <span class="l l-Scalar l-Scalar-Plain">prefix</span><span class="p p-Indicator">:</span> <span class="s">&quot;profile_data_&quot;</span>
+</pre></div>
+</div>
+<p>This reporter is uploading the following information</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p>The Postgres database is using uuid-based lookup for every parameter
+and metric. Therefire it’s required to include the <code class="docutils literal"><span class="pre">uuid</span></code> parameter
+in the <a class="reference internal" href="../config/Global.html#statements-config-metrics"><span class="std std-ref">config.metrics</span></a> and
+<a class="reference internal" href="../config/Global.html#statements-config-parameters"><span class="std std-ref">config.parameters</span></a> configuration.</p>
+<p class="last">This de-couples the representation of the metric across different projects
+or versions of the same project.</p>
+</div>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Related:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="related/PostgRESTSchema.html">Postgres SQL Schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="related/PostgRESTSchema.html#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="related/PostgRESTSchema.html#tables">Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="related/PostgRESTSchema.html#querying">Querying</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="rawreporter">
+<span id="classref-reporter-rawreporter"></span><h2>RawReporter<a class="headerlink" href="#rawreporter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.reporter.RawReporter">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">RawReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/raw.html#RawReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.RawReporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>Raw Reporter</strong> is creating a raw dump of the results in the results
+folder</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s3reporter">
+<span id="classref-reporter-s3reporter"></span><h2>S3Reporter<a class="headerlink" href="#s3reporter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.reporter.S3Reporter">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">S3Reporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/s3.html#S3Reporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.S3Reporter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>S3 Reporter</strong> is uploading a raw dump of the results in a bucket in
+Amazon’s S3 services</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="related/PostgRESTSchema.html" class="btn btn-neutral float-right" title="Postgres SQL Schema" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Tasks.html" class="btn btn-neutral" title="Tasks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

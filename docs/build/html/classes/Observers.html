@@ -1,0 +1,438 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Observers &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Class Reference" href="Readme.html"/>
+        <link rel="next" title="Trackers" href="Trackers.html"/>
+        <link rel="prev" title="Channels" href="Channels.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Policies.html">Policies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Observers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loglineobserver">LogLineObserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathoneventsobserver">MarathonEventsObserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathonmetricsobserver">MarathonMetricsObserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathonpollerobserver">MarathonPollerObserver</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Trackers.html">Trackers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Readme.html">Class Reference</a> &raquo;</li>
+        
+      <li>Observers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/classes/Observers.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="observers">
+<span id="classref-observers"></span><h1>Observers<a class="headerlink" href="#observers" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal"><span class="pre">observer</span></code> classes are responsible for monitoring the application being
+tested and exracting useful events.</p>
+<div class="section" id="loglineobserver">
+<span id="classref-observers-loglineobserver"></span><h2>LogLineObserver<a class="headerlink" href="#loglineobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.LogLineObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">LogLineObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/logline.html#LogLineObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.LogLineObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>Log Line Observer</strong> is post-processing every <code class="docutils literal"><span class="pre">LogLineEvent</span></code> and
+extracts tokens that can be later converted into metrics.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.LogLineObserver</span>
+
+    <span class="c1"># An array of the matching rules to apply on every line</span>
+    <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># A rule is activated when the `match` regexp is matching</span>
+      <span class="c1"># the line.</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span> <span class="s">&quot;^status:&quot;</span>
+
+        <span class="c1"># The `regex` expression defines the groups to capture</span>
+        <span class="l l-Scalar l-Scalar-Plain">regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;^status:([^,]+),([^,]+),([^,]+),$&quot;</span>
+
+        <span class="c1"># The `groups` array specifies the token names for the</span>
+        <span class="c1"># equivalent captured group</span>
+        <span class="l l-Scalar l-Scalar-Plain">groups</span><span class="p p-Indicator">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">status</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">time</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latency</span>
+</pre></div>
+</div>
+<p>This observer is going to apply the full set of rules for every log line
+broadcasted in the bus and is going to extract tokens for every match.</p>
+<p>It first ries to match the <code class="docutils literal"><span class="pre">match</span></code> regular expression against the line
+and it then applies the <code class="docutils literal"><span class="pre">regex</span></code> regular expression in order to extract
+one or more capturing groups. It then uses the <code class="docutils literal"><span class="pre">groups</span></code> array to assign
+token names to each captured group.</p>
+<p>A <code class="docutils literal"><span class="pre">LogLineTokenMatchEvent</span></code> will be published for every captured group,
+allowing a tracker to collect these values as metrics.</p>
+<p>Otherwise such events can be used for synchronisation purposes.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="marathoneventsobserver">
+<span id="classref-observers-marathoneventsobserver"></span><h2>MarathonEventsObserver<a class="headerlink" href="#marathoneventsobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.MarathonEventsObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">MarathonEventsObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/marathonevents.html#MarathonEventsObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.MarathonEventsObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>Marathon Events Observer</em> is extracting high-level events by subscribing
+to the Server-Side Events endpoint on marathon.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.MarathonEventsObserver</span>
+
+    <span class="c1"># The URL to the marathon SSE endpoint</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}/v2/events&quot;</span>
+
+    <span class="c1"># [Optional] Additional headers to send</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">Accept</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test/plain</span>
+</pre></div>
+</div>
+<p>Since this observer requires an active HTTP session to marathon, it also
+publishes the <code class="docutils literal"><span class="pre">MarathonStartedEvent</span></code> when an HTTP connection was
+successfully established.</p>
+<p>The following events are forwarded from the event bus:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentStepSuccessEvent</span></code></li>
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentStepFailureEvent</span></code></li>
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentInfoEvent</span></code></li>
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentSuccessEvent</span></code></li>
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentFailedEvent</span></code></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This observer will automatically inject an <code class="docutils literal"><span class="pre">Authorization</span></code> header if
+a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> definition exists, so you don’t have to specify
+it through the <code class="docutils literal"><span class="pre">headers</span></code> configuration.</p>
+<p class="last">Note that a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> can be dynamically injected via an
+authentication task.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="marathonmetricsobserver">
+<span id="classref-observers-marathonmetricsobserver"></span><h2>MarathonMetricsObserver<a class="headerlink" href="#marathonmetricsobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.MarathonMetricsObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">MarathonMetricsObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/marathonmetrics.html#MarathonMetricsObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.MarathonMetricsObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>Marathon Metrics Observer</em> is observing for changes in the marathon
+<cite>/stats</cite> endpoint and is emitting events according to it’s configuration</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.MarathonMetricsObserver</span>
+
+    <span class="c1"># The URL to the marathon metrics endpoint</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}/metrics&quot;</span>
+
+    <span class="c1"># [Optional] Additional headers to send</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">Accept</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test/plain</span>
+</pre></div>
+</div>
+<p>This observer is polling the <code class="docutils literal"><span class="pre">/metrics</span></code> endpoint 2 times per second and
+for every value that is changed, a <code class="docutils literal"><span class="pre">MetricUpdateEvent</span></code> event is published.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The name of the parameter is always the flattened name in the JSON response.
+For example, a parameter change in the following path:</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;foo&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;bar.baz&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;bax&quot;</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Will be broadcasted as a change in the following path:</p>
+<div class="last highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">foo.bar.baz.bax</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This observer will automatically inject an <code class="docutils literal"><span class="pre">Authorization</span></code> header if
+a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> definition exists, so you don’t have to specify
+it through the <code class="docutils literal"><span class="pre">headers</span></code> configuration.</p>
+<p class="last">Note that a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> can be dynamically injected via an
+authentication task.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="marathonpollerobserver">
+<span id="classref-observers-marathonpollerobserver"></span><h2>MarathonPollerObserver<a class="headerlink" href="#marathonpollerobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.MarathonPollerObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">MarathonPollerObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/marathonpoller.html#MarathonPollerObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.MarathonPollerObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>Marathon Poller Observer</em> is a polling-based fallback observer that can
+fully replace the <code class="docutils literal"><span class="pre">MarathonEventsObserver</span></code> when the SSE event bus is not
+available.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.MarathonPollerObserver</span>
+
+    <span class="c1"># The URL to the marathon base</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+
+    <span class="c1"># [Optional] Additional headers to send</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">Accept</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">test/plain</span>
+</pre></div>
+</div>
+<p>This observer is polling the <code class="docutils literal"><span class="pre">/deployments</span></code> endpoint 8 times per second in
+order to detect changes in the deployments and is publishing the following
+events:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentSuccessEvent</span></code></li>
+<li><code class="docutils literal"><span class="pre">MarathonDeploymentFailedEvent</span></code></li>
+</ul>
+</div></blockquote>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>It is cruicial that a low-lattency connection is used between the test
+driver and the marathon instance. Failing to do so a deployment might
+appear and vanish inbetween the polling probes, failing to detect them.</p>
+<p class="last">Such case will likely cause a stalled test and introduce wrong results.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This observer will automatically inject an <code class="docutils literal"><span class="pre">Authorization</span></code> header if
+a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> definition exists, so you don’t have to specify
+it through the <code class="docutils literal"><span class="pre">headers</span></code> configuration.</p>
+<p class="last">Note that a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> can be dynamically injected via an
+authentication task.</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Trackers.html" class="btn btn-neutral float-right" title="Trackers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Channels.html" class="btn btn-neutral" title="Channels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Configuration Example &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Configuration" href="Readme.html"/>
+        <link rel="next" title="Class Reference" href="../classes/Readme.html"/>
+        <link rel="prev" title="Using Macros" href="Macros.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Configuration</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Global.html">Global Configuration Statements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Classes.html">Per-Class Configuration Statements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Separating.html">Separating Configuration Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Macros.html">Using Macros</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../classes/Readme.html">Class Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Readme.html">Configuration</a> &raquo;</li>
+        
+      <li>Configuration Example</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/config/Example.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="configuration-example">
+<span id="config-example"></span><h1>Configuration Example<a class="headerlink" href="#configuration-example" title="Permalink to this headline">¶</a></h1>
+<p>The following example demonstrates a full configuration example</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="c1">##################################################</span>
+<span class="c1"># Global test configuration</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">config</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Repeat this test 5 times</span>
+  <span class="l l-Scalar l-Scalar-Plain">repeat</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+
+  <span class="c1"># The title of the scale test</span>
+  <span class="l l-Scalar l-Scalar-Plain">title</span><span class="p p-Indicator">:</span> <span class="s">&quot;1</span><span class="nv"> </span><span class="s">App</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">N</span><span class="nv"> </span><span class="s">Instances</span><span class="nv"> </span><span class="s">Test</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">Local</span><span class="nv"> </span><span class="s">Mesos</span><span class="nv"> </span><span class="s">Simulator&quot;</span>
+
+  <span class="c1"># Define the parameters this policy will be updating</span>
+  <span class="l l-Scalar l-Scalar-Plain">parameters</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">instances</span>
+      <span class="l l-Scalar l-Scalar-Plain">uuid</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">4a003e85e8bb4a95a340eec1727cfd0d</span>
+      <span class="l l-Scalar l-Scalar-Plain">units</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">count</span>
+      <span class="l l-Scalar l-Scalar-Plain">desc</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">The number of instances per application deployment</span>
+
+  <span class="c1"># Define the metrics we are measuring</span>
+  <span class="l l-Scalar l-Scalar-Plain">metrics</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">deploymentTime</span>
+      <span class="l l-Scalar l-Scalar-Plain">uuid</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">cfac77fceb244862aedd89066441c416</span>
+      <span class="l l-Scalar l-Scalar-Plain">desc</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">The time from the HTTP request completion till the deployment success</span>
+      <span class="l l-Scalar l-Scalar-Plain">summarize</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">mean</span><span class="p p-Indicator">,</span> <span class="nv">min</span><span class="p p-Indicator">,</span> <span class="nv">max</span><span class="p p-Indicator">]</span>
+      <span class="l l-Scalar l-Scalar-Plain">units</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">sec</span>
+
+  <span class="c1"># Introduce some indicators that will be used to extract</span>
+  <span class="c1"># the outcome of the test as a single scalar value</span>
+  <span class="l l-Scalar l-Scalar-Plain">indicators</span><span class="p p-Indicator">:</span>
+
+    <span class="c1"># Calculate `meanDeploymentTime` by calculating the normalizing average</span>
+    <span class="c1"># of all the `deploymentTime` mean values, normalized against the number</span>
+    <span class="c1"># of instances</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">meanDeploymentTime</span>
+      <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">indicator.NormalizedMeanMetricIndicator</span>
+      <span class="l l-Scalar l-Scalar-Plain">metric</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">deploymentTime.mean</span>
+      <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">instances</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># Macro Values</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">define</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Define `marathon_repo_dir` that is required by other fragments</span>
+  <span class="l l-Scalar l-Scalar-Plain">marathon_repo_dir</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/workdir/marathon</span>
+
+  <span class="c1"># Define `marathon_url` that is required by other fragments</span>
+  <span class="l l-Scalar l-Scalar-Plain">marathon_url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://127.0.0.1:8080</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># Test Metadata</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">meta</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">test</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1-app-n-instances</span>
+  <span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">local</span>
+  <span class="l l-Scalar l-Scalar-Plain">config</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">simulator</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># Test policy configuration</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">policies</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Explore a multi-variable parameter space as scale test task</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">policy.MultivariableExplorerPolicy</span>
+
+    <span class="c1"># The following rules describe the permutation matrix</span>
+    <span class="l l-Scalar l-Scalar-Plain">matrix</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">instances</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">discrete</span>
+        <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">2</span><span class="p p-Indicator">,</span> <span class="nv">4</span><span class="p p-Indicator">,</span> <span class="nv">8</span><span class="p p-Indicator">,</span> <span class="nv">16</span><span class="p p-Indicator">,</span> <span class="nv">32</span><span class="p p-Indicator">,</span> <span class="nv">64</span><span class="p p-Indicator">,</span> <span class="nv">128</span><span class="p p-Indicator">,</span> <span class="nv">256</span><span class="p p-Indicator">,</span> <span class="nv">512</span><span class="p p-Indicator">,</span> <span class="nv">1024</span><span class="p p-Indicator">,</span> <span class="nv">2048</span><span class="p p-Indicator">,</span> <span class="nv">4096</span><span class="p p-Indicator">]</span>
+
+    <span class="c1"># The event binding configuration</span>
+    <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># Wait until marathin is started before continuing with the tests</span>
+      <span class="l l-Scalar l-Scalar-Plain">start</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">MarathonStartedEvent</span>
+
+      <span class="c1"># Signal the status of the following events</span>
+      <span class="l l-Scalar l-Scalar-Plain">signal</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">OK</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">MarathonDeploymentSuccessEvent</span>
+        <span class="l l-Scalar l-Scalar-Plain">FAILURE</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">MarathonDeploymentFailedEvent</span>
+
+      <span class="c1"># Wait for the given number of events (evaluated at run-time)</span>
+      <span class="l l-Scalar l-Scalar-Plain">signalEventCount</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># Channel configuration</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">channels</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Perform an HTTP request for every `instance` parameter change</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">channel.HTTPChannel</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}/v2/apps&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">verb</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">POST</span>
+    <span class="l l-Scalar l-Scalar-Plain">body</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">{</span>
+        <span class="no">&quot;cmd&quot;: &quot;sleep 1200&quot;,</span>
+        <span class="no">&quot;cpus&quot;: 0.005,</span>
+        <span class="no">&quot;mem&quot;: 32,</span>
+        <span class="no">&quot;disk&quot;: 0,</span>
+        <span class="no">&quot;instances&quot;: {{instances}},</span>
+        <span class="no">&quot;id&quot;: &quot;/scale-instances/{{uuid()}}&quot;,</span>
+        <span class="no">&quot;backoffFactor&quot;: 1.0,</span>
+        <span class="no">&quot;backoffSeconds&quot;: 0</span>
+      <span class="no">}</span>
+
+  <span class="c1"># We are using a dummy command-line channel in order to launch marathon</span>
+  <span class="c1"># through scala, using mesos-simulator.</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">channel.CmdlineChannel</span>
+    <span class="l l-Scalar l-Scalar-Plain">cmdline</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">sbt &quot;project mesos-simulation&quot; &quot;run --master 127.0.0.1:5050&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">cwd</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_repo_dir}}&quot;</span>
+
+    <span class="c1"># By specifying `atstart` we are opting out from the parameter-driven</span>
+    <span class="c1"># launc, rather we are launching this app at start and then forget about it</span>
+    <span class="l l-Scalar l-Scalar-Plain">atstart</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+
+
+<span class="c1">#################################################</span>
+<span class="c1"># Observer configuration</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># The events observer is subscribing to the</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.MarathonEventsObserver</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}/v2/events&quot;</span>
+
+  <span class="c1"># The metrics observer samples the /metrics endpoint and emmits their</span>
+  <span class="c1"># value updates to the event bus.</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.MarathonMetricsObserver</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}/metrics&quot;</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># Tracker configuration</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">trackers</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Track deploymentTime as the duration between an `HTTPResponseEndEvent`</span>
+  <span class="c1"># and an `MarathonDeploymentSuccessEvent`</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tracker.DurationTracker</span>
+    <span class="l l-Scalar l-Scalar-Plain">metric</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">deploymentTime</span>
+    <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">start</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">HTTPResponseEndEvent</span>
+      <span class="l l-Scalar l-Scalar-Plain">end</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">MarathonDeploymentSuccessEvent</span>
+
+
+<span class="c1">#################################################</span>
+<span class="c1"># Global test configuration</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Dump raw time series results to results/dump.json</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.RawReporter</span>
+    <span class="l l-Scalar l-Scalar-Plain">filename</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">results/dump.json</span>
+
+  <span class="c1"># Dump summarized CSV values to results/results.csv</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.CSVReporter</span>
+    <span class="l l-Scalar l-Scalar-Plain">filename</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">results/results.csv</span>
+
+  <span class="c1"># Create plots as images to results/plot-*.png</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">reporter.PlotReporter</span>
+    <span class="l l-Scalar l-Scalar-Plain">xscale</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">log2</span>
+    <span class="l l-Scalar l-Scalar-Plain">prefix</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">results/plot-</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># One-time tasks</span>
+<span class="c1">#################################################</span>
+<span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+
+  <span class="c1"># Right after ever test run we should remove all the instances</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveGroup</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">group</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/scale-instances</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">intertest</span>
+
+  <span class="c1"># Also remove the tests if they were abruptly terminated</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveGroup</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">group</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">/scale-instances</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">teardown</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../classes/Readme.html" class="btn btn-neutral float-right" title="Class Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Macros.html" class="btn btn-neutral" title="Using Macros" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

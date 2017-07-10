@@ -1,0 +1,476 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>performance.driver.classes.reporter.plot &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../../index.html"/> 
+
+  
+  <script src="../../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>performance.driver.classes.reporter.plot</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for performance.driver.classes.reporter.plot</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Reporter</span>
+
+<span class="k">try</span><span class="p">:</span>
+  <span class="kn">import</span> <span class="nn">matplotlib</span>
+  <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+
+  <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+  <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+  <span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cm</span>
+<span class="k">except</span> <span class="n">ModuleNotFoundError</span><span class="p">:</span>
+  <span class="kn">import</span> <span class="nn">logging</span>
+  <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;One or more libraries required by PlotReporter were not&#39;</span>
+    <span class="s1">&#39;installed. The reporter will not work.&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">tomin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tomax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">vmin</span> <span class="ow">and</span> <span class="n">wrap</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">tomin</span>
+  <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="n">vmax</span> <span class="ow">and</span> <span class="n">wrap</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">tomax</span>
+  <span class="k">return</span> <span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">tomax</span> <span class="o">-</span> <span class="n">tomin</span><span class="p">)</span> <span class="o">+</span> <span class="n">tomin</span>
+
+<span class="k">def</span> <span class="nf">getPlotfn</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">xscale</span><span class="p">,</span> <span class="n">yscale</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Get the correct plot function configuration to the axis string given</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span> <span class="n">xscale</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;log2&#39;</span><span class="p">,</span> <span class="s1">&#39;log10&#39;</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown `xscale` value </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">xscale</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">yscale</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;log2&#39;</span><span class="p">,</span> <span class="s1">&#39;log10&#39;</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown `yscale` value </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">yscale</span><span class="p">)</span>
+
+  <span class="k">if</span> <span class="n">xscale</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span> <span class="ow">and</span> <span class="n">yscale</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="p">{})</span>
+  <span class="k">elif</span> <span class="n">xscale</span> <span class="o">!=</span> <span class="s1">&#39;linear&#39;</span> <span class="ow">and</span> <span class="n">yscale</span> <span class="o">!=</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">xscale</span> <span class="o">==</span> <span class="s1">&#39;log2&#39;</span><span class="p">:</span>
+      <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">xscale</span> <span class="o">==</span> <span class="s1">&#39;log10&#39;</span><span class="p">:</span>
+      <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="k">if</span> <span class="n">yscale</span> <span class="o">==</span> <span class="s1">&#39;log2&#39;</span><span class="p">:</span>
+      <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basey&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">yscale</span> <span class="o">==</span> <span class="s1">&#39;log10&#39;</span><span class="p">:</span>
+      <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basey&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">xscale</span> <span class="o">!=</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+      <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">if</span> <span class="n">xscale</span> <span class="o">==</span> <span class="s1">&#39;log2&#39;</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+      <span class="k">if</span> <span class="n">xscale</span> <span class="o">==</span> <span class="s1">&#39;log10&#39;</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+      <span class="k">return</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">if</span> <span class="n">yscale</span> <span class="o">==</span> <span class="s1">&#39;log2&#39;</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basey&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+      <span class="k">if</span> <span class="n">yscale</span> <span class="o">==</span> <span class="s1">&#39;log10&#39;</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;basey&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+      <span class="k">return</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">PlotGroup</span><span class="p">:</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;desc&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">valueSeries</span> <span class="o">=</span> <span class="p">{}</span>
+
+  <span class="k">def</span> <span class="nf">series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueSeries</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">valueSeries</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valueSeries</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PlotReporter"><a class="viewcode-back" href="../../../../../classes/Reporters.html#performance.driver.classes.reporter.PlotReporter">[docs]</a><span class="k">class</span> <span class="nc">PlotReporter</span><span class="p">(</span><span class="n">Reporter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  The **Plot Reporter** is creating a PNG plot with the measured values</span>
+<span class="sd">  and storing it in the results folder.</span>
+
+<span class="sd">  ::</span>
+
+<span class="sd">    reporters:</span>
+<span class="sd">      - class: reporter.PlotReporter</span>
+
+<span class="sd">        # [Optional] Default parameter value to use if not specified</span>
+<span class="sd">        default: 0</span>
+
+<span class="sd">        # [Optional] Filename prefix and suffix (without the extension)</span>
+<span class="sd">        prefix: &quot;plot-&quot;</span>
+<span class="sd">        suffix: &quot;&quot;</span>
+
+<span class="sd">        # [Optional] The X and Y axis scale (for all plots)</span>
+<span class="sd">        # Can be one of: &#39;linear&#39;, &#39;log&#39;, &#39;log2&#39;, &#39;log10&#39;</span>
+<span class="sd">        xscale: linear</span>
+<span class="sd">        yscale: log2</span>
+
+<span class="sd">  This reporter will generate an image plot for every metric defined. The axis</span>
+<span class="sd">  is the 1 or 2 parameters of the test.</span>
+
+<span class="sd">  .. warning::</span>
+<span class="sd">     The ``PlotReporter`` can be used only if the total number of parameters</span>
+<span class="sd">     is 1 or 2, since it&#39;s not possible to display plots with more than 3 axes.</span>
+
+<span class="sd">     Trying to use it otherwise will result in an exception being thrown.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">normalizeAxisValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputValues</span><span class="p">):</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">inputValues</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">inputValues</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+  <span class="k">def</span> <span class="nf">createPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a plot with common configuration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create a plot</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">8.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+    <span class="c1"># figure size, borders and padding</span>
+    <span class="c1"># fig.subplots_adjust(left=0.12, bottom=0.08, right=0.90, top=0.90, wspace=0.25, hspace=0.40)</span>
+    <span class="c1"># fig.set_size_inches(8.5, 6)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
+
+  <span class="k">def</span> <span class="nf">dumpPlot_1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump an 1-D plot group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Populate axis values</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])),</span> <span class="n">axisValues</span><span class="p">))</span>
+
+    <span class="c1"># Create sub-plots</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createPlot</span><span class="p">()</span>
+
+    <span class="c1"># Prepare plot function according to config</span>
+    <span class="p">(</span><span class="n">plotfn</span><span class="p">,</span> <span class="n">plotfn_kwargs</span><span class="p">)</span> <span class="o">=</span> <span class="n">getPlotfn</span><span class="p">(</span>
+      <span class="n">ax</span><span class="p">,</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;xscale&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">),</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;yscale&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">valueSeries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="n">line</span> <span class="o">=</span> <span class="n">plotfn</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">plotfn_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Show legend</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">p1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">plotGroup</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">units</span><span class="p">))</span>
+
+    <span class="c1"># Dump</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">dumpPlot_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump an 2-D plot group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Populate axis values</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])),</span> <span class="n">axisValues</span><span class="p">))</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])),</span> <span class="n">axisValues</span><span class="p">))</span>
+
+    <span class="c1"># Calculate value bounds</span>
+    <span class="n">v_min</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">valueSeries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="n">s_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+      <span class="n">s_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">v_min</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">s_min</span> <span class="o">&lt;</span> <span class="n">v_min</span><span class="p">:</span>
+        <span class="n">v_min</span> <span class="o">=</span> <span class="n">s_min</span>
+      <span class="k">if</span> <span class="n">v_max</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">s_max</span> <span class="o">&gt;</span> <span class="n">v_max</span><span class="p">:</span>
+        <span class="n">v_max</span> <span class="o">=</span> <span class="n">s_max</span>
+
+    <span class="c1"># Create sub-plots</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createPlot</span><span class="p">()</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">valueSeries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span>
+        <span class="n">s</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v_min</span><span class="p">,</span> <span class="n">v_max</span><span class="p">,</span> <span class="n">tomax</span><span class="o">=</span><span class="mi">200</span><span class="p">),</span> <span class="n">values</span><span class="p">)),</span>
+        <span class="n">c</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">viridis</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">plotGroup</span><span class="o">.</span><span class="n">valueSeries</span><span class="p">),</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+      <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Show legend</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">units</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">p1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">p2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span>
+
+    <span class="c1"># Dump</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">dumpPlot_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump an 3-D plot group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;The 3-axis plot is nt yet implemented&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump a plot for every metric in the time series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate dimentions</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Requested to dump a plot without having any parameters&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Requested to dump a plot with more than 3 parameters&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Prepare plot group</span>
+    <span class="n">axisValues</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">metricPlotGroup</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Create one plot for every observed value</span>
+    <span class="k">for</span> <span class="n">metricName</span><span class="p">,</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="n">metricPlotGroup</span><span class="p">[</span><span class="n">metricName</span><span class="p">]</span> <span class="o">=</span> <span class="n">PlotGroup</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+
+    <span class="c1"># Process summarizer values</span>
+    <span class="k">for</span> <span class="n">testCase</span> <span class="ow">in</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
+      <span class="n">axisValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalizeAxisValues</span><span class="p">(</span><span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]))</span>
+
+      <span class="c1"># Process summarized values into the appropriate plot group</span>
+      <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">summarizedValues</span> <span class="ow">in</span> <span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">summarizer</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">summarizedValues</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+          <span class="n">metricPlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">summarizer</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+    <span class="c1"># Dump plots using the correct function</span>
+    <span class="n">dumpFunction</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_1d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_2d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_3d</span><span class="p">]</span> \
+                   <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Create and dump plots</span>
+    <span class="n">filePrefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;plot-&#39;</span><span class="p">)</span>
+    <span class="n">fileSuffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;suffix&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">plotGroup</span> <span class="ow">in</span> <span class="n">metricPlotGroup</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="n">dumpFunction</span><span class="p">(</span><span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%s%s%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filePrefix</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">fileSuffix</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

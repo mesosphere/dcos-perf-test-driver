@@ -1,0 +1,670 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Postgres SQL Schema &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Reporters" href="../Reporters.html"/>
+        <link rel="next" title="Indicators" href="../Indicators.html"/>
+        <link rel="prev" title="Reporters" href="../Reporters.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../general/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../general/Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../general/Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../general/Metrics.html">Metrics Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../Readme.html">Class Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../Policies.html">Policies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Channels.html">Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Observers.html">Observers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Trackers.html">Trackers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Tasks.html">Tasks</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../Reporters.html">Reporters</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../Reporters.html#csvreporter">CSVReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../Reporters.html#datadogreporter">DataDogReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../Reporters.html#plotreporter">PlotReporter</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../Reporters.html#postgrestreporter">PostgRESTReporter</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Postgres SQL Schema</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../Reporters.html#rawreporter">RawReporter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../Reporters.html#s3reporter">S3Reporter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../Indicators.html">Indicators</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../Readme.html">Class Reference</a> &raquo;</li>
+        
+          <li><a href="../Reporters.html">Reporters</a> &raquo;</li>
+        
+      <li>Postgres SQL Schema</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/classes/related/PostgRESTSchema.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="postgres-sql-schema">
+<span id="postgres-sql-schema"></span><h1>Postgres SQL Schema<a class="headerlink" href="#postgres-sql-schema" title="Permalink to this headline">¶</a></h1>
+<p>This document explains the table schema the <code class="docutils literal"><span class="pre">PostgRESTReporter</span></code> reporter is expected to which to report the data.</p>
+<div class="section" id="terminology">
+<span id="terminology"></span><h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><strong>job</strong> : A scale test job</li>
+<li><strong>run</strong> : A repeating scale test sampling process in order to collect statistics. One or more <em>runs</em> are executed within a single <em>job</em>.</li>
+<li><strong>test</strong> : A scale test that is executed during a <em>run</em></li>
+<li><strong>phase</strong> : A checkpoint during the execution of a <em>test</em> during which a new set of <em>parameters</em> is given to the application and a new sampling process begins.</li>
+<li><strong>parameter</strong> : An input value to the <em>test</em>. For example <code class="docutils literal"><span class="pre">instances=10</span></code>.</li>
+<li><strong>mmetric</strong> : An output value from the <em>test</em>. For example <code class="docutils literal"><span class="pre">deployTime=1.42s</span></code></li>
+</ul>
+</div>
+<div class="section" id="tables">
+<span id="tables"></span><h2>Tables<a class="headerlink" href="#tables" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="job-job-indexing-table">
+<span id="job-job-indexing-table"></span><h3><code class="docutils literal"><span class="pre">*_job</span></code> Job Indexing Table<a class="headerlink" href="#job-job-indexing-table" title="Permalink to this headline">¶</a></h3>
+<p>This table keeps track of the high-level job structure. Since more than one project will be using the same database, the <code class="docutils literal"><span class="pre">project</span></code> field should be populated with the name of the project that started this job.</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>jid</u></th>
+            <th class="head">started</th>
+            <th class="head">completed</th>
+            <th class="head">status</th>
+            <th class="head">project</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Job UUID</td>
+            <td>Started Timestamp</td>
+            <td>Finished Timestamp</td>
+            <td>Job Status</td>
+            <td>Project Name</td>
+        </tr>
+    </tbody>
+</table><div class="section" id="ddl">
+<span id="ddl"></span><h4>DDL<a class="headerlink" href="#ddl" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job</span>
+<span class="p">(</span>
+    <span class="n">jid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">started</span> <span class="k">timestamp</span> <span class="k">without</span> <span class="n">time</span> <span class="k">zone</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">completed</span> <span class="k">timestamp</span> <span class="k">without</span> <span class="n">time</span> <span class="k">zone</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">status</span> <span class="nb">integer</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">project</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">jid</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="job-meta-job-metadata">
+<span id="job-meta-job-metadata"></span><h3><code class="docutils literal"><span class="pre">*_job_meta</span></code> Job Metadata<a class="headerlink" href="#job-meta-job-metadata" title="Permalink to this headline">¶</a></h3>
+<p>Each job has a set of metadata that can be used to identify the process being executed. For example <code class="docutils literal"><span class="pre">environment</span></code>, <code class="docutils literal"><span class="pre">version</span></code>, <code class="docutils literal"><span class="pre">git_hash</span></code> etc.</p>
+<p>They are unique for every run, therefore they are groupped with the run ID.</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">jid</th>
+            <th class="head">name</th>
+            <th class="head">value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Run UUID</td>
+            <td>Name</td>
+            <td>Value</td>
+        </tr>
+    </tbody>
+</table><div class="section" id="ddl">
+<span id="id1"></span><h4>DDL<a class="headerlink" href="#ddl" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_meta</span>
+<span class="p">(</span>
+    <span class="n">id</span> <span class="nb">serial</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">jid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">value</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+    <span class="k">CONSTRAINT</span> <span class="n">jid</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">jid</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job</span> <span class="p">(</span><span class="n">jid</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_meta</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="job-phases-job-phases">
+<span id="job-phases-job-phases"></span><h3><code class="docutils literal"><span class="pre">*_job_phases</span></code> Job Phases<a class="headerlink" href="#job-phases-job-phases" title="Permalink to this headline">¶</a></h3>
+<p>Eventually the test will go through various <em>phases</em> that are repeated during every <em>run</em>. Since the <em>phase</em> is groupping various parameter/metric combinations, we are using the <code class="docutils literal"><span class="pre">job_phases</span></code> table to index them.</p>
+<p><em>(This table could actually be merged into the <code class="docutils literal"><span class="pre">phase_</span></code> tables below)</em></p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>pid</u></th>
+            <th class="head">jid</th>
+            <th class="head">run</th>
+            <th class="head">timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Phase UUID</td>
+            <td>Job UUID</td>
+            <td><strike>Run Index</strike></td>
+            <td><strike>Timestamp</strike></td>
+        </tr>
+    <tbody>
+</table><div class="section" id="ddl">
+<span id="id2"></span><h4>DDL<a class="headerlink" href="#ddl" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_phases</span>
+<span class="p">(</span>
+    <span class="n">pid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">jid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">run</span> <span class="nb">integer</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="ss">&quot;timestamp&quot;</span> <span class="k">timestamp</span> <span class="k">without</span> <span class="n">time</span> <span class="k">zone</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">pid</span><span class="p">),</span>
+    <span class="k">CONSTRAINT</span> <span class="n">jid</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">jid</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job</span> <span class="p">(</span><span class="n">jid</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_phases</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgresql</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="lookup-metrics-metric-lookup-table">
+<span id="lookup-metrics-metric-lookup-table"></span><h3><code class="docutils literal"><span class="pre">*_lookup_metrics</span></code> Metric lookup table<a class="headerlink" href="#lookup-metrics-metric-lookup-table" title="Permalink to this headline">¶</a></h3>
+<p>Since a metric might be renamed or changed over time, we are using UUIDs to refer to metrics. This table contains the lookup information between the UUID and the metric name.</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>metric</u></th>
+            <th class="head">name</th>
+            <th class="head">title</th>
+            <th class="head">units</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Metric UUID</td>
+            <td>Name</td>
+            <td>Axis Title</td>
+            <td>Units</td>
+        </tr>
+    </tbody>
+</table><div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_lookup_metrics</span>
+<span class="p">(</span>
+    <span class="n">metric</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">title</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">units</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_lookup_metrics</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lookup-parameters-parameter-lookup-table">
+<span id="lookup-parameters-parameter-lookup-table"></span><h3><code class="docutils literal"><span class="pre">*_lookup_parameters</span></code> Parameter lookup table<a class="headerlink" href="#lookup-parameters-parameter-lookup-table" title="Permalink to this headline">¶</a></h3>
+<p>Like the <em>lookup metrics</em> table, this table contains the lookup information between the UUID and the parameter name.</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>parameter</u></th>
+            <th class="head">name</th>
+            <th class="head">title</th>
+            <th class="head">units</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Parameter UUID</td>
+            <td>Name</td>
+            <td>Title</td>
+            <td>Units</td>
+        </tr>
+    </tbody>
+</table><div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_lookup_parameters</span>
+<span class="p">(</span>
+    <span class="k">parameter</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">title</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">units</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="k">parameter</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_lookup_parameters</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="phase-flags-phase-flags">
+<span id="phase-flags-phase-flags"></span><h3><code class="docutils literal"><span class="pre">*_phase_flags</span></code> Phase Flags<a class="headerlink" href="#phase-flags-phase-flags" title="Permalink to this headline">¶</a></h3>
+<p>During each <em>phase</em> one or more status <em>flags</em> might be raised, indicating internal failures or other status information. These flags are submitted when the phase is completed and it's useful to collect them.</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">pid</th>
+            <th class="head">name</th>
+            <th class="head">value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Phase UUID</td>
+            <td>Name</td>
+            <td>Value</td>
+        </tr>
+    </tbody>
+</table><div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_phase_flags</span>
+<span class="p">(</span>
+    <span class="n">id</span> <span class="nb">serial</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">pid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">value</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+    <span class="k">CONSTRAINT</span> <span class="n">pid</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_phases</span> <span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_phase_flags</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="phase-params-phase-parameters">
+<span id="phase-params-phase-parameters"></span><h3><code class="docutils literal"><span class="pre">*_phase_params</span></code> Phase Parameters<a class="headerlink" href="#phase-params-phase-parameters" title="Permalink to this headline">¶</a></h3>
+<p>During each <em>phase</em> the <em>test</em> is given some <em>parameters</em>. These <em>parameters</em> are usually the plot axis that we are interested in. (ex. <code class="docutils literal"><span class="pre">instances</span></code>)</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">pid</th>
+            <th class="head">parameter</th>
+            <th class="head">value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Phase ID</td>
+            <td>Parameter UUID</td>
+            <td>Parameter value</td>
+        </tr>
+    </tbody>
+</table><div class="section" id="ddl">
+<span id="id3"></span><h4>DDL<a class="headerlink" href="#ddl" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_phase_params</span>
+<span class="p">(</span>
+    <span class="n">id</span> <span class="nb">serial</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">pid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">parameter</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">value</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+    <span class="k">CONSTRAINT</span> <span class="n">pid</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_phases</span> <span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span><span class="p">,</span>
+    <span class="k">CONSTRAINT</span> <span class="k">parameter</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="k">parameter</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_lookup_parameters</span> <span class="p">(</span><span class="k">parameter</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_phase_flags</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="phase-metrics-phase-metrics">
+<span id="phase-metrics-phase-metrics"></span><h3><code class="docutils literal"><span class="pre">*_phase_metrics</span></code> Phase Metrics<a class="headerlink" href="#phase-metrics-phase-metrics" title="Permalink to this headline">¶</a></h3>
+<p>During the <em>test</em> various <em>metrics</em> are extracted and emmited the moment their sampling is completed. These metrics are effectively the results of the test.</p>
+<table class="docutils">
+    <thead>
+        <tr class="row-odd">
+            <th class="head"><u>id</u></th>
+            <th class="head">pid</th>
+            <th class="head">metric</th>
+            <th class="head">value</th>
+            <th class="head">timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Phase UUID</td>
+            <td>Metric UUID</td>
+            <td>Value</td>
+            <td>Timestamp</td>
+        </tr>
+    </tbody>
+</table><div class="section" id="ddl">
+<span id="id4"></span><h4>DDL<a class="headerlink" href="#ddl" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_phase_metrics</span>
+<span class="p">(</span>
+    <span class="n">id</span> <span class="nb">serial</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">pid</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">metric</span> <span class="n">uuid</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">value</span> <span class="nb">numeric</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">timestamp</span> <span class="k">timestamp</span> <span class="k">without</span> <span class="n">time</span> <span class="k">zone</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+    <span class="k">CONSTRAINT</span> <span class="n">pid</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_job_phases</span> <span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span><span class="p">,</span>
+    <span class="k">CONSTRAINT</span> <span class="n">metric</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+        <span class="k">REFERENCES</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_lookup_metrics</span> <span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="k">MATCH</span> <span class="k">SIMPLE</span>
+        <span class="k">ON</span> <span class="k">UPDATE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+        <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">NO</span> <span class="n">ACTION</span>
+<span class="p">)</span>
+<span class="k">WITH</span> <span class="p">(</span>
+    <span class="k">OIDS</span> <span class="o">=</span> <span class="k">FALSE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">metric_data</span><span class="p">.</span><span class="n">perf_test_phase_flags</span>
+    <span class="k">OWNER</span> <span class="k">to</span> <span class="n">postgrest</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="querying">
+<span id="querying"></span><h2>Querying<a class="headerlink" href="#querying" title="Permalink to this headline">¶</a></h2>
+<p>The following query can be used to fetch a 1D plot for jobs that have only 1 axis on it's parameters:</p>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="k">SELECT</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_phases&quot;</span><span class="p">.</span><span class="n">jid</span><span class="p">,</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_params&quot;</span><span class="p">.</span><span class="ss">&quot;value&quot;</span> <span class="k">AS</span> <span class="ss">&quot;x&quot;</span><span class="p">,</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_metrics&quot;</span><span class="p">.</span><span class="ss">&quot;value&quot;</span> <span class="k">AS</span> <span class="ss">&quot;y&quot;</span>
+
+<span class="k">FROM</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_params&quot;</span>
+    <span class="k">JOIN</span> <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_metrics&quot;</span>
+        <span class="k">ON</span> <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_params&quot;</span><span class="p">.</span><span class="n">pid</span> <span class="o">=</span> 
+           <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_metrics&quot;</span><span class="p">.</span><span class="n">pid</span>
+    <span class="k">JOIN</span> <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_phases&quot;</span>
+        <span class="k">ON</span> <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_params&quot;</span><span class="p">.</span><span class="n">pid</span> <span class="o">=</span> 
+           <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_phases&quot;</span><span class="p">.</span><span class="n">pid</span>
+<span class="k">WHERE</span>
+    <span class="c1">-- The axis you want to view (assuming only 1 dimention)</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_params&quot;</span><span class="p">.</span><span class="ss">&quot;parameter&quot;</span> <span class="o">=</span> 
+        <span class="s1">&#39;4a003e85-e8bb-4a95-a340-eec1727cfd0d&#39;</span> <span class="k">AND</span>
+
+    <span class="c1">-- The metric you want to plot</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_phase_metrics&quot;</span><span class="p">.</span><span class="ss">&quot;metric&quot;</span> <span class="o">=</span> 
+        <span class="s1">&#39;cfac77fc-eb24-4862-aedd-89066441c416&#39;</span> <span class="k">AND</span>
+
+    <span class="c1">-- Job selection based on it&#39;s metadata.</span>
+    <span class="c1">-- In this example we are selecting the latest `master` version.</span>
+    <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_phases&quot;</span><span class="p">.</span><span class="n">jid</span> <span class="k">IN</span> <span class="p">(</span>
+        <span class="k">SELECT</span>
+            <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_meta&quot;</span><span class="p">.</span><span class="n">jid</span>
+        <span class="k">FROM</span>
+            <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_meta&quot;</span>
+        <span class="k">WHERE</span>
+            <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_meta&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="o">=</span> <span class="s1">&#39;version&#39;</span> <span class="k">AND</span>
+            <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_meta&quot;</span><span class="p">.</span><span class="ss">&quot;value&quot;</span> <span class="o">=</span> <span class="s1">&#39;master&#39;</span>
+        <span class="k">ORDER</span> <span class="k">BY</span>
+            <span class="ss">&quot;metric_data&quot;</span><span class="p">.</span><span class="ss">&quot;perf_test_job_meta&quot;</span><span class="p">.</span><span class="n">id</span> <span class="k">DESC</span>
+        <span class="k">LIMIT</span> <span class="mi">1</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Indicators.html" class="btn btn-neutral float-right" title="Indicators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../Reporters.html" class="btn btn-neutral" title="Reporters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
