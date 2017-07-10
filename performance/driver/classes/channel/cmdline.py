@@ -176,18 +176,22 @@ class CmdlineChannel(Channel):
     # Mark as stopped
     self.activeTask = None
     if not self.killing:
+
+      # Dispatch the correct exit message
+      self.logger.debug('Process exited with code %i' % proc.returncode)
+      if proc.returncode == 0:
+        self.eventbus.publish(CmdlineExitZeroEvent(
+          proc.returncode, traceid=self.lastTraceId))
+      else:
+        self.eventbus.publish(CmdlineExitNonzeroEvent(
+          proc.returncode, traceid=self.lastTraceId))
+
+      # Relaunch if configured
       if self.getConfig('relaunch', True):
         self.logger.warn('Process exited prematurely')
         self.launch(self.activeParameters)
       else:
-        self.logger.debug('Process exited with code %i' % proc.returncode)
         self.logger.info('Process completed')
-        if proc.returncode == 0:
-          self.eventbus.publish(CmdlineExitZeroEvent(
-            proc.returncode, traceid=self.lastTraceId))
-        else:
-          self.eventbus.publish(CmdlineExitNonzeroEvent(
-            proc.returncode, traceid=self.lastTraceId))
 
   def kill(self):
     """
