@@ -1,5 +1,6 @@
 from collections import Counter
 from .timeseries import SummarizerAxisTimeseries
+from .util import confidence_interval
 
 def sum(timeseries:SummarizerAxisTimeseries, param:dict):
   """
@@ -94,3 +95,9 @@ def sdeviation(timeseries:SummarizerAxisTimeseries, param:dict):
   Calculate the standard deviation
   """
   return sqrt(variance(timeseries))
+
+def mean_err(timeseries:SummarizerAxisTimeseries, param:dict):
+  """
+  Calculate the sample mean, including confidence interval
+  """
+  return confidence_interval(timeseries)
