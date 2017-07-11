@@ -151,6 +151,9 @@ class Configurable:
         raise KeyError('%s.%s' % (self.config.path, key))
     return self.config.get(key, default)
 
+  def hasConfig(self, name):
+    return name in self.config
+
   def getMeta(self):
     return self.config.meta
 
