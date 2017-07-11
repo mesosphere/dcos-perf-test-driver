@@ -102,8 +102,13 @@ def dcos_perf_test_driver(args=None):
 
     # Instantiate reporters
     for reporter in session.reporters:
-      logger.debug('Reporting to \'%s\' reporter' % type(reporter).__name__)
-      reporter.dump(session.summarizer)
+      try:
+        logger.debug('Reporting to \'%s\' reporter' % type(reporter).__name__)
+        reporter.dump(session.summarizer)
+      except Exception as e:
+        logger.error('Reporter \'%s\' failed with error: %s' % (type(reporter).__name__, str(e)))
+        if cmdline.verbose:
+          logger.exception(e)
 
     # Success
     return 0
