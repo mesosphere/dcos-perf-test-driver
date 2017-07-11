@@ -32,6 +32,7 @@ it's simple to configure it to match your needs.
    general/Installation
    general/Usage
    general/Tutorial
+   general/Recipes
    general/Architecture
    config/Readme
    classes/Readme

@@ -94,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Recipes.html">Recipes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
@@ -222,6 +223,19 @@
 
 <span class="sd">          # [Optional] Start the tests with this event is received</span>
 <span class="sd">          start: EventToWaitUntilReady</span>
+
+<span class="sd">        # [Optional] Parallelization configuration</span>
+<span class="sd">        parallel:</span>
+
+<span class="sd">          # [Optional] Implied, if the `parallel` section is defined</span>
+<span class="sd">          enabled: yes</span>
+
+<span class="sd">          # [Optional] Interval between the tests (in seconds, can be float)</span>
+<span class="sd">          interval: 1</span>
+
+<span class="sd">          # [Optional] Trigger a parallelisation fork when the given event(s)</span>
+<span class="sd">          # is received. If specified, the `interval` is ignored</span>
+<span class="sd">          event:</span>
 
 <span class="sd">  This policy is first computing all possible combinations of the parameter</span>
 <span class="sd">  matrix given and is then running the tests for every one.</span>
@@ -376,7 +390,11 @@
       <span class="c1"># `eventsRemaining` accordingly</span>
       <span class="n">evalVars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
       <span class="n">evalVars</span><span class="p">[</span><span class="s1">&#39;_i&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">progressCurrent</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signalEventCount</span><span class="p">),</span> <span class="p">{},</span> <span class="n">evalVars</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signalEventCount</span><span class="p">),</span> <span class="p">{},</span> <span class="n">evalVars</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error while parsing the `signalEventcount` expression&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span>
 
       <span class="c1"># Dispatch the request to update the test parameter. All such updates</span>
       <span class="c1"># are batched together into a single event in the bus at the end of the</span>

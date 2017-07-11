@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../general/Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Recipes.html">Recipes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Class Reference</a><ul class="current">
@@ -117,6 +118,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
 </ul>
 </li>
 </ul>
@@ -316,6 +318,22 @@ and storing it in the results folder.</p>
     <span class="c1"># [Optional] The colormap to use when plotting 2D plots</span>
     <span class="c1"># Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html</span>
     <span class="l l-Scalar l-Scalar-Plain">colormap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">plasma</span>
+
+    <span class="c1"># [Optional] Reference data structure</span>
+    <span class="l l-Scalar l-Scalar-Plain">reference</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># Path to raw reference JSON</span>
+      <span class="l l-Scalar l-Scalar-Plain">data</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://path.to/refernce-raw.json</span>
+
+      <span class="c1"># [Optional] The colormap to use when plotting the reference 2D plots</span>
+      <span class="l l-Scalar l-Scalar-Plain">ratiocolormap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">bwr</span>
+
+      <span class="c1"># [Optional] Name of the reference data</span>
+      <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ref</span>
+
+      <span class="c1"># [Optional] Headers to send along with the request</span>
+      <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">Authentication</span><span class="p p-Indicator">:</span> <span class="s">&quot;token={{token}}&quot;</span>
 </pre></div>
 </div>
 <p>This reporter will generate an image plot for every metric defined. The axis

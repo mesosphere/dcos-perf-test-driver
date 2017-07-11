@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Recipes &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Architecture" href="Architecture.html"/>
+        <link rel="prev" title="Tutorial" href="Tutorial.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> dcos-perf-test-driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Recipes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#launching-an-app-not-part-of-the-test">Launching an app, not part of the test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#including-reference-data-in-your-plots">Including reference data in your plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../classes/Readme.html">Class Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dcos-perf-test-driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Recipes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/general/Recipes.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="recipes">
+<span id="id1"></span><h1>Recipes<a class="headerlink" href="#recipes" title="Permalink to this headline">¶</a></h1>
+<p>This section contains various copy-paste-friendly YAML recipes for addressing
+frequently-encountered problems.</p>
+<div class="section" id="launching-an-app-not-part-of-the-test">
+<h2>Launching an app, not part of the test<a class="headerlink" href="#launching-an-app-not-part-of-the-test" title="Permalink to this headline">¶</a></h2>
+<p>Some times you might want to launch an application that is going to run for the
+duration of the test but it’s not active part of the test.</p>
+<p>To launch such applications you can use a <a class="reference internal" href="../classes/Channels.html#classref-channel-cmdlinechannel"><span class="std std-ref">CmdlineChannel</span></a>
+with the following configuration:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">channels</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">class</span><span class="p">:</span> <span class="n">channel</span><span class="o">.</span><span class="n">CmdlineChannel</span>
+
+    <span class="c1"># Start this app at launch time and keep it alive</span>
+    <span class="n">atstart</span><span class="p">:</span> <span class="n">yes</span>
+    <span class="n">relaunch</span><span class="p">:</span> <span class="n">yes</span>
+
+    <span class="c1"># The command-line to launch.</span>
+    <span class="n">cmdline</span><span class="p">:</span> <span class="s2">&quot;path/to/app --args &quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It’s important not to include any <code class="docutils literal"><span class="pre">{{macro}}</span></code> in the channel. Doing so will
+link the channel to a parameter and make it part of the test.</p>
+</div>
+</div>
+<div class="section" id="including-reference-data-in-your-plots">
+<h2>Including reference data in your plots<a class="headerlink" href="#including-reference-data-in-your-plots" title="Permalink to this headline">¶</a></h2>
+<p>If you are running the tests as part of a CI you migth be interested into
+comparing the results to a reference run. To do so, use the <code class="docutils literal"><span class="pre">reference</span></code>
+parameter in the <a class="reference internal" href="../classes/Reporters.html#classref-reporter-plotreporter"><span class="std std-ref">PlotReporter</span></a>.</p>
+<p>The <code class="docutils literal"><span class="pre">url</span></code> should point to a URL where a raw dump (generated by a
+<a class="reference internal" href="../classes/Reporters.html#classref-reporter-rawreporter"><span class="std std-ref">RawReporter</span></a>) is available. This raw dump will be used
+as a reference:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">reporters</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">class</span><span class="p">:</span> <span class="n">reporter</span><span class="o">.</span><span class="n">PlotReporter</span>
+
+    <span class="c1"># Use the given reference</span>
+    <span class="n">reference</span><span class="p">:</span>
+      <span class="n">data</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">.</span><span class="n">to</span><span class="o">/</span><span class="n">refernce</span><span class="o">-</span><span class="n">raw</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>The reference can be computed for 1D and 2D plots. For example:</p>
+<img alt="../_images/plot-metric.png" src="../_images/plot-metric.png" />
+<img alt="../_images/plot-metric-mean_err.png" src="../_images/plot-metric-mean_err.png" />
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Architecture.html" class="btn btn-neutral float-right" title="Architecture" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Tutorial.html" class="btn btn-neutral" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ioannis Charalampidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

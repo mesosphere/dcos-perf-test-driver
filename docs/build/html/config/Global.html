@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../general/Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../general/Recipes.html">Recipes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Configuration</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Global Configuration Statements</a><ul>
@@ -270,7 +271,7 @@ identify this run.</li>
 pre-conditioning their structures based on this configuration.</p>
 <p>The <code class="docutils literal"><span class="pre">name</span></code> and the <code class="docutils literal"><span class="pre">summarize</span></code> properties are the only ones required. The <code class="docutils literal"><span class="pre">desc</span></code>, <code class="docutils literal"><span class="pre">title</span></code>, <code class="docutils literal"><span class="pre">uuid</span></code> and <code class="docutils literal"><span class="pre">units</span></code> are only used by the reporters.</p>
 <p>If you are using the PostgREST reporter, the <code class="docutils literal"><span class="pre">uuid</span></code> should be a valid GUID for the metric being tracked.</p>
-<p>The <code class="docutils literal"><span class="pre">summarize</span></code> array defines one or more <span class="xref std std-ref">metrics-summarized-summarizer</span> classes to use for calculating a single scalar value from the values of the timeseries.</p>
+<p>The <code class="docutils literal"><span class="pre">summarize</span></code> array defines one or more summarizer classes to use for calculating a single scalar value from the values of the timeseries.</p>
 </div>
 <div class="section" id="config-indicators">
 <span id="statements-config-indicators"></span><h3>config.indicators<a class="headerlink" href="#config-indicators" title="Permalink to this headline">¶</a></h3>

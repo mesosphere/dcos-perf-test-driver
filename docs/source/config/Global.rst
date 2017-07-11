@@ -124,7 +124,7 @@ The ``name`` and the ``summarize`` properties are the only ones required. The ``
 
 If you are using the PostgREST reporter, the ``uuid`` should be a valid GUID for the metric being tracked.
 
-The ``summarize`` array defines one or more :ref:`metrics-summarized-summarizer` classes to use for calculating a single scalar value from the values of the timeseries.
+The ``summarize`` array defines one or more summarizer classes to use for calculating a single scalar value from the values of the timeseries.
 
 .. _statements-config-indicators:
 

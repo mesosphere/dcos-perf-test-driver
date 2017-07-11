@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Class Reference &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
+  <title>Summarizers &mdash; dcos-perf-test-driver 0.1.0 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
-        <link rel="next" title="Policies" href="Policies.html"/>
-        <link rel="prev" title="Configuration Example" href="../config/Example.html"/> 
+        <link rel="up" title="Class Reference" href="Readme.html"/>
+        <link rel="prev" title="Indicators" href="Indicators.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -98,7 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../general/Recipes.html">Recipes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../general/Architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config/Readme.html">Configuration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Class Reference</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="Readme.html">Class Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Policies.html">Policies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Observers.html">Observers</a></li>
@@ -106,7 +106,10 @@
 <li class="toctree-l2"><a class="reference internal" href="Tasks.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Summarizers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#builtinsummarizer">BuiltInSummarizer</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -153,13 +156,15 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Class Reference</li>
+          <li><a href="Readme.html">Class Reference</a> &raquo;</li>
+        
+      <li>Summarizers</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/classes/Readme.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/classes/Summarizers.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -172,63 +177,50 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="class-reference">
-<span id="classref"></span><h1>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h1>
-<p>This section contains the detailed configuration and description of every
-class available in the DC/OS Performance Test Driver.</p>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="Policies.html">Policies</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Policies.html#multivariableexplorerpolicy">MultivariableExplorerPolicy</a></li>
+  <div class="section" id="summarizers">
+<span id="classref-summarizer"></span><h1>Summarizers<a class="headerlink" href="#summarizers" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal"><span class="pre">summarizer</span></code> classes contains the functions to calculate a summary value
+for the given time series.</p>
+<div class="section" id="builtinsummarizer">
+<span id="classref-summarizer-builtinsummarizer"></span><h2>BuiltInSummarizer<a class="headerlink" href="#builtinsummarizer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.core.classes.summarizer.BuiltInSummarizer">
+<em class="property">class </em><code class="descclassname">performance.driver.core.classes.summarizer.</code><code class="descname">BuiltInSummarizer</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/core/classes/summarizer.html#BuiltInSummarizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.core.classes.summarizer.BuiltInSummarizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A proxy class that calls the built-in summarizer functions</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="c1"># Can be used without configuration, like so:</span>
+<span class="l l-Scalar l-Scalar-Plain">metrics</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">metric</span>
+    <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">summarize</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">mean</span><span class="p p-Indicator">,</span> <span class="nv">min</span><span class="p p-Indicator">,</span> <span class="p p-Indicator">]</span>
+
+<span class="c1"># Or with configuration like so:</span>
+<span class="l l-Scalar l-Scalar-Plain">metrics</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">metric</span>
+    <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">summarize</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class @mean</span>
+
+        <span class="l l-Scalar l-Scalar-Plain"># The name of the metric in the plots</span>
+        <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">mean</span>
+
+        <span class="c1"># [Optional] Set to `yes` to include outliers</span>
+        <span class="l l-Scalar l-Scalar-Plain">outliers</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">no</span>
+</pre></div>
+</div>
+<p>The following built-in summarizers are available:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">mean</span></code> : Calculate the mean value of the timeseries</li>
+<li><code class="docutils literal"><span class="pre">mean_err</span></code> : Calculate the mean value, including statistical errors</li>
+<li><code class="docutils literal"><span class="pre">min</span></code> : Find the minimum value</li>
+<li><code class="docutils literal"><span class="pre">max</span></code> : Find the maximum value</li>
+<li><code class="docutils literal"><span class="pre">sum</span></code> : Calculate the sum of all timeseries</li>
+<li><code class="docutils literal"><span class="pre">median</span></code> : Calculate the median of the timeseries</li>
+<li><code class="docutils literal"><span class="pre">mode</span></code> : Calculate the mode of the timeseries</li>
+<li><code class="docutils literal"><span class="pre">variance</span></code> : Calculate the variance of the timeseries</li>
+<li><code class="docutils literal"><span class="pre">sdeviation</span></code> : Calculate the standard deviation of the timeseries</li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Channels.html">Channels</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Channels.html#cmdlinechannel">CmdlineChannel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Channels.html#httpchannel">HTTPChannel</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Observers.html">Observers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Observers.html#loglineobserver">LogLineObserver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Observers.html#marathoneventsobserver">MarathonEventsObserver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Observers.html#marathonmetricsobserver">MarathonMetricsObserver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Observers.html#marathonpollerobserver">MarathonPollerObserver</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Trackers.html">Trackers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Trackers.html#durationtracker">DurationTracker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Trackers.html#loglinetokentracker">LogLineTokenTracker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Trackers.html#dumpmetrictracker">DumpMetricTracker</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Tasks.html">Tasks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Tasks.html#auth-authee">auth.AuthEE</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Tasks.html#auth-authopen">auth.AuthOpen</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Tasks.html#removeallapps">RemoveAllApps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Tasks.html#removematchingapps">RemoveMatchingApps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Tasks.html#removegroup">RemoveGroup</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Reporters.html">Reporters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Reporters.html#csvreporter">CSVReporter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Reporters.html#datadogreporter">DataDogReporter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Reporters.html#plotreporter">PlotReporter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Reporters.html#postgrestreporter">PostgRESTReporter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Reporters.html#rawreporter">RawReporter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Reporters.html#s3reporter">S3Reporter</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Indicators.html">Indicators</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Indicators.html#normalizedmeanmetricindicator">NormalizedMeanMetricIndicator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Indicators.html#normalizedminmetricindicator">NormalizedMinMetricIndicator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Indicators.html#normalizedmaxmetricindicator">NormalizedMaxMetricIndicator</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Summarizers.html">Summarizers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Summarizers.html#builtinsummarizer">BuiltInSummarizer</a></li>
-</ul>
-</li>
-</ul>
+</dd></dl>
+
 </div>
 </div>
 
@@ -242,10 +234,8 @@ class available in the DC/OS Performance Test Driver.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Policies.html" class="btn btn-neutral float-right" title="Policies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="../config/Example.html" class="btn btn-neutral" title="Configuration Example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Indicators.html" class="btn btn-neutral" title="Indicators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

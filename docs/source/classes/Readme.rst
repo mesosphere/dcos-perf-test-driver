@@ -17,3 +17,4 @@ class available in the DC/OS Performance Test Driver.
    Tasks
    Reporters
    Indicators
+   Summarizers

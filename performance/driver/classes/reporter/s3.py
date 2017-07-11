@@ -3,6 +3,9 @@ import json
 
 from performance.driver.core.classes import Reporter
 
+# NOTE: The following block is needed only when sphinx is parsing this file
+#       in order to generate the documentation. It's not really useful for
+#       the logic of the file itself.
 try:
   import boto3
 except ModuleNotFoundError:

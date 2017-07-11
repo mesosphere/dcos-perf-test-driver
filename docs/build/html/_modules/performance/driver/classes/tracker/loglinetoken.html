@@ -94,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../general/Recipes.html">Recipes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../general/Architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../config/Readme.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../classes/Readme.html">Class Reference</a></li>
@@ -169,6 +170,12 @@
 
 <span class="kn">from</span> <span class="nn">performance.driver.classes.observer.logline</span> <span class="k">import</span> <span class="n">LogLineTokenMatchEvent</span>
 
+<span class="n">TYPE_TRANSFORMATIONS</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;int&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+  <span class="s1">&#39;float&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+  <span class="s1">&#39;str&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="p">}</span>
+
 <div class="viewcode-block" id="LogLineTokenTracker"><a class="viewcode-back" href="../../../../../classes/Trackers.html#performance.driver.classes.tracker.LogLineTokenTracker">[docs]</a><span class="k">class</span> <span class="nc">LogLineTokenTracker</span><span class="p">(</span><span class="n">Tracker</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The *LogLine Token Tracker* is forwarding the values of the LogLine tokens</span>
@@ -200,8 +207,20 @@
 
     <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tokenCastFn</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tokens&#39;</span><span class="p">,</span> <span class="p">[]):</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="p">[</span><span class="n">token</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">token</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">tokenCastFn</span><span class="p">[</span><span class="n">token</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span>
+
+      <span class="c1"># Compute the type cast function name</span>
+      <span class="n">typeCastFnName</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">typeCastFnName</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">typeCastFnName</span> <span class="ow">in</span> <span class="n">TYPE_TRANSFORMATIONS</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown type transformation </span><span class="si">%s</span><span class="s1"> for token </span><span class="si">%s</span><span class="s1">&#39;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">typeCastFnName</span><span class="p">,</span> <span class="n">token</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokenCastFn</span><span class="p">[</span><span class="n">token</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">TYPE_TRANSFORMATIONS</span><span class="p">[</span><span class="n">typeCastFnName</span><span class="p">]</span>
+
 
     <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleLogLineTokenMatchEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">LogLineTokenMatchEvent</span><span class="p">,))</span>
 
@@ -216,7 +235,7 @@
     <span class="c1"># Track metric</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">trackMetric</span><span class="p">(</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
-      <span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">tokenCastFn</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">](</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
       <span class="n">event</span><span class="o">.</span><span class="n">traceids</span>
     <span class="p">)</span></div>
 
