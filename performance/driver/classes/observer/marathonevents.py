@@ -200,7 +200,6 @@ class MarathonEventsObserver(Observer):
     url = self.urlTpl.apply(definitions)
     headers = self.headersTpl.apply(definitions)
 
-
     # Wait til endpoint responds
     while self.running:
 
@@ -251,7 +250,7 @@ class MarathonEventsObserver(Observer):
       # ...
       #
       try:
-        self.activeSse = RawSSE(url)
+        self.activeSse = RawSSE(url, headers=headers)
         with self.activeSse as rawsse:
           try:
             for event in rawsse:
