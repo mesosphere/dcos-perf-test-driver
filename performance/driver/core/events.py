@@ -71,7 +71,7 @@ class StartEvent(Event):
   and the environment is ready, in order to start the policies.
   """
 
-class RestartEvent(StartEvent):
+class RestartEvent(Event):
   """
   A restart event is dispatched in place of StartEvent when more than one
   test loops has to be executed.
