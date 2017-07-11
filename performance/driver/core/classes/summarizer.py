@@ -1,7 +1,7 @@
 import logging
 
 from performance.driver.core.summarizer import SummarizerAxisTimeseries, SummarizerAxisParameters
-from performance.driver.core.summarizer import builtin
+from performance.driver.core.summarizer import builtin, util
 from performance.driver.core.config import Configurable
 
 class Summarizer(Configurable):
@@ -26,6 +26,40 @@ class Summarizer(Configurable):
 class BuiltInSummarizer(Summarizer):
   """
   A proxy class that calls the built-in summarizer functions
+
+  ::
+
+    # Can be used without configuration, like so:
+    metrics:
+      - name: metric
+        ...
+        summarize: [mean, min, ]
+
+    # Or with configuration like so:
+    metrics:
+      - name: metric
+        ...
+        summarize:
+          - class @mean
+
+            # The name of the metric in the plots
+            name: mean
+
+            # [Optional] Set to `yes` to include outliers
+            outliers: no
+
+  The following built-in summarizers are available:
+
+  * ``mean`` : Calculate the mean value of the timeseries
+  * ``mean_err`` : Calculate the mean value, including statistical errors
+  * ``min`` : Find the minimum value
+  * ``max`` : Find the maximum value
+  * ``sum`` : Calculate the sum of all timeseries
+  * ``median`` : Calculate the median of the timeseries
+  * ``mode`` : Calculate the mode of the timeseries
+  * ``variance`` : Calculate the variance of the timeseries
+  * ``sdeviation`` : Calculate the standard deviation of the timeseries
+
   """
 
   def __init__(self, config):
@@ -46,6 +80,12 @@ class BuiltInSummarizer(Summarizer):
     """
     Call the built-in summarizer function
     """
+
+    # Remove outliers
+    if self.getConfig('outliers', False):
+      timeseries = util.reject_outliers(timeseries)
+
+    # Apply the summarizer function
     return self.ref(timeseries, parameters)
 
 
