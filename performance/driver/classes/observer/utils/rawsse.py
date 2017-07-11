@@ -1,8 +1,40 @@
 import select
+import logging
 import ssl
 
 from urllib.parse import urlparse
 from socket import socket, AF_INET, SOCK_STREAM
+
+class ChunkedReader:
+  """
+  Rough implementation of HTTP/1.1 chunked trasnfer reader
+  """
+
+  def __init__(self):
+    self.buffer = b''
+    self.activeChunk = b''
+
+  def feed(self, chunk):
+    self.activeChunk += chunk
+    while b'\r\n' in self.activeChunk:
+      (hex_size, body) = self.activeChunk.split(b'\r\n', 1)
+      size = int(hex_size, 16)
+      if len(body) < size:
+        break
+
+      self.buffer += body[:size]
+      self.activeChunk = body[size+2:]
+
+class DirectReader:
+  """
+  Direct transfer reader (non-chunked)
+  """
+
+  def __init__(self):
+    self.buffer = b''
+
+  def feed(self, chunk):
+    self.buffer += chunk
 
 class RawSSE:
   """
@@ -18,6 +50,7 @@ class RawSSE:
   """
 
   def __init__(self, url, headers={}):
+    self.logger = logging.getLogger('RawSSE')
     self.url = urlparse(url)
     self.sslctx = None
     self.headers = {
@@ -88,9 +121,13 @@ class RawSSE:
       self.socket.close()
       raise IOError('Remote server responded with an HTTP %s %s' % (status, status_str))
 
+    # Check if we are using chunked encuding
+    transferManager = DirectReader()
+    if headers['Transfer-Encoding'] == 'chunked':
+      transferManager = ChunkedReader()
+
     # Return a generator that processes the socket results
     def eventGenerator():
-      buf = b''
       while True:
 
         # Wait for an I/O Event
@@ -107,10 +144,12 @@ class RawSSE:
           if not chunk:
             raise IOError('Disconnected')
 
+          # Feed data to the transfer manager
+          transferManager.feed(chunk)
+
           # Extract all messages from the buffer
-          buf += chunk
-          while b'\r\n\r\n' in buf:
-            (event, buf) = buf.split(b'\r\n\r\n', 1)
+          while b'\r\n\r\n' in transferManager.buffer:
+            (event, transferManager.buffer) = transferManager.buffer.split(b'\r\n\r\n', 1)
 
             # Strep newlines that might come from keepalive
             event = event.strip()
@@ -123,6 +162,17 @@ class RawSSE:
               # of the event in the stream
               event = {}
               for line in lines:
+
+                # Comment line
+                if line.startswith(':'):
+                  continue
+
+                # Line without ':' implicitly is considered a field with
+                # an empty value
+                if not ':' in line:
+                  line += ':'
+
+                # Separate key/value and update contents
                 (key, value) = line.split(': ', 1)
                 if not key in event:
                   event[key] = ''
