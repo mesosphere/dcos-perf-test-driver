@@ -171,6 +171,13 @@ class MultivariableExplorerPolicy(PolicyFSM):
       if isEventMatching(event, self.startEvent):
         self.goto(MultivariableExplorerPolicy.Run)
 
+    def onRestartEvent(self, event):
+      """
+      When the tests are re-started, marathon is already running, so only wait
+      for the restart signal before switching to `Run` state.
+      """
+      self.goto(MultivariableExplorerPolicy.Run)
+
   class Run(State):
     """
     Initialize test cases and prepare for deployment
