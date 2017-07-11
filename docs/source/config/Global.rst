@@ -124,7 +124,36 @@ The ``name`` and the ``summarize`` properties are the only ones required. The ``
 
 If you are using the PostgREST reporter, the ``uuid`` should be a valid GUID for the metric being tracked.
 
-The ``summarize`` array defines one or more summarizer classes to use for calculating a single scalar value from the values of the timeseries.
+The ``summarize`` array defines one or more summarizer classes to use for calculating a single scalar value from the values of the timeseries. Note that there are two ways to define summarizers:
+
+* The **compact format** accepts no configuration parameters, assumes that the
+  name of the summariser (visible in the reports) is it's type and the
+  functionality will be imported from the :ref:`classref-summarizer-BuiltInSummarizer`.
+
+  ::
+
+    config:
+      ...
+      metrics:
+        - name: parameterName
+          ...
+          summarize: [min, max]
+
+* The **extended format** accepts full configuration parameters and you can even
+  specify your own summarizers. You can still use the ``@name`` class name if
+  you want to refer to a built-in summarizer.
+
+
+  ::
+
+    config:
+      ...
+      metrics:
+        - name: parameterName
+          ...
+          summarize:
+            - class: summarizers.MyCustomSummarizer.summarisationFunction
+              name: "Name in plots"
 
 .. _statements-config-indicators:
 

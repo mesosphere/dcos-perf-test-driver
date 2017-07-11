@@ -271,7 +271,35 @@ identify this run.</li>
 pre-conditioning their structures based on this configuration.</p>
 <p>The <code class="docutils literal"><span class="pre">name</span></code> and the <code class="docutils literal"><span class="pre">summarize</span></code> properties are the only ones required. The <code class="docutils literal"><span class="pre">desc</span></code>, <code class="docutils literal"><span class="pre">title</span></code>, <code class="docutils literal"><span class="pre">uuid</span></code> and <code class="docutils literal"><span class="pre">units</span></code> are only used by the reporters.</p>
 <p>If you are using the PostgREST reporter, the <code class="docutils literal"><span class="pre">uuid</span></code> should be a valid GUID for the metric being tracked.</p>
-<p>The <code class="docutils literal"><span class="pre">summarize</span></code> array defines one or more summarizer classes to use for calculating a single scalar value from the values of the timeseries.</p>
+<p>The <code class="docutils literal"><span class="pre">summarize</span></code> array defines one or more summarizer classes to use for calculating a single scalar value from the values of the timeseries. Note that there are two ways to define summarizers:</p>
+<ul>
+<li><p class="first">The <strong>compact format</strong> accepts no configuration parameters, assumes that the
+name of the summariser (visible in the reports) is it’s type and the
+functionality will be imported from the <a class="reference internal" href="../classes/Summarizers.html#classref-summarizer-builtinsummarizer"><span class="std std-ref">BuiltInSummarizer</span></a>.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">config</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+  <span class="l l-Scalar l-Scalar-Plain">metrics</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">parameterName</span>
+      <span class="l l-Scalar l-Scalar-Plain">...</span>
+      <span class="l l-Scalar l-Scalar-Plain">summarize</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">min</span><span class="p p-Indicator">,</span> <span class="nv">max</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">The <strong>extended format</strong> accepts full configuration parameters and you can even
+specify your own summarizers. You can still use the <code class="docutils literal"><span class="pre">&#64;name</span></code> class name if
+you want to refer to a built-in summarizer.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">config</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+  <span class="l l-Scalar l-Scalar-Plain">metrics</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">parameterName</span>
+      <span class="l l-Scalar l-Scalar-Plain">...</span>
+      <span class="l l-Scalar l-Scalar-Plain">summarize</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">summarizers.MyCustomSummarizer.summarisationFunction</span>
+          <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Name</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">plots&quot;</span>
+</pre></div>
+</div>
+</li>
+</ul>
 </div>
 <div class="section" id="config-indicators">
 <span id="statements-config-indicators"></span><h3>config.indicators<a class="headerlink" href="#config-indicators" title="Permalink to this headline">¶</a></h3>

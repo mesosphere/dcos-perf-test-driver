@@ -224,19 +224,6 @@
 <span class="sd">          # [Optional] Start the tests with this event is received</span>
 <span class="sd">          start: EventToWaitUntilReady</span>
 
-<span class="sd">        # [Optional] Parallelization configuration</span>
-<span class="sd">        parallel:</span>
-
-<span class="sd">          # [Optional] Implied, if the `parallel` section is defined</span>
-<span class="sd">          enabled: yes</span>
-
-<span class="sd">          # [Optional] Interval between the tests (in seconds, can be float)</span>
-<span class="sd">          interval: 1</span>
-
-<span class="sd">          # [Optional] Trigger a parallelisation fork when the given event(s)</span>
-<span class="sd">          # is received. If specified, the `interval` is ignored</span>
-<span class="sd">          event:</span>
-
 <span class="sd">  This policy is first computing all possible combinations of the parameter</span>
 <span class="sd">  matrix given and is then running the tests for every one.</span>
 
