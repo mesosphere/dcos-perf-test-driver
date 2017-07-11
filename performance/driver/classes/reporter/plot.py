@@ -1,6 +1,9 @@
 import requests
 from performance.driver.core.classes import Reporter
 
+# NOTE: The following block is needed only when sphinx is parsing this file
+#       in order to generate the documentation. It's not really useful for
+#       the logic of the file itself.
 try:
   import matplotlib
   matplotlib.use('Agg')
@@ -213,7 +216,18 @@ class PlotReporter(Reporter):
         self.getConfig('yscale', 'linear')
       )
       for name, values in plotGroup.values().items():
-        plotfn(x1, values[:,0], '-', label=name, linewidth=2, **plotfn_kwargs)
+        v = values[:,0]
+        dat = plotfn(x1, v, '-', label=name, linewidth=2, **plotfn_kwargs)
+
+        # Plot the error bars if we have them
+        if not np.all(values[:,1] == 0):
+          ax.errorbar(
+            x1, v,
+            yerr=values[:,1],
+            ecolor=dat[0].get_color(),
+            capsize=5,
+            fmt='.'
+          )
 
       ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
 
@@ -240,6 +254,16 @@ class PlotReporter(Reporter):
         v = values[:,0]
         dat = plotfn(x1, v, '-', label=name, linewidth=2, **plotfn_kwargs)
 
+        # Plot the error bars if we have them
+        if not np.all(values[:,1] == 0):
+          ax.errorbar(
+            x1, v,
+            yerr=values[:,1],
+            ecolor=dat[0].get_color(),
+            capsize=5
+          )
+
+        # Safely bail if something went wrong while processing the reference
         try:
           rvalues = referencePlotGroup.values(name)
           rv = rvalues[:,0]
@@ -250,14 +274,17 @@ class PlotReporter(Reporter):
           ratio = v/rv
           rat = plotfn_ratio(x1, ratio, c=dat[0].get_color(), **plotfn_kwargs_ratio)
 
-          # Calculate the ratio error bar values
-          ratio_err = ratio * np.sqrt(
-            values[:,1] ** 2 / values[:,0] + rvalues[:,1] ** 2 / rvalues[:,0]
-          )
+          # Calculate the ratio error bar values, if we have them
+          if not np.all(values[:,1] == 0):
+            ratio_err = ratio * np.sqrt(
+              values[:,1] ** 2 / values[:,0] + rvalues[:,1] ** 2 / rvalues[:,0]
+            )
 
-          # axRatio.errorbar(x1, ratio, yerr=ratio_err)
-          axRatio.fill_between(x1, ratio-ratio_err, ratio+ratio_err, facecolor=rat[0].get_color(), alpha=0.5)
-
+            axRatio.fill_between(
+              x1, ratio-ratio_err, ratio+ratio_err,
+              facecolor=rat[0].get_color(),
+              alpha=0.5
+            )
 
         except KeyError as e:
           self.logger.warning('Could not find summariser %s in reference data'
