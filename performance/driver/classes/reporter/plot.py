@@ -427,6 +427,7 @@ class PlotReporter(Reporter):
     """
     Dump a plot for every metric in the time series
     """
+    config = self.getRenderedConfig()
 
     # Validate dimentions
     if len(self.generalConfig.parameters) == 0:
@@ -441,7 +442,7 @@ class PlotReporter(Reporter):
 
     # Collect reference data if we have them
     reference = None
-    refConfig = self.getConfig('reference', required=False)
+    refConfig = config.get('reference', None)
     if not refConfig is None:
       url = refConfig['url']
       self.logger.info('Fetcing reference data from %s' % url)
@@ -505,8 +506,8 @@ class PlotReporter(Reporter):
                    [len(self.generalConfig.parameters)-1]
 
     # Create and dump plots
-    filePrefix = self.getConfig('prefix', 'plot-')
-    fileSuffix = self.getConfig('suffix', '')
+    filePrefix = config.get('prefix', 'plot-')
+    fileSuffix = config.get('suffix', '')
     for metric, plotGroup in metricPlotGroup.items():
       dumpFunction(
         axisValues,

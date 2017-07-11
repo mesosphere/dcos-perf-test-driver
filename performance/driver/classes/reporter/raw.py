@@ -102,7 +102,8 @@ class RawReporter(Reporter):
     """
 
     # Get the fiename to write into
-    filename = self.config.get('filename', 'results-raw.json')
+    config = self.getRenderedConfig()
+    filename = config.get('filename', 'results-raw.json')
 
     # Dump the raw timeseries
     with open(filename, 'w') as f:

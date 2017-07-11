@@ -121,7 +121,8 @@ class CSVReporter(Reporter):
         csv.col(name).set(str(value))
 
     # Dump csv file
+    config = self.getRenderedConfig()
     csv.saveTo(
-      self.config.get('filename', 'results.csv'),
-      self.config.get('separator', ',')
+      config.get('filename', 'results.csv'),
+      config.get('separator', ',')
     )
