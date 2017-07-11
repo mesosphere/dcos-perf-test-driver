@@ -213,7 +213,11 @@ class MultivariableExplorerPolicy(PolicyFSM):
       # `eventsRemaining` accordingly
       evalVars = dict(parameters)
       evalVars['_i'] = self.progressCurrent
-      self.eventsRemaining = eval(str(self.signalEventCount), {}, evalVars)
+      try:
+        self.eventsRemaining = eval(str(self.signalEventCount), {}, evalVars)
+      except Exception as e:
+        self.logger.error('Error while parsing the `signalEventcount` expression')
+        raise e
 
       # Dispatch the request to update the test parameter. All such updates
       # are batched together into a single event in the bus at the end of the
