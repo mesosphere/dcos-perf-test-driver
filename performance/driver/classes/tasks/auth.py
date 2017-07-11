@@ -109,4 +109,4 @@ class AuthOpen(Task):
 
     # Get token
     self.setDefinition('dcos_auth_token', response.json()['token'])
-    self.logger.debug('Authenticated')
+    self.logger.info('Authenticated')
