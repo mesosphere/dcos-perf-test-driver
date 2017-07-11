@@ -62,7 +62,7 @@ class DurationTracker(Tracker):
     for trace in self.activeTraces:
       if not trace.completed():
         self.logger.warn('Trace initiated by %r was incomplete' % trace.startEvent)
-        return
+        continue
 
       self.trackMetric(
         self.metric,
