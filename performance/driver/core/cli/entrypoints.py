@@ -98,6 +98,7 @@ def dcos_perf_test_driver(args=None):
       return 1
 
     # Run the tests
+    logger.info("Starting %s" % generalConfig.title)
     session.run()
 
     # Instantiate reporters
