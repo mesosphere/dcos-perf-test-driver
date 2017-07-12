@@ -123,7 +123,7 @@ class RawSSE:
 
     # Check if we are using chunked encuding
     transferManager = DirectReader()
-    if headers['Transfer-Encoding'] == 'chunked':
+    if headers.get('Transfer-Encoding', '') == 'chunked':
       transferManager = ChunkedReader()
 
     # Return a generator that processes the socket results
