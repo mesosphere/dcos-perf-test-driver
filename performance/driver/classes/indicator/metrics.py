@@ -15,19 +15,35 @@ class NormalizedMeanMetricIndicator(Indicator):
     """
 
     # Get the metric.summarizer to track
-    (v_metric, v_summarizer) = self.getConfig('metric').split('.')
-    v_parameter = self.getConfig('parameter')
+    config = self.getRenderedConfig()
+    (v_metric, v_summarizer) = config['metric'].split('.')
+    v_norm_expr = config['normalizeto']
 
     # Calculate the normalized average
     v_mean = 0.0
     for axis in axes:
       summ = axis.sum()
 
+      # Get the summariser value (and in case of value/error get the value)
+      sum_value = summ[v_metric][v_summarizer]
+      if type(sum_value) in (list, tuple):
+        sum_value = sum_value[0]
+
+      self.logger.debug('For Axis %r, metric %s, summariser %s = %r'
+        % (axis, v_metric, v_summarizer, sum_value))
+
       # Calculate normalized value
-      if axis.parameters[v_parameter] == 0:
+      try:
+        norm = eval(v_norm_expr, {}, axis.parameters)
+        value = float(sum_value) / norm
+        self.logger.debug('Norm expression "%s" evaluated to %r = %r'
+          % (v_norm_expr, norm, value))
+
+      except Exception as e:
+        self.logger.error("Error evaluating normalization expression: %s" % str(e))
         value = 0
-      else:
-        value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
+
+      # Calculate indicator
       v_mean += value
 
     # Calculate mean
@@ -50,20 +66,29 @@ class NormalizedMinMetricIndicator(Indicator):
     """
 
     # Get the metric.summarizer to track
-    (v_metric, v_summarizer) = self.getConfig('metric').split('.')
-    v_parameter = self.getConfig('parameter')
+    config = self.getRenderedConfig()
+    (v_metric, v_summarizer) = config['metric'].split('.')
+    v_norm_expr = config['normalizeto']
 
     # Calculate the normalized minimum
     v_min = None
     for axis in axes:
       summ = axis.sum()
 
-      # Calculate normalized value
-      if axis.parameters[v_parameter] == 0:
-        value = 0
-      else:
-        value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
+      # Get the summariser value (and in case of value/error get the value)
+      sum_value = summ[v_metric][v_summarizer]
+      if type(sum_value) in (list, tuple):
+        sum_value = sum_value[0]
 
+      # Calculate normalized value
+      try:
+        norm = eval(v_norm_expr, {}, axis.parameters)
+        value = float(sum_value) / norm
+      except Exception as e:
+        self.logger.error("Error evaluating normalization expression: %s" % str(e))
+        value = 0
+
+      # Calculate indicator
       if v_min is None:
         v_min = value
       else:
@@ -85,20 +110,29 @@ class NormalizedMaxMetricIndicator(Indicator):
     """
 
     # Get the metric.summarizer to track
-    (v_metric, v_summarizer) = self.getConfig('metric').split('.')
-    v_parameter = self.getConfig('parameter')
+    config = self.getRenderedConfig()
+    (v_metric, v_summarizer) = config['metric'].split('.')
+    v_norm_expr = config['normalizeto']
 
     # Calculate the normalized minimum
     v_max = None
     for axis in axes:
       summ = axis.sum()
 
-      # Calculate normalized value
-      if axis.parameters[v_parameter] == 0:
-        value = 0
-      else:
-        value = float(summ[v_metric][v_summarizer]) / axis.parameters[v_parameter]
+      # Get the summariser value (and in case of value/error get the value)
+      sum_value = summ[v_metric][v_summarizer]
+      if type(sum_value) in (list, tuple):
+        sum_value = sum_value[0]
 
+      # Calculate normalized value
+      try:
+        norm = eval(v_norm_expr, {}, axis.parameters)
+        value = float(sum_value) / norm
+      except Exception as e:
+        self.logger.error("Error evaluating normalization expression: %s" % str(e))
+        value = 0
+
+      # Calculate indicator
       if v_max is None:
         v_max = value
       else:
