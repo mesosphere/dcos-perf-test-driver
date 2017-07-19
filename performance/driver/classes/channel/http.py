@@ -56,6 +56,18 @@ class HTTPFirstResponseEndEvent(HTTPResponseEndEvent):
 class HTTPLastResponseEndEvent(HTTPResponseEndEvent):
   pass
 
+class HTTPErrorResponseEvent(Event):
+  pass
+
+class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorResponseEvent):
+  pass
+
+class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorResponseEvent):
+  pass
+
+class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorResponseEvent):
+  pass
+
 ###############################
 # Helpers
 ###############################
@@ -299,34 +311,53 @@ class HTTPChannel(Channel):
       )(req.url, traceid=req.traceids)
     )
     self.logger.debug('Placing a %s request to %s' % (req.verb, req.url))
-    req.activeRequest = self.session.request(
-      req.verb,
-      req.url,
-      verify=False,
-      data=req.getBody(),
-      headers=req.headers,
-      hooks=dict(response=ack_response)
-    )
+    try:
 
-    # Warn errors
-    if (req.activeRequest.status_code < 200) or (req.activeRequest.status_code >= 300):
-      self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
-        (req.verb, req.url, req.activeRequest.status_code))
-
-    # Process response
-    self.eventbus.publish(pickFirstLast(
-        req.completedCounter,
-        req.repeat,
-        HTTPFirstResponseEndEvent,
-        HTTPLastResponseEndEvent,
-        HTTPResponseEndEvent
-      )(req.url,
-        req.activeRequest.text,
-        req.activeRequest.headers,
-        traceid=req.traceids
+      # Send request (and trap errors)
+      req.activeRequest = self.session.request(
+        req.verb,
+        req.url,
+        verify=False,
+        data=req.getBody(),
+        headers=req.headers,
+        hooks=dict(response=ack_response)
       )
-    )
-    req.activeRequest = None
+
+      # Warn errors
+      if (req.activeRequest.status_code < 200) or (req.activeRequest.status_code >= 300):
+        self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
+          (req.verb, req.url, req.activeRequest.status_code))
+
+      # Process response
+      self.eventbus.publish(pickFirstLast(
+          req.completedCounter,
+          req.repeat,
+          HTTPFirstResponseEndEvent,
+          HTTPLastResponseEndEvent,
+          HTTPResponseEndEvent
+        )(req.url,
+          req.activeRequest.text,
+          req.activeRequest.headers,
+          traceid=req.traceids
+        )
+      )
+      req.activeRequest = None
+
+    except requests.exceptions.ConnectionError as e:
+
+      # Dispatch error
+      self.eventbus.publish(pickFirstLast(
+          req.completedCounter,
+          req.repeat,
+          HTTPFirstResponseErrorEvent,
+          HTTPLastResponseErrorEvent,
+          HTTPResponseErrorEvent
+        )(req.url,
+          "",
+          {},
+          traceid=req.traceids
+        )
+      )
 
     # Check for repetitions
     req.completedCounter += 1
