@@ -114,7 +114,11 @@ class CSVReporter(Reporter):
       # Process summarized values
       for metric, summarizedValues in testCase['values'].items():
         for summarizer, value in summarizedValues.items():
-          csv.col('%s (%s)' % (metric, summarizer)).set(str(value))
+          if type(value) in (list, tuple):
+            csv.col('%s (%s)' % (metric, summarizer)).set(str(value[0]))
+            csv.col('%s (%s - error)' % (metric, summarizer)).set(str(value[1]))
+          else:
+            csv.col('%s (%s)' % (metric, summarizer)).set(str(value))
 
       # Process flags
       for name, value in testCase['flags'].items():
