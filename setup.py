@@ -52,5 +52,10 @@ setup(
     'console_scripts': [
       'dcos-perf-test-driver = performance.driver.core.cli.entrypoints:dcos_perf_test_driver'
     ]
-  }
+  },
+
+  scripts=[
+    'tools/dcos-ccm-tool',
+    'tools/dcos-pr-tool'
+  ]
 )
