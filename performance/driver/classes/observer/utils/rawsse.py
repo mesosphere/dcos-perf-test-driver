@@ -1,5 +1,10 @@
-import select
+#
+# Raw Server-Side-Events Client
+# (C) 2017 Ioannis Charalampidis - Mesosphere GmbH
+#
+
 import logging
+import select
 import ssl
 
 from urllib.parse import urlparse
@@ -44,12 +49,14 @@ class RawSSE:
 
   Usage:
 
-  with RawSSE(url) as session:
-    for event in session:
-      ...
+    with RawSSE(url) as session:
+      for event in session:
+        ...
+        print(event['event'], event['data'])
+
   """
 
-  def __init__(self, url, headers={}):
+  def __init__(self, url, headers={}, secure=False):
     self.logger = logging.getLogger('RawSSE')
     self.url = urlparse(url)
     self.sslctx = None
@@ -61,7 +68,8 @@ class RawSSE:
 
     # Validate URL
     if self.url.scheme not in ('http', 'https'):
-      raise ValueError('Only the `http` and `https` URL schemes are supported through RAW SSE sockets')
+      raise ValueError('Only the `http` and `https` URL schemes are supported '
+        'through RAW SSE sockets')
 
     # Crate SSL context if we are using https
     if self.url.scheme == 'https':
@@ -70,14 +78,14 @@ class RawSSE:
       elif hasattr(ssl, 'PROTOCOL_TLS'):
         self.sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS)
       self.verify_mode = ssl.CERT_NONE
-      self.check_hostname = False
+      self.check_hostname = secure
 
   def __enter__(self):
     """
     Establish a connection to the remote endpoint and send the request
     """
 
-    # Find server and port
+    # Find server and port by de-composing the URL
     server = self.url.netloc
     port = 443 if self.url.scheme == 'https' else 80
     if ':' in server:
@@ -90,17 +98,17 @@ class RawSSE:
     if self.url.scheme == 'https':
       self.socket = self.sslctx.wrap_socket(self.socket)
 
-    # Connect & Send the HTTP request
+    # Connect and send an HTTP/1.1 - compliant request
     self.socket.connect((server, int(port)))
     req = [
-        'GET %s HTTP/1.1' % self.url.path,
-        'Host: %s' %  self.url.netloc,
+        'GET {} HTTP/1.1'.format(self.url.path),
+        'Host: {}'.format(self.url.netloc),
       ] \
-      + list(map(lambda x: '%s: %s' % x, self.headers.items())) \
+      + list(map(lambda x: '{}: {}'.format(*x), self.headers.items())) \
       + ['', '']
     self.socket.send(bytes('\r\n'.join(req), encoding='utf-8'))
 
-    # Receive an http response
+    # Receive the HTTP response
     response = self.socket.recv(4096)
     if not b'\r\n\r\n' in response:
       self.socket.shutdown(2)
@@ -110,7 +118,7 @@ class RawSSE:
     # Split response from the body
     (resp_headers, body) = response.split(b'\r\n\r\n', 1)
 
-    # Decompose headers
+    # De-compose headers
     header_lines = resp_headers.decode('utf-8').split('\r\n')
     (http_ver, status, status_str) = header_lines.pop(0).split(' ', 2)
     headers = dict(map(lambda x: x.split(': ', 1), header_lines))
@@ -119,12 +127,14 @@ class RawSSE:
     if int(status) != 200:
       self.socket.shutdown(2)
       self.socket.close()
-      raise IOError('Remote server responded with an HTTP %s %s' % (status, status_str))
+      raise IOError('Remote server responded with an HTTP {} {}' \
+        .format(status, status_str))
 
-    # Check if we are using chunked encuding
-    transferManager = DirectReader()
+    # According to HTTP/1.1 specifications we MUST support chunked
+    # encoding, so we are providing a minimal implementation for it.
+    reader = DirectReader()
     if headers.get('Transfer-Encoding', '') == 'chunked':
-      transferManager = ChunkedReader()
+      reader = ChunkedReader()
 
     # Return a generator that processes the socket results
     def eventGenerator():
@@ -145,11 +155,11 @@ class RawSSE:
             raise IOError('Disconnected')
 
           # Feed data to the transfer manager
-          transferManager.feed(chunk)
+          reader.feed(chunk)
 
           # Extract all messages from the buffer
-          while b'\r\n\r\n' in transferManager.buffer:
-            (event, transferManager.buffer) = transferManager.buffer.split(b'\r\n\r\n', 1)
+          while b'\r\n\r\n' in reader.buffer:
+            (event, reader.buffer) = reader.buffer.split(b'\r\n\r\n', 1)
 
             # Strep newlines that might come from keepalive
             event = event.strip()
