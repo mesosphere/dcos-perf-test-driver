@@ -2,7 +2,7 @@ import re
 import time
 import uuid
 
-MACRO = re.compile(r'{{(.+?)(\|.+)?}}')
+MACRO = re.compile(r'{{(.+?)(\|.+?)?}}')
 METHOD = re.compile(r'([\w_]+)\((.*)\)')
 
 class TemplateMethods:
