@@ -151,6 +151,7 @@ class Session(EventBusSubscriber):
 
       # Wait for all policies to end
       activePolicies = True
+      stallSignaled = False
       while not self.interrupted and activePolicies:
 
         # Iterate over all policies and wait for them to reach to `End` State
@@ -160,9 +161,14 @@ class Session(EventBusSubscriber):
           if policy.state != 'End':
             activePolicies = True
 
-            # Check if a policy is stalled
-            if ts - policy.lastTransitionTs > generalConfig.staleTimeout:
+            # Check if a policy is stalled and make sure we don't
+            # send the StalledEvent more than once (even if the
+            # policy takes infinite time to respond)
+            if not stallSignaled and \
+              (ts - policy.lastTransitionTs) > generalConfig.staleTimeout:
+
               self.logger.warn('Policy `%s` stalled' % type(policy).__name__)
+              stallSignaled = True
               policy.handleEvent(StalledEvent())
 
         # Idle sleep
