@@ -101,6 +101,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = 0
       self.progressCurrent = 0
       self.eventsRemaining = 0
+      self.startEvent = False
 
       # Compose permutation matrix
       renderdConfig = self.getRenderedConfig()
