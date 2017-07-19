@@ -218,7 +218,7 @@ class MarathonEventsObserver(Observer):
       # Poll the endpoint until it responds
       #
       self.logger.debug('Checking if %s is alive' % url)
-      if is_accessible(url, headers=headers, status_code=[200, 405]):
+      if is_accessible(url, headers=headers, status_code=[200, 405, 400]):
         break
 
       # Wait for 5 seconds
