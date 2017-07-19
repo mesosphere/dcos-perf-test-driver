@@ -136,6 +136,9 @@ class RawSSE:
     if headers.get('Transfer-Encoding', '') == 'chunked':
       reader = ChunkedReader()
 
+    # Feed the remainings of the header
+    reader.feed(body)
+
     # Return a generator that processes the socket results
     def eventGenerator():
       while True:
