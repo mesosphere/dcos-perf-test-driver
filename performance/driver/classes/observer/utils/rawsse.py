@@ -108,12 +108,18 @@ class RawSSE:
       + ['', '']
     self.socket.send(bytes('\r\n'.join(req), encoding='utf-8'))
 
-    # Receive the HTTP response
-    response = self.socket.recv(4096)
-    if not b'\r\n\r\n' in response:
-      self.socket.shutdown(2)
-      self.socket.close()
-      raise IOError('Did not find a valid HTTP response')
+    # Wait until we have a properly formatted HTTP response
+    response = b''
+    while not b'\r\n\r\n' in response:
+      chunk = self.socket.recv(4096)
+      if not chunk:
+        self.socket.shutdown(2)
+        self.socket.close()
+        raise IOError('Did not find a valid HTTP response')
+
+      # Collect chunks since the headers might not fit in a
+      # single MTU frame.
+      response += chunk
 
     # Split response from the body
     (resp_headers, body) = response.split(b'\r\n\r\n', 1)
