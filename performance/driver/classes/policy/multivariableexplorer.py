@@ -90,6 +90,10 @@ class MultivariableExplorerPolicy(PolicyFSM):
     Entry point state
     """
 
+    def __init__(self, *args, **kwargs):
+      super().__init__(*args, **kwargs)
+      self.startEvent = False
+
     def onEnter(self):
       """
       Reset state when entering the `Start` state
@@ -101,7 +105,6 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = 0
       self.progressCurrent = 0
       self.eventsRemaining = 0
-      self.startEvent = False
 
       # Compose permutation matrix
       renderdConfig = self.getRenderedConfig()
