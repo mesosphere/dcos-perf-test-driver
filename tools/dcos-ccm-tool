@@ -38,10 +38,14 @@ class CCMClusterApi:
     if result.status_code == 204: # NO_CONTENT
       return (204, None)
 
-    return (
-      result.status_code,
-      result.json()
-    )
+    try:
+      return (
+        result.status_code,
+        result.json()
+      )
+    except Exception as e:
+      raise IOError('Invalid JSON received from %s/%s. Got: %s' % (
+        self.baseUrl, action, result.text))
 
   def getAllClusters(self):
     self.logger.debug('Fetching all clusters')
