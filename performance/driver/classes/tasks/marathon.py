@@ -120,7 +120,7 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
   ::
 
     tasks:
-      - class: tasks.marathon.RemoveAllApps
+      - class: tasks.marathon.RemoveMatchingApps
         at: ...
 
         # The base url to marathon
@@ -177,7 +177,7 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
   ::
 
     tasks:
-      - class: tasks.marathon.RemoveAllApps
+      - class: tasks.marathon.RemoveGroup
         at: ...
 
         # The base url to marathon
