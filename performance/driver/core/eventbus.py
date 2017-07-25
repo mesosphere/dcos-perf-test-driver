@@ -1,7 +1,7 @@
 import logging
 import time
 
-from threading import Thread, Timer
+from threading import Thread, Timer, Condition
 from queue import Queue
 
 from .events import Event, TickEvent, isEventMatching
@@ -50,15 +50,28 @@ class EventBus:
       if sub == callback:
         self.subscribers.remove((order, sub, events))
 
-  def publish(self, event:Event):
+  def publish(self, event:Event, wait=False):
     """
     Publish an event to all subscribers
     """
     if not isinstance(event, Event):
       raise TypeError('You can only publish `Event` instances in the bus')
 
+    # If we are requested to wait until the event is consumed, create a
+    # semaphore and wait for a singla
+    cond = None
+    if wait:
+      cond = Condition()
+
     self.logger.debug('Publishing \'%s\'' % str(event))
-    self.queue.put(event)
+    self.queue.put((event, cond))
+
+    # Wait for condition variable, if requested
+    if wait:
+      self.logger.debug('Waiting for condition of event \'%s\'' % str(event))
+      with cond:
+        cond.wait()
+      self.logger.debug('Condition met for event \'%s\'' % str(event))
 
   def start(self):
     """
@@ -88,7 +101,7 @@ class EventBus:
     self.queue.join()
 
     self.logger.debug('Posting the ExitEvent')
-    self.queue.put(ExitEvent())
+    self.queue.put((ExitEvent(), None))
 
     self.logger.debug('Waiting for thread to exit')
     self.mainThread.join()
@@ -119,7 +132,7 @@ class EventBus:
     """
     self.logger.debug('Event bus thread started')
     while True:
-      event = self.queue.get()
+      (event, cond) = self.queue.get()
       if type(event) is ExitEvent:
         self.queue.task_done()
         break
@@ -131,6 +144,12 @@ class EventBus:
         except Exception as e:
           self.logger.error('Exception while dispatching event %s' % event.event)
           self.logger.exception(e)
+
+      # Signal condition variable (if any)
+      if cond:
+        self.logger.debug('Notifying condition for \'%s\'' % str(event))
+        with cond:
+          cond.notify()
 
       # Mark task as done
       self.queue.task_done()
