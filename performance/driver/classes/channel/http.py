@@ -11,9 +11,12 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 ###############################
 
 class HTTPRequestStartEvent(Event):
-  def __init__(self, url, *args, **kwargs):
+  def __init__(self, verb, url, body, headers, *args, **kwargs):
     super().__init__(*args, **kwargs)
+    self.verb = verb.lower()
     self.url = url
+    self.body = body
+    self.headers = headers
 
 class HTTPFirstRequestStartEvent(HTTPRequestStartEvent):
   pass
@@ -22,9 +25,12 @@ class HTTPLastRequestStartEvent(HTTPRequestStartEvent):
   pass
 
 class HTTPRequestEndEvent(Event):
-  def __init__(self, url, *args, **kwargs):
+  def __init__(self, verb, url, body, headers, *args, **kwargs):
     super().__init__(*args, **kwargs)
+    self.verb = verb.lower()
     self.url = url
+    self.body = body
+    self.headers = headers
 
 class HTTPFirstRequestEndEvent(HTTPRequestEndEvent):
   pass
@@ -268,6 +274,9 @@ class HTTPChannel(Channel):
     if req is None:
       return
 
+    # Render body
+    renderedBody = req.getBody()
+
     # Helper function that handles `repeatAfter` events before scheduling
     # a new request
     def handle_repeatAfter(event):
@@ -290,7 +299,7 @@ class HTTPChannel(Channel):
           HTTPFirstRequestEndEvent,
           HTTPLastRequestEndEvent,
           HTTPRequestEndEvent
-        )(req.url, traceid=req.traceids)
+        )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids)
       )
       self.eventbus.publish(pickFirstLast(
           req.completedCounter,
@@ -308,7 +317,7 @@ class HTTPChannel(Channel):
         HTTPFirstRequestStartEvent,
         HTTPLastRequestStartEvent,
         HTTPRequestStartEvent
-      )(req.url, traceid=req.traceids)
+      )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids)
     )
     self.logger.debug('Placing a %s request to %s' % (req.verb, req.url))
     try:
@@ -318,7 +327,7 @@ class HTTPChannel(Channel):
         req.verb,
         req.url,
         verify=False,
-        data=req.getBody(),
+        data=renderedBody,
         headers=req.headers,
         hooks=dict(response=ack_response)
       )
