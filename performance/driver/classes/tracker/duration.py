@@ -1,76 +1,93 @@
+import logging
 import time
 
 from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, TeardownEvent, isEventMatching
+from performance.driver.core.eventfilters import EventFilter
+from queue import Queue, Empty
 
-class DurationTrace:
-  def __init__(self, parameterEvent):
-    self.traceids = parameterEvent.traceids
-    self.startEvent = None
-    self.endEvent = None
+class DurationTrackerSession:
+  """
+  A tracking session
+  """
 
-  def isEventTracked(self, event):
+  def __init__(self, tracker, traceids):
+    self.queue = Queue()
+    self.logger = logging.getLogger('DurationTrackerSession')
+    self.startFilter = tracker.startFilter.start(traceids, self.handleStart)
+    self.endFilter = tracker.endFilter.start(traceids, self.handleEnd)
+    self.tracker = tracker
+    self.traceids = traceids
+
+  def handleStart(self, event):
+    # self.logger.info('Found start, matching' + str(self.tracker.startFilter))
+    self.queue.put(event)
+
+  def handleEnd(self, event):
+    # self.logger.info('Found end, matching ' + str(self.tracker.endFilter))
+    try:
+      start_event = self.queue.get(False)
+    except Empty:
+      self.logger.warn('Found duration end without a start event!')
+      return
+
+    # Track metric
+    self.tracker.trackMetric(
+      self.tracker.metric,
+      event.ts - start_event.ts,
+      self.traceids
+    )
+
+  def isRelevant(self, event):
     return event.hasTraces(self.traceids)
 
-  def start(self, event):
-    self.startEvent = event
+  def handle(self, event):
+    self.startFilter.handle(event)
+    self.endFilter.handle(event)
 
-  def end(self, event):
-    self.endEvent = event
+  def finalize(self):
+    self.startFilter.finalize()
+    self.endFilter.finalize()
 
-  def duration(self):
-    return None
-
-  def completed(self):
-    return False
-
-class EdgeDurationTrace(DurationTrace):
-
-  def __init__(self, *args):
-    super().__init__(*args)
-    self.completedFlag = False
-
-  def end(self, event):
-    super().end(event)
-    self.completedFlag = True
-
-  def duration(self):
-    if not self.completedFlag:
-      return 0.0
-    return self.endEvent.ts - self.startEvent.ts
-
-  def completed(self):
-    return self.completedFlag
+    if not self.queue.empty():
+      self.logger.warn('Incomplete traces were present for metric %s' % self.tracker.metric)
 
 class DurationTracker(Tracker):
   """
   Tracks the duration between a ``start`` and an ``end`` event.
+
+  ::
+
+    trackers:
+      - class: tracker.DurationTracker
+
+        # The relevant events
+        events:
+
+          # The event to start counting from
+          # (This can be a filter expression)
+          start: StartEventFilter
+
+          # The event to stop counting at
+          # (This can be a filter expression)
+          end: EndEventFilter
+
+
+  This tracker will
+
   """
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.activeTraces = []
+    self.traces = []
+    self.activeTrace = None
 
-    self.events = self.getConfig('events')
-    self.metric = self.getConfig('metric')
+    config = self.getRenderedConfig()
+    self.startFilter = EventFilter(config['events']['start'])
+    self.endFilter = EventFilter(config['events']['end'])
+    self.metric = config['metric']
+
     self.eventbus.subscribe(self.handleEvent)
-
-  def flushTraces(self):
-    """
-    Flushes active events to the bus
-    """
-    for trace in self.activeTraces:
-      if not trace.completed():
-        self.logger.warn('Trace initiated by %r was incomplete' % trace.startEvent)
-        continue
-
-      self.trackMetric(
-        self.metric,
-        trace.duration(),
-        trace.traceids
-      )
-
-    self.activeTraces = []
 
   def handleEvent(self, event):
     """
@@ -78,23 +95,26 @@ class DurationTracker(Tracker):
     the time of the first event and the time of the lsat event
     """
 
-    # Flush edge events when the test is completed
+    # A terminal events terminates an active trace
     if isinstance(event, RestartEvent) or isinstance(event, TeardownEvent):
-      self.flushTraces()
+      if self.activeTrace:
+        self.activeTrace.finalize()
 
-    # Each parameter update initiates a trace of interest, therefore
-    # we are keeping track of traceIDs that originate from a parameter update
+      self.activeTrace = None
+      return
+
+    # Each parameter update initiates a trace of interest
     if isinstance(event, ParameterUpdateEvent):
-      self.flushTraces()
-      self.activeTraces.append(EdgeDurationTrace(event))
-      self.logger.debug('Keeping track of trace ID %r' % event.traceids)
 
-    # Track the `start` and `end` of events
-    if isEventMatching(event, self.events['start']):
-      for trace in self.activeTraces:
-        if trace.isEventTracked(event):
-          trace.start(event)
-    elif isEventMatching(event, self.events['end']):
-      for trace in self.activeTraces:
-        if trace.isEventTracked(event):
-          trace.end(event)
+      # Finalize active trace
+      if self.activeTrace:
+        self.activeTrace.finalize()
+
+      # Start a new session tracker
+      print("START TRACE:", event)
+      self.activeTrace = DurationTrackerSession(self, event.traceids)
+      self.traces.append(self.activeTrace)
+
+    # Handle this event on the correct trace
+    for trace in self.traces:
+      trace.handle(event)
