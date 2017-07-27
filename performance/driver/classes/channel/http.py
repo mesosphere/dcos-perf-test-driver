@@ -5,6 +5,7 @@ from performance.driver.core.events import Event, TickEvent, ParameterUpdateEven
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
 from performance.driver.core.reflection import subscribesToHint, publishesHint
+from threading import Thread, Lock
 
 ###############################
 # Events
@@ -133,6 +134,7 @@ class HTTPRequestState:
     self.activeRequest = None
     self.completedCounter = 0
     self.lastRequestTs = 0
+    self.active = True
 
   def getBody(self):
     """
@@ -256,7 +258,8 @@ class HTTPChannel(Channel):
   @subscribesToHint(ParameterUpdateEvent, TeardownEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.requestState = None
+    self.requestStates = []
+    self.requestStateMutex = Lock()
     self.session = requests.Session()
 
     # Receive parameter updates and clean-up on teardown
@@ -269,129 +272,143 @@ class HTTPChannel(Channel):
     HTTPFirstRequestStartEvent, HTTPLastRequestStartEvent,
     HTTPRequestStartEvent, HTTPFirstResponseEndEvent,
     HTTPLastResponseEndEvent, HTTPResponseEndEvent)
-  def handleRequest(self):
-    req = self.requestState
-    if req is None:
+  def handleRequest(self, req):
+    if req is None or not req.active:
+      self.logger.debug('Bailing out of %s request to %s due to termination' % (req.verb, req.url))
       return
 
-    # Render body
-    renderedBody = req.getBody()
+    # Make sure to process loops in a single stack frame
+    while req.active:
 
-    # Helper function that handles `repeatAfter` events before scheduling
-    # a new request
-    def handle_repeatAfter(event):
-      self.eventbus.unsubscribe(handle_repeatAfter)
-      self.handleRequest()
+      # Render body
+      renderedBody = req.getBody()
 
-    # Helper function that handles TickEvents until the designated time
-    # in the `repeatInterval` parameter has passed
-    def handle_repeatInterval(event):
-      deltaMs = event.ts - req.lastRequestTs
-      if deltaMs >= req.repeatInterval:
-        self.eventbus.unsubscribe(handle_repeatInterval)
-        self.handleRequest()
+      # Helper function that handles `repeatAfter` events before scheduling
+      # a new request
+      def handle_repeatAfter(event):
+        self.eventbus.unsubscribe(handle_repeatAfter)
+        self.handleRequest(req)
 
-    # Helper function to notify the message bus when an HTTP response starts
-    def ack_response(request, *args, **kwargs):
-      self.eventbus.publish(pickFirstLast(
-          req.completedCounter,
-          req.repeat,
-          HTTPFirstRequestEndEvent,
-          HTTPLastRequestEndEvent,
-          HTTPRequestEndEvent
-        )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids)
-      )
-      self.eventbus.publish(pickFirstLast(
-          req.completedCounter,
-          req.repeat,
-          HTTPFirstResponseStartEvent,
-          HTTPLastResponseStartEvent,
-          HTTPResponseStartEvent
-        )(req.url, traceid=req.traceids)
-      )
+      # Helper function that handles TickEvents until the designated time
+      # in the `repeatInterval` parameter has passed
+      def handle_repeatInterval(event):
+        deltaMs = event.ts - req.lastRequestTs
+        if deltaMs >= req.repeatInterval:
+          self.eventbus.unsubscribe(handle_repeatInterval)
+          self.handleRequest(req)
 
-    # Place request
-    self.eventbus.publish(pickFirstLast(
-        req.completedCounter,
-        req.repeat,
-        HTTPFirstRequestStartEvent,
-        HTTPLastRequestStartEvent,
-        HTTPRequestStartEvent
-      )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids)
-    )
-    self.logger.debug('Placing a %s request to %s' % (req.verb, req.url))
-    try:
-
-      # Send request (and trap errors)
-      req.activeRequest = self.session.request(
-        req.verb,
-        req.url,
-        verify=False,
-        data=renderedBody,
-        headers=req.headers,
-        hooks=dict(response=ack_response)
-      )
-
-      # Warn errors
-      if (req.activeRequest.status_code < 200) or (req.activeRequest.status_code >= 300):
-        self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
-          (req.verb, req.url, req.activeRequest.status_code))
-
-      # Process response
-      self.eventbus.publish(pickFirstLast(
-          req.completedCounter,
-          req.repeat,
-          HTTPFirstResponseEndEvent,
-          HTTPLastResponseEndEvent,
-          HTTPResponseEndEvent
-        )(req.url,
-          req.activeRequest.text,
-          req.activeRequest.headers,
-          traceid=req.traceids
+      # Helper function to notify the message bus when an HTTP response starts
+      def ack_response(request, *args, **kwargs):
+        self.eventbus.publish(pickFirstLast(
+            req.completedCounter,
+            req.repeat,
+            HTTPFirstRequestEndEvent,
+            HTTPLastRequestEndEvent,
+            HTTPRequestEndEvent
+          )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids)
         )
-      )
-      req.activeRequest = None
+        self.eventbus.publish(pickFirstLast(
+            req.completedCounter,
+            req.repeat,
+            HTTPFirstResponseStartEvent,
+            HTTPLastResponseStartEvent,
+            HTTPResponseStartEvent
+          )(req.url, traceid=req.traceids)
+        )
 
-    except requests.exceptions.ConnectionError as e:
-
-      # Dispatch error
+      # Place request
       self.eventbus.publish(pickFirstLast(
           req.completedCounter,
           req.repeat,
-          HTTPFirstResponseErrorEvent,
-          HTTPLastResponseErrorEvent,
-          HTTPResponseErrorEvent
-        )(req.url,
-          "",
-          {},
-          traceid=req.traceids
-        )
+          HTTPFirstRequestStartEvent,
+          HTTPLastRequestStartEvent,
+          HTTPRequestStartEvent
+        )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids),
+        sync=True
       )
+      self.logger.debug('Placing a %s request to %s' % (req.verb, req.url))
+      try:
 
-    # Check for repetitions
-    req.completedCounter += 1
-    if req.completedCounter < req.repeat:
+        # Send request (and trap errors)
+        req.activeRequest = self.session.request(
+          req.verb,
+          req.url,
+          verify=False,
+          data=renderedBody,
+          headers=req.headers,
+          hooks=dict(response=ack_response)
+        )
 
-      # Register an event listener if we have an `repeatAfter` parameter
-      if not req.repeatAfter is None:
-        self.eventbus.subscribe(handle_repeatAfter, events=(req.repeatAfter,))
-        return
+        # Warn errors
+        if (req.activeRequest.status_code < 200) or (req.activeRequest.status_code >= 300):
+          self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
+            (req.verb, req.url, req.activeRequest.status_code))
 
-      # Register a timeout if we have a `repeatInterval` parameter
-      if not req.repeatInterval is None:
-        req.lastRequestTs = time.time()
-        self.eventbus.subscribe(handle_repeatInterval, events=(TickEvent,))
-        return
+        # Process response
+        self.eventbus.publish(pickFirstLast(
+            req.completedCounter,
+            req.repeat,
+            HTTPFirstResponseEndEvent,
+            HTTPLastResponseEndEvent,
+            HTTPResponseEndEvent
+          )(req.url,
+            req.activeRequest.text,
+            req.activeRequest.headers,
+            traceid=req.traceids
+          )
+        )
 
-      # Otherwise immediately re-schedule request
-      self.handleRequest()
+      except requests.exceptions.ConnectionError as e:
+
+        # Dispatch error
+        self.eventbus.publish(pickFirstLast(
+            req.completedCounter,
+            req.repeat,
+            HTTPFirstResponseErrorEvent,
+            HTTPLastResponseErrorEvent,
+            HTTPResponseErrorEvent
+          )(req.url,
+            "",
+            {},
+            traceid=req.traceids
+          )
+        )
+
+      # Check for repetitions
+      req.completedCounter += 1
+      if req.completedCounter < req.repeat:
+
+        # Register an event listener if we have an `repeatAfter` parameter
+        if not req.repeatAfter is None:
+          self.eventbus.subscribe(handle_repeatAfter, events=(req.repeatAfter,))
+          break
+
+        # Register a timeout if we have a `repeatInterval` parameter
+        if not req.repeatInterval is None:
+          req.lastRequestTs = time.time()
+          self.eventbus.subscribe(handle_repeatInterval, events=(TickEvent,))
+          break
+
+        # Otherwise let the loop continue in order to re-schedule request
+        continue
+
+      else:
+
+        # Remoe the active reuqest when we are done
+        with self.requestStateMutex:
+          self.requestStates.remove(req)
+        break
 
   def handleTeardown(self, event):
     """
     Stop pending request(s) at teardown
     """
-    if self.requestState and self.requestState.activeRequest:
-      self.requestState.activeRequest.raw._fp.close()
+    with self.requestStateMutex:
+      for req in self.requestStates:
+        req.active = False
+        if req.activeRequest:
+          req.activeRequest.raw._fp.close()
+      self.requestStates = []
 
   def handleParameterUpdate(self, event):
     """
@@ -409,9 +426,15 @@ class HTTPChannel(Channel):
       return
 
     # Prepare request state and send initial request
-    self.requestState = HTTPRequestState(
+    state = HTTPRequestState(
       self,
       event.parameters,
       event.traceids
     )
-    self.handleRequest()
+
+    # Keep track of the requests
+    with self.requestStateMutex:
+      self.requestStates.append(state)
+
+    # Start request chain
+    Thread(target=self.handleRequest, daemon=True, args=(state,)).start()
