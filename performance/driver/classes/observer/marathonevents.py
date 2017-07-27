@@ -10,8 +10,8 @@ from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.events import Event, LogLineEvent, TeardownEvent, StartEvent
 from performance.driver.core.utils.http import is_accessible
 from performance.driver.core.reflection import subscribesToHint, publishesHint
-
 from performance.driver.classes.channel.http import HTTPRequestStartEvent
+from queue import Queue
 
 ################################################################################
 # MarathonEvent
@@ -127,7 +127,9 @@ class MarathonEventsObserver(Observer):
     super().__init__(*args, **kwargs)
     self.urlTpl = TemplateString(self.getConfig('url'))
     self.headersTpl = TemplateDict(self.getConfig('headers', {}))
-    self.eventThread = None
+    self.eventReceiverThread = None
+    self.eventEmitterThread = None
+    self.eventQueue = Queue()
     self.appTraceIDs = {}
     self.running = True
     self.activeSse = None
@@ -194,19 +196,30 @@ class MarathonEventsObserver(Observer):
     if self.activeSse:
       self.activeSse.close()
 
-    # Join thread
-    if self.eventThread:
-      self.eventThread.join()
-      self.eventThread = None
+    # Join queue
+    self.eventQueue.put((None, None))
+    self.eventQueue.join()
+
+    # Join threads
+    if self.eventReceiverThread:
+      self.eventReceiverThread.join()
+      self.eventReceiverThread = None
+    if self.eventEmitterThread:
+      self.eventEmitterThread.join()
+      self.eventEmitterThread = None
 
   def handleStartEvent(self, event):
     """
     The start event is starting the event handling thread
     """
 
-    # Start the main event thread
-    self.eventThread = threading.Thread(target=self.eventHandlerThread)
-    self.eventThread.start()
+    # Start the event reader thread
+    self.eventReceiverThread = threading.Thread(target=self.eventReceiverHandler)
+    self.eventReceiverThread.start()
+
+    # Start the event emmiter thread
+    self.eventEmitterThread = threading.Thread(target=self.eventEmitterThreadHandler)
+    self.eventEmitterThread.start()
 
   # def getAffectedAppIDs(self, data):
   #   """
@@ -277,9 +290,89 @@ class MarathonEventsObserver(Observer):
     MarathonDeploymentStepFailureEvent, MarathonDeploymentInfoEvent, \
     MarathonDeploymentSuccessEvent, MarathonDeploymentFailedEvent, \
     MarathonAPIEvent)
-  def eventHandlerThread(self):
+  def eventEmitterThreadHandler(self):
     """
-    While in this thread the
+    This event is draining the receiver queue and is forwarding the events
+    to the internal event bus
+    """
+
+    while self.running:
+      (eventName, eventData) = self.eventQueue.get()
+
+      # If we have drained the queue and we are instructed to quit, exit now
+      if eventName is None:
+        self.logger.debug('Received interrupt event')
+        self.eventQueue.task_done()
+        break
+
+      # If we were interrupted, drain queue
+      if not self.running:
+        self.logger.debug('Ignoring event because we are shutting down')
+        self.eventQueue.task_done()
+        continue
+
+      # Dispatch raw event
+      self.logger.debug('Received event %s: %r' % (eventName, eventData))
+      self.eventbus.publish(MarathonAPIEvent(eventData))
+
+      # Get the affected IDs
+      affectedIDs = self.getAffectedIDs(eventData)
+
+      #
+      # deployment_step_success
+      #
+      if eventName == 'deployment_step_success':
+        deploymentId = eventData['plan']['id']
+        self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
+          traceid=self.getTraceIDs(affectedIDs)))
+
+      #
+      # deployment_step_failure
+      #
+      elif eventName == 'deployment_step_failure':
+        deploymentId = eventData['plan']['id']
+        self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
+          traceid=self.getTraceIDs(affectedIDs)))
+
+      #
+      # deployment_info
+      #
+      elif eventName == 'deployment_info':
+        deploymentId = eventData['plan']['id']
+        self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
+          traceid=self.getTraceIDs(affectedIDs)))
+
+      #
+      # deployment_success
+      #
+      elif eventName == 'deployment_success':
+        deploymentId = eventData['id']
+        self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
+          traceid=self.getTraceIDs(affectedIDs)))
+        self.removeIDs(affectedIDs)
+
+      #
+      # deployment_failed
+      #
+      elif eventName == 'deployment_failed':
+        deploymentId = eventData['id']
+        self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
+          traceid=self.getTraceIDs(affectedIDs)))
+        self.removeIDs(affectedIDs)
+
+      # Warn unknown events
+      else:
+        self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
+
+      # Inform queue that the task is done
+      self.eventQueue.task_done()
+
+    self.logger.debug('Terminated event receiver thread')
+
+  def eventReceiverHandler(self):
+    """
+    This thread is responsible for receiving events from the SSE bus as
+    quickly as possible, in order to avoid slowing down marathon.
     """
     # Render URL
     definitions = self.getDefinitions()
@@ -349,58 +442,8 @@ class MarathonEventsObserver(Observer):
               eventName = event.get('event')
               eventData = json.loads(event.get('data'))
 
-              # Dispatch raw event
-              self.logger.debug('Received event %s: %r' % (eventName, eventData))
-              self.eventbus.publish(MarathonAPIEvent(eventData))
-
-              # Get the affected IDs
-              affectedIDs = self.getAffectedIDs(eventData)
-
-              #
-              # deployment_step_success
-              #
-              if eventName == 'deployment_step_success':
-                deploymentId = eventData['plan']['id']
-                self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
-                  traceid=self.getTraceIDs(affectedIDs)))
-
-              #
-              # deployment_step_failure
-              #
-              elif eventName == 'deployment_step_failure':
-                deploymentId = eventData['plan']['id']
-                self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
-                  traceid=self.getTraceIDs(affectedIDs)))
-
-              #
-              # deployment_info
-              #
-              elif eventName == 'deployment_info':
-                deploymentId = eventData['plan']['id']
-                self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
-                  traceid=self.getTraceIDs(affectedIDs)))
-
-              #
-              # deployment_success
-              #
-              elif eventName == 'deployment_success':
-                deploymentId = eventData['id']
-                self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
-                  traceid=self.getTraceIDs(affectedIDs)))
-                self.removeIDs(affectedIDs)
-
-              #
-              # deployment_failed
-              #
-              elif eventName == 'deployment_failed':
-                deploymentId = eventData['id']
-                self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
-                  traceid=self.getTraceIDs(affectedIDs)))
-                self.removeIDs(affectedIDs)
-
-              # Warn unknown events
-              else:
-                self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
+              # Process when able
+              self.eventQueue.put((eventName, eventData))
 
           except Exception as e:
             if not self.running:
@@ -425,3 +468,5 @@ class MarathonEventsObserver(Observer):
         else:
           self.logger.error('Exception while connecting to SSE event stream')
           self.logger.exception(e)
+
+    self.logger.debug('Terminated event emitter thread')
