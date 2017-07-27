@@ -1,52 +1,105 @@
+import logging
 import time
 
 from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, TeardownEvent, isEventMatching
+from performance.driver.core.eventfilters import EventFilter
+from queue import Queue, Empty
 
-class CountTrace:
-  def __init__(self, parameterEvent):
-    self.traceids = parameterEvent.traceids
+class CountTrackerSession:
+  """
+  A tracking session
+  """
+
+  def __init__(self, tracker, traceids):
+    self.queue = Queue()
+    self.logger = logging.getLogger('CountTrackerSession')
+    self.eventFilter = tracker.eventFilter.start(traceids, self.handleEvent)
+    self.tracker = tracker
+    self.traceids = traceids
+
     self.counter = 0
 
-  def isEventTracked(self, event):
-    return event.hasTraces(self.traceids)
-
-  def hit(self):
+  def handleEvent(self, event):
     self.counter += 1
 
-class DurationTracker(Tracker):
+  def handle(self, event):
+    self.eventFilter.handle(event)
+
+  def finalize(self):
+    self.eventFilter.finalize()
+
+    # Track metric
+    self.tracker.trackMetric(
+      self.tracker.metric,
+      self.counter,
+      self.traceids
+    )
+
+
+class CountTracker(Tracker):
   """
-  Tracks the duration between a ``start`` and an ``end`` event.
+  Tracks the occurrences of an ``event`` within the tracking session.
+
+  ::
+
+    trackers:
+      - class: tracker.CountTracker
+
+        # The metric where to write the measured value to
+        metric: someMetric
+
+        # The event to count
+        # (This can be a filter expression)
+        event: SomeEvent
+
+  This tracker always operates within a tracking session, initiated by a
+  ``ParameterUpdateEvent`` and terminated by the next ``ParameterUpdateEvent``,
+  or the completion of the test.
+
+  .. important::
+
+    The ``event`` must contain the trace IDs of the originating
+    ``ParameterUpdateEvent``, otherwise the events won't be measured.
+
   """
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.activeTraces = []
+    self.traces = []
+    self.activeTrace = None
 
-    self.events = self.getConfig('events', [self.getConfig('event')], required=False)
-    self.metric = self.getConfig('metric')
+    config = self.getRenderedConfig()
+    self.eventFilter = EventFilter(config['events'])
+    self.metric = config['metric']
+
     self.eventbus.subscribe(self.handleEvent)
 
   def handleEvent(self, event):
     """
-    Handle every event in the event bus. A ParameterUpdate
+    Handle an event from the event bus and process tracked events by calculating
+    the time of the first event and the time of the lsat event
     """
 
-    # Garbage Collection: When the test is restarted we don't expect any
-    # ParameterUpdateEvent traces to leak on the next test, therefore it's
-    # safe to clean-up the active traces array.
+    # A terminal events terminates an active trace
     if isinstance(event, RestartEvent) or isinstance(event, TeardownEvent):
-      self.activeTraces = []
+      if self.activeTrace:
+        self.activeTrace.finalize()
 
-    # Each parameter update initiates a trace of interest, therefore
-    # we are keeping track of traceIDs that originate from a parameter update
+      self.activeTrace = None
+      return
+
+    # Each parameter update initiates a trace of interest
     if isinstance(event, ParameterUpdateEvent):
-      self.activeTraces.append(CountTrace(event))
-      self.logger.debug('Keeping track of counts with trace ID %r' % event.traceids)
 
-    # Track hits
-    for eventName in self.events:
-      if isEventMatching(event, eventName):
-        for trace in self.activeTraces:
-          if trace.isEventTracked(event):
-            trace.hit()
+      # Finalize active trace
+      if self.activeTrace:
+        self.activeTrace.finalize()
+
+      # Start a new session tracker
+      self.activeTrace = CountTrackerSession(self, event.traceids)
+      self.traces.append(self.activeTrace)
+
+    # Handle this event on the correct trace
+    for trace in self.traces:
+      trace.handle(event)
