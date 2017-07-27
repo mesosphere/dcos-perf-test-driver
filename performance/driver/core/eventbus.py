@@ -25,49 +25,51 @@ class EventBus:
   The event bus handles delivery of in-system messages
   """
 
-  def __init__(self, clockFrequency=1):
+  def __init__(self, clockFrequency=1, threadCount=8):
     self.logger = logging.getLogger('EventBus')
     self.subscribers = []
     self.queue = Queue()
-    self.mainThread = None
+    self.threadCount = threadCount
+    self.threads = []
 
     self.clockThread = None
     self.clockTicks = 0
     self.clickInterval = float(1) / clockFrequency
 
-  def subscribe(self, callback, order=5, events=None):
+  def subscribe(self, callback, order=5, events=None, args=[], kwargs={}):
     """
     Subscribe a callback to the bus
     """
-    self.subscribers.append((order, callback, events))
+    self.subscribers.append((order, callback, events, args, kwargs))
     self.subscribers = sorted(self.subscribers, key=lambda x: x[0])
 
   def unsubscribe(self, callback):
     """
     Remove a callback from the bus
     """
-    for order, sub, events in self.subscribers:
-      if sub == callback:
-        self.subscribers.remove((order, sub, events))
+    for subscriber in self.subscribers:
+      if subscriber[1] == callback:
+        self.subscribers.remove(subscriber)
 
-  def publish(self, event:Event, wait=False):
+  def publish(self, event:Event, sync=False):
     """
     Publish an event to all subscribers
     """
     if not isinstance(event, Event):
       raise TypeError('You can only publish `Event` instances in the bus')
 
-    # If we are requested to wait until the event is consumed, create a
-    # semaphore and wait for a singla
+    # If we are requested to perform a synchronous broadcast, we need to
+    # wait until the event is consumed. So create a condition variable
+    # and wait for signal
     cond = None
-    if wait:
+    if sync:
       cond = Condition()
 
     self.logger.debug('Publishing \'%s\'' % str(event))
     self.queue.put((event, cond))
 
     # Wait for condition variable, if requested
-    if wait:
+    if sync:
       self.logger.debug('Waiting for condition of event \'%s\'' % str(event))
       with cond:
         cond.wait()
@@ -79,9 +81,12 @@ class EventBus:
     """
     self.logger.debug('Starting event bus')
 
-    # Start main thread
-    self.mainThread = Thread(target=self._loopthread, name='eventbus')
-    self.mainThread.start()
+    # Start thread pool
+    self.logger.debug('Starting thread pool of %i threads' % self.threadCount)
+    for i in range(0, self.threadCount):
+      t = Thread(target=self._loopthread, name='eventbus-%i' % (i+1))
+      t.start()
+      self.threads.append(t)
 
     # Start clock thread
     self.clockThread = Timer(self.clickInterval, self._clockthread)
@@ -101,11 +106,12 @@ class EventBus:
     self.queue.join()
 
     self.logger.debug('Posting the ExitEvent')
-    self.queue.put((ExitEvent(), None))
+    for i in range(0, self.threadCount):
+      self.queue.put((ExitEvent(), None))
 
-    self.logger.debug('Waiting for thread to exit')
-    self.mainThread.join()
-    self.mainThread = None
+    self.logger.debug('Waiting for thread pool to exit')
+    for i in range(0, self.threadCount):
+      self.threads[i].join()
 
   def flush(self):
     """
@@ -137,10 +143,16 @@ class EventBus:
         self.queue.task_done()
         break
 
-      for order, sub, events in self.subscribers:
+      for order, sub, events, args, kwargs in self.subscribers:
         try:
+          start_ts = time.time()
           if events is None or any(map(lambda cls: isEventMatching(event, cls), events)):
-            sub(event)
+            sub(event, *args, **kwargs)
+
+          delta = time.time() - start_ts
+          if delta > 0.25:
+            self.logger.warn('Slow handler (%.2fs) %r for event %s' % (delta, sub, type(event).__name__))
+
         except Exception as e:
           self.logger.error('Exception while dispatching event %s' % event.event)
           self.logger.exception(e)
