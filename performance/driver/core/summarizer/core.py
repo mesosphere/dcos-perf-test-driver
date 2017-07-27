@@ -5,6 +5,7 @@ from .axis import SummarizerAxis
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, FlagUpdateEvent
 from performance.driver.core.reflection import subscribesToHint
 from performance.driver.core.eventbus import EventBusSubscriber
+from threading import Lock
 
 class Summarizer(EventBusSubscriber):
 
@@ -18,6 +19,7 @@ class Summarizer(EventBusSubscriber):
     self.config = config
     self.axes = []
     self.axisLookup = {}
+    self.axisLookupMutex = Lock()
     self.started = None
 
     # Every time we have a ParameterUpdateEvent we construct a new axis
@@ -76,9 +78,10 @@ class Summarizer(EventBusSubscriber):
       return
 
     # Update the flags of matched axes
-    for traceid in event.traceids:
-      if traceid in self.axisLookup:
-        self.axisLookup[traceid].flag(event.name ,event.value)
+    with self.axisLookupMutex:
+      for traceid in event.traceids:
+        if traceid in self.axisLookup:
+          self.axisLookup[traceid].flag(event.name ,event.value)
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -115,8 +118,9 @@ class Summarizer(EventBusSubscriber):
 
     # Index them with their trace IDs in order to quickly look them up
     # when tracking a metric
-    for traceid in event.traceids:
-      self.axisLookup[traceid] = axis
+    with self.axisLookupMutex:
+      for traceid in event.traceids:
+        self.axisLookup[traceid] = axis
 
   def trackMetric(self, name, value, traceids):
     """
@@ -126,10 +130,11 @@ class Summarizer(EventBusSubscriber):
 
     # Locate the axis that can track the metric update
     axis = None
-    for traceid in traceids:
-      if traceid in self.axisLookup:
-        axis = self.axisLookup[traceid]
-        break
+    with self.axisLookupMutex:
+      for traceid in traceids:
+        if traceid in self.axisLookup:
+          axis = self.axisLookup[traceid]
+          break
 
     # We cannot continue without axis
     if axis is None:
