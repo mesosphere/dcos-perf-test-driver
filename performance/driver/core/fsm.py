@@ -2,7 +2,8 @@ import inspect
 import logging
 import time
 
-from threading import Condition
+from threading import Condition, Lock
+from queue import Queue, Empty
 
 class State:
   """
@@ -52,6 +53,9 @@ class FSM:
   def __init__(self):
     self.states = {}
     self.state = 'Start'
+    self.stateQueue = Queue()
+    self.stateMutex = Lock()
+    self.statePollerActive = False
     self.stateCv = Condition()
     self.logger = logging.getLogger('FSM<%s>' % type(self).__name__)
     self.lastTransitionTs = time.time()
@@ -67,7 +71,7 @@ class FSM:
     """
     """
     self.logger.debug('Starting FSM')
-    self.state = 'Start'
+    self.stateQueue.put('Start')
     self._handleEnterState()
 
   def keepalive(self):
@@ -92,7 +96,7 @@ class FSM:
     if not stateName in self.states:
       raise TypeError('State \'%s\' was not found in the FSM' % stateName)
 
-    self.state = stateName
+    self.stateQueue.put(stateName)
     self._handleEnterState()
 
   def wait(self, targetStateName, timeout=None):
@@ -137,11 +141,26 @@ class FSM:
     """
     Handle the trigger function that enters in the given state
     """
-    self.logger.debug('Entering in state %s' % self.state)
-    self.lastTransitionTs = time.time()
-    stateInst = self.states[self.state]
-    stateInst.onEnter()
 
-    # Notify all locks waiting on `wait`
-    with self.stateCv:
-      self.stateCv.notify_all()
+    # Don't re-run if we are already running
+    with self.stateMutex:
+      if self.statePollerActive:
+        return
+      self.statePollerActive = True
+
+    while True:
+      try:
+        self.state = self.stateQueue.get(False)
+      except Empty:
+        with self.stateMutex:
+          self.statePollerActive = False
+        return
+
+      self.logger.debug('Entering in state %s' % self.state)
+      self.lastTransitionTs = time.time()
+      stateInst = self.states[self.state]
+      stateInst.onEnter()
+
+      # Notify all locks waiting on `wait`
+      with self.stateCv:
+        self.stateCv.notify_all()
