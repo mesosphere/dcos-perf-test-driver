@@ -102,7 +102,7 @@ class Session(EventBusSubscriber):
     """
     Interrupt the tests and force exit
     """
-    self.logger.error('Interrupting tests')
+    self.logger.error('Tests interrupted; continuing with reporting. Interrupt again to quit')
 
     # Restore signal handler
     signal.signal(signal.SIGINT, self.prevSigHandler)
@@ -112,7 +112,7 @@ class Session(EventBusSubscriber):
     # that since the `run` thread is blocked in the policy wait loop, we will
     # resume from that point onwards
     self.interrupted = True
-    self.eventbus.publish(InterruptEvent())
+    self.eventbus.publish(InterruptEvent(), sync=True)
 
   @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent, RunTaskEvent)
   def run(self):
@@ -141,7 +141,7 @@ class Session(EventBusSubscriber):
     self.logger.debug('All policies are ready')
 
     # Dispatch the start event
-    self.eventbus.publish(StartEvent())
+    self.eventbus.publish(StartEvent(), sync=True)
 
     # Repeat tests more than once
     while not self.interrupted and (runs > 0):
@@ -189,9 +189,9 @@ class Session(EventBusSubscriber):
           policy.start()
 
         # Dispatch the restart event
-        self.eventbus.publish(RestartEvent())
+        self.eventbus.publish(RestartEvent(), sync=True)
 
     # Teardown
-    self.eventbus.publish(TeardownEvent())
+    self.eventbus.publish(TeardownEvent(), sync=True)
     self.eventbus.publish(RunTaskEvent('teardown'))
     self.eventbus.stop()
