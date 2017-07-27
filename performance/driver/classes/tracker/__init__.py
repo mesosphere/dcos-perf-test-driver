@@ -1,3 +1,4 @@
 from .duration import DurationTracker
-from .metric import DumpMetricTracker
+from .event import EventAttributeTracker
 from .loglinetoken import LogLineTokenTracker
+from .metric import DumpMetricTracker
