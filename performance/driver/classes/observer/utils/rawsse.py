@@ -56,8 +56,9 @@ class RawSSE:
 
   """
 
-  def __init__(self, url, headers={}, secure=False):
+  def __init__(self, url, headers={}, secure=False, chunkSize=1024*1024):
     self.logger = logging.getLogger('RawSSE')
+    self.chunkSize = chunkSize
     self.url = urlparse(url)
     self.sslctx = None
     self.headers = {
@@ -111,7 +112,7 @@ class RawSSE:
     # Wait until we have a properly formatted HTTP response
     response = b''
     while not b'\r\n\r\n' in response:
-      chunk = self.socket.recv(4096)
+      chunk = self.socket.recv(self.chunkSize)
       if not chunk:
         self.socket.shutdown(2)
         self.socket.close()
@@ -159,7 +160,7 @@ class RawSSE:
 
         # Handle read events
         if len(rd) > 0:
-          chunk = self.socket.recv(4096)
+          chunk = self.socket.recv(self.chunkSize)
           if not chunk:
             raise IOError('Disconnected')
 
