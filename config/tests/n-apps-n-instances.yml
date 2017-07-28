@@ -6,36 +6,40 @@ config:
 
   # Define the parameters this policy will be updating
   parameters:
+    # - name: apps
+    #   uuid: 7836e302bb7f43ea8e3477264c9b523e
+    #   units: count
+    #   desc: The number of apps deployed to marathon
     - name: instances
       uuid: 4a003e85e8bb4a95a340eec1727cfd0d
       units: count
       desc: The number of instances per application deployment
 
-  # Introduce some indicators that will be used to extract
-  # the outcome of the test as a single scalar value
-  indicators:
+  # # Introduce some indicators that will be used to extract
+  # # the outcome of the test as a single scalar value
+  # indicators:
 
-    # Calculate `meanDeploymentTime` by calculating the normalizing average
-    # of all the `deploymentTime` mean values, normalized against the number
-    # of instances
-    - name: meanDeploymentTime
-      class: indicator.NormalizedMeanMetricIndicator
-      metric: deploymentTime.mean
-      parameter: instances
+  #   # Calculate `meanDeploymentTime` by calculating the normalizing average
+  #   # of all the `deploymentTime` mean values, normalized against the number
+  #   # of instances
+  #   - name: meanDeploymentTime
+  #     class: indicator.NormalizedMeanMetricIndicator
+  #     metric: deploymentTime.mean
+  #     parameter: instances
 
-    # Calculate `meanHttpRequestTime` by calculating the normalizing average
-    # of all the `deploymentTime` mean values, normalized against the number
-    # of instances
-    - name: meanHttpRequestTime
-      class: indicator.NormalizedMeanMetricIndicator
-      metric: httpRequestTime.mean
-      parameter: instances
+  #   # Calculate `meanHttpRequestTime` by calculating the normalizing average
+  #   # of all the `deploymentTime` mean values, normalized against the number
+  #   # of instances
+  #   - name: meanHttpRequestTime
+  #     class: indicator.NormalizedMeanMetricIndicator
+  #     metric: httpRequestTime.mean
+  #     parameter: instances
 
 #################################################
 # Test Metadata
 #################################################
 meta:
-  test: 1-app-n-instances
+  test: n-app-n-instances
 
 #################################################
 # Test policy configuration
@@ -56,6 +60,9 @@ policies:
 
     # The following rules describe the permutation matrix
     matrix:
+      apps:
+        type: discrete
+        values: [1, 2, 4, 8, 16]
       instances:
         type: discrete
         values: [1, 2, 4, 8, 16]
@@ -72,7 +79,7 @@ policies:
         FAILURE: MarathonDeploymentFailedEvent
 
       # Wait for the given number of events (evaluated at run-time)
-      signalEventCount: 1
+      # signalEventCount: apps
 
 #################################################
 # Channel configuration
@@ -83,6 +90,7 @@ channels:
   - class: channel.HTTPChannel
     url: "{{marathon_url}}/v2/apps"
     verb: POST
+    repeat: "{{apps}}"
     body: |
       {
         "cmd": "sleep 1200",

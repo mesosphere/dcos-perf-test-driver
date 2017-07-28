@@ -37,6 +37,7 @@ config:
       units: count
 
     - name: marathonMemTotalUsage
+      uuid: bc970138095e4fff94301f67a2ae9d4a
       desc: Total memory usage of marathon
       summarize: [mean, min, max]
       units: Kb

@@ -7,8 +7,9 @@ config:
   # Define the metrics we are measuring
   metrics:
     - name: httpRequestTime
+      uuid: d7071b36bb804a3c8df69c2de28ac222
       desc: The time from the HTTP request till the completion of the HTTP response
-      summarize: [mean, min, max]
+      summarize: [mean_err]
       units: sec
 
 #################################################

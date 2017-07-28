@@ -1,0 +1,29 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the metrics we are measuring
+  metrics:
+    - name: latency
+      desc: How much time it takes for an HTTP request to complete
+      summarize: [mean, min, max]
+      units: sec
+
+  indicators:
+    - name: meanLatency
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: latency.mean
+      parameter: users
+
+#################################################
+# Tracker configuration
+#################################################
+trackers:
+
+  - class: tracker.LogLineTokenTracker
+    tokens:
+      - token: latency
+        metric: latency
+        type: int

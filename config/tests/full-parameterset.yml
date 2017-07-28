@@ -1,0 +1,199 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the parameters this policy will be updating
+  parameters:
+    - name: apps
+      units: count
+      desc: The number of apps per instance
+    - name: instances
+      units: count
+      desc: The number of instances per application deployment
+
+  # Introduce some indicators that will be used to extract
+  # the outcome of the test as a single scalar value
+  indicators:
+
+    # Calculate `meanDeploymentTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of instances
+    - name: meanDeploymentTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: deploymentTime.mean
+      parameter: instances
+
+    # Calculate `meanHttpRequestTime` by calculating the normalizing average
+    # of all the `deploymentTime` mean values, normalized against the number
+    # of instances
+    - name: meanHttpRequestTime
+      class: indicator.NormalizedMeanMetricIndicator
+      metric: httpRequestTime.mean
+      parameter: instances
+
+#################################################
+# Test Metadata
+#################################################
+meta:
+  test: sequential-matrix
+
+#################################################
+# Test policy configuration
+#################################################
+policies:
+
+  # Use a policy that explores the permutation matrix
+  - class: policy.MultivariableExplorerPolicy
+
+    # The following rules describe the permutation matrix
+    matrix:
+      apps:
+        type: discrete
+        values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+      instances:
+        type: discrete
+        values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+      kind:
+        type: discrete
+        values: [app, pod]
+      complexity:
+        type: discrete
+        values: [dummy, simple, regular, complex]
+
+    wait:
+      events:
+        success: MarathonDeploymentSuccessEvent
+        failure: MarathonDeploymentFailedEvent
+
+#################################################
+# Channel configuration
+#################################################
+channels:
+
+  # Perform an HTTP request for every `instance` parameter change
+  - class: channel.HTTPChannel
+    url: "{{marathon_url}}/v2/apps"
+    verb: POST
+    body:
+      - if: kind == "app" and complexity == "dummy"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/app-dummy-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "app" and complexity == "simple"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/app-simple-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "app" and complexity == "regular"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/app-regular-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "app" and complexity == "complex"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/app-complex-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "pod" and complexity == "dummy"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/pod-dummy-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "pod" and complexity == "simple"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/pod-simple-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "pod" and complexity == "regular"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/pod-regular-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+      - if: kind == "pod" and complexity == "complex"
+        value: |
+          {
+            "cmd": "sleep 1200",
+            "cpus": 0.005,
+            "mem": 32,
+            "disk": 0,
+            "instances": {{instances}},
+            "id": "/scale-instances/pod-complex-{{uuid()}}",
+            "backoffFactor": 1.0,
+            "backoffSeconds": 0
+          }
+
+#################################################
+# One-time tasks
+#################################################
+tasks:
+
+  # Right after ever test run we should remove all the instances
+  - class: tasks.marathon.RemoveGroup
+    url: "{{marathon_url}}"
+    group: /scale-instances
+    at: intertest
+
+  # Also remove the tests if they were abruptly terminated
+  - class: tasks.marathon.RemoveGroup
+    url: "{{marathon_url}}"
+    group: /scale-instances
+    at: teardown

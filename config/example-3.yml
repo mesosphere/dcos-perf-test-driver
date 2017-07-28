@@ -26,7 +26,8 @@ include:
   - measure/deployment-time.yml
   - measure/http-request-time.yml
   - measure/marathon-memory.yml
-  - measure/marathon-threads.yml
+  - measure/marathon-gauges.yml
+  - measure/marathon-sys-resources.yml
 
   # We will dump the raw results, csv files and the image plots
   - reports/raw.yml

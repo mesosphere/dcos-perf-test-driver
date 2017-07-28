@@ -20,3 +20,10 @@ HTTPChannel
 -----------
 
 .. autoclass:: performance.driver.classes.channel.HTTPChannel
+
+.. _classref-channel-MarathonUpdateChannel:
+
+MarathonUpdateChannel
+---------------------
+
+.. autoclass:: performance.driver.classes.channel.MarathonUpdateChannel

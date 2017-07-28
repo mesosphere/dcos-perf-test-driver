@@ -1,7 +1,7 @@
 import re
 from performance.driver.core.events import isEventMatching
 
-DSL_TOKENS = re.compile(r'^(\w+)(?:\[(.*?)\])?(\:.+)?$')
+DSL_TOKENS = re.compile(r'\b(\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
 DSL_FLAGS  = re.compile(r'\:([^\:]+)')
 
@@ -12,6 +12,7 @@ class EventFilterSession:
 
   def __init__(self, filter, traceids, callback):
     self.foundEvent = None
+    self.triggerAtExit = False
     self.filter = filter
     self.traceids = traceids
     self.callback = callback
@@ -20,32 +21,35 @@ class EventFilterSession:
     """
     Handle the incoming event
     """
+    for (event, attrib, flags) in self.filter.events:
 
-    # Handle all events or matching events
-    if self.filter.event != "*" and not isEventMatching(event, self.filter.event):
-      return
+      # Handle all events or matching events
+      if event != "*" and not isEventMatching(event, event):
+        continue
 
-    # Handle attributes
-    for attrib in self.filter.attrib:
-      if not attrib(event):
-        return
+      # Handle attributes
+      for attrib in attrib:
+        if not attrib(event):
+          continue
 
-    # Handle trace ID
-    if not event.hasTraces(self.traceids):
-      return
+      # Handle trace ID
+      if not event.hasTraces(self.traceids):
+        continue
 
-    # Handle order
-    if 'first' in self.filter.flags:
-      if self.foundEvent is None:
+      # Handle order
+      if 'first' in flags:
+        if self.foundEvent is None:
+          self.foundEvent = event
+          self.callback(event)
+        break
+      if 'last' in flags:
         self.foundEvent = event
-        self.callback(event)
-      return
-    if 'last' in self.filter.flags:
-      self.foundEvent = event
-      return
+        self.triggerAtExit = True
+        break
 
-    # Fire callback
-    self.callback(event)
+      # Fire callback
+      self.callback(event)
+      break
 
   def finalize(self):
     """
@@ -53,7 +57,7 @@ class EventFilterSession:
     """
 
     # Submit the last event
-    if 'last' in self.filter.flags and self.foundEvent:
+    if self.triggerAtExit and self.foundEvent:
       self.callback(self.foundEvent)
 
   def __str__(self):
@@ -124,39 +128,44 @@ class EventFilter:
   def __init__(self, expression):
     self.expression = expression
 
-    # Tokenize expression
-    match = DSL_TOKENS.match(expression)
-    if not match:
+    # Find all the events to match against
+    matches = DSL_TOKENS.findall(expression)
+    if not matches:
       raise ValueError('The given expression "%s" is not a valid event '
         'filter DSL' % expression)
 
-    # Process sub-tokens
-    (event, attrib, flags) = match.groups()
-    self.event = event
-    self.flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
-    self.attrib = []
+    # Process event matches
+    self.events =[]
+    for (event, exprAttrib, flags) in matches:
 
-    # Compile attribute selectors
-    if attrib:
-      for (left, op, right) in DSL_ATTRIB.findall(attrib):
+      # Process sub-tokens
+      flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
 
-        # Shorthand some ops
-        if op == "=":
-          op = "=="
+      # Compile attribute selectors
+      attrib = []
+      if exprAttrib:
+        for (left, op, right) in DSL_ATTRIB.findall(exprAttrib):
 
-        # Handle regex match
-        if op == "~=":
-          self.attrib.append(eval(
-            'lambda event: regex.match(str(event.%s))' % (left,),
-            {},
-            {'regex': re.compile(right)}
-          ))
+          # Shorthand some ops
+          if op == "=":
+            op = "=="
 
-        # Handle operator match
-        else:
-          if not right.isnumeric():
-            right = '"%s"' % right.replace('"', '\\"')
-          self.attrib.append(eval('lambda event: event.%s %s %s' % (left, op, right)))
+          # Handle regex match
+          if op == "~=":
+            attrib.append(eval(
+              'lambda event: regex.match(str(event.%s))' % (left,),
+              {},
+              {'regex': re.compile(right)}
+            ))
+
+          # Handle operator match
+          else:
+            if not right.isnumeric():
+              right = '"%s"' % right.replace('"', '\\"')
+            attrib.append(eval('lambda event: event.%s %s %s' % (left, op, right)))
+
+      # Collect flags
+      self.events.append((event, attrib, flags))
 
   def start(self, traceids, callback):
     """

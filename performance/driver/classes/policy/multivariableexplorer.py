@@ -105,6 +105,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = 0
       self.progressCurrent = 0
       self.eventsRemaining = 0
+      self.startEvent = False
 
       # Compose permutation matrix
       renderdConfig = self.getRenderedConfig()
@@ -252,6 +253,9 @@ class MultivariableExplorerPolicy(PolicyFSM):
       Process all relevant events
       """
       if not event.hasTrace(self.traceid):
+        for ev, status in self.signalEvents.items():
+          if isEventMatching(event, ev):
+            self.logger.error('Untracked terminal event!!!')
         return
 
       # Check if this event is a success or a failure trigger

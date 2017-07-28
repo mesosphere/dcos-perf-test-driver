@@ -7,26 +7,31 @@ config:
   # Define the metrics we are measuring
   metrics:
     - name: marathonMemTotalUsage
+      uuid: bc970138095e4fff94301f67a2ae9d4a
       desc: Total memory usage
       summarize: [mean, min, max]
       units: Kb
 
     - name: marathonMemHeapUsage
+      uuid: fd401903feba453ca1ba3591151e0248
       desc: Heap memory usage
       summarize: [mean, min, max]
       units: Kb
 
     - name: marathonThreadsCount
+      uuid: 947b11b46b224ebd9564d00a4fbd5fdf
       desc: Number of threads in marathon
       summarize: [mean, min, max]
       units: threads
 
     - name: marathonThreadsBlocked
+      uuid: c0e5d243e43b43698bbed51ffb6429b2
       desc: Blocked threads in marathon
       summarize: [mean, min, max]
       units: threads
 
     - name: marathonThreadsWaiting
+      uuid: 8114515cc3fe476abf3814bcc964d3bf
       desc: Waiting threads in marathon
       summarize: [mean, min, max]
       units: threads

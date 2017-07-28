@@ -22,6 +22,7 @@ channels:
   # We are using a passive command-line channel in order to launch marathon
   # through scala, using mesos-simulator.
   - class: channel.CmdlineChannel
-    cmdline: sbt "project mesos-simulation" "run --master 127.0.0.1:5050"
+    cmdline: sleep 12000
+    #sbt "project mesos-simulation" "run --master 127.0.0.1:5050"
     cwd: "{{marathon_repo_dir}}"
     atstart: yes

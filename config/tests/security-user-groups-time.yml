@@ -1,0 +1,78 @@
+
+#################################################
+# Global test configuration
+#################################################
+config:
+
+  # Define the parameters this policy will be updating
+  parameters:
+    - name: users
+      units: users
+      desc: The number of users
+
+    - name: groups
+      units: users
+      desc: The number of groups
+
+  # We require the following definitions to be present (might be defined by
+  # other fragments, or must be given by the user)
+  definitions:
+    - name: ssh_key
+      desc: The full path to the private SSH key to use for logging into the cluster
+      required: yes
+
+    - name: hosts
+      desc: A comma-separated list of user@host you want to ssh into
+      required: yes
+
+
+#################################################
+# Test Metadata
+#################################################
+meta:
+  test: security-user-groups
+
+#################################################
+# Test policy configuration
+#################################################
+policies:
+
+  # Use a chained deployment policy that submits a new request only when
+  # the previous deployment has completed
+  - class: policy.MultivariableExplorerPolicy
+
+    # The following rules describe the permutation matrix
+    matrix:
+      users:
+        type: discrete
+        values: [1, 10, 100]
+      groups:
+        type: discrete
+        values: [1, 10, 100]
+    events:
+      signal:
+        OK: CmdlineProcessCompletedSuccessfully
+        FAIL: CmdlineProcessCompletedWithError
+
+#################################################
+# Channel configuration
+#################################################
+channels:
+
+  # Perform an HTTP request for every `instance` parameter change
+  - class: channel.CmdlineChannel
+    relaunch: no
+    cmdline: |
+      docker run --rm
+      -v {{ssh_key}}:/work/dcos-default
+      bbench:latest
+      bbench benchmark create-service-user
+        --verbose
+        --hosts="{{hosts}}"
+        --ssh-key-path=/work/dcos-default
+        --users={{users}}
+        --groups={{groups}}
+        --members=1
+        --permissions-per-user=1
+        --permissions-per-group=1
+        --iterations=1

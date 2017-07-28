@@ -18,17 +18,22 @@ auth.AuthOpen
 
 .. autoclass:: performance.driver.classes.tasks.auth.AuthOpen
 
-RemoveAllApps
+http.Request
 -------------
+
+.. autoclass:: performance.driver.classes.tasks.http.Request
+
+marathon.RemoveAllApps
+----------------------
 
 .. autoclass:: performance.driver.classes.tasks.marathon.RemoveAllApps
 
-RemoveMatchingApps
-------------------
+marathon.RemoveMatchingApps
+---------------------------
 
 .. autoclass:: performance.driver.classes.tasks.marathon.RemoveMatchingApps
 
-RemoveGroup
------------
+marathon.RemoveGroup
+--------------------
 
 .. autoclass:: performance.driver.classes.tasks.marathon.RemoveGroup
