@@ -33,6 +33,10 @@ def loadConfigFile(filename):
   with open(filename, 'r') as f:
     config = yaml.load(f)
 
+  # Validate
+  if not config:
+    raise ValueError('This configuration file contains no meaningful information')
+
   # Process includes
   includes = []
   if 'include' in config:
