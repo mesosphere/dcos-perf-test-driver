@@ -111,6 +111,8 @@
 <li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventReference.html">Event Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventFilters.html">Event Filters</a></li>
 </ul>
 </li>
 </ul>
@@ -180,8 +182,9 @@
             
   <div class="section" id="policies">
 <span id="classref-policy"></span><h1>Policies<a class="headerlink" href="#policies" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">policy</span></code> classes are responsible for controling the evolution of the
-test parameters over time.</p>
+<p>The <code class="docutils literal"><span class="pre">policy</span></code> classes are <strong>driving the tests</strong> by controlling the evolution
+of the test parameters over time. The parameters changed are applied to the
+test through the <a class="reference internal" href="Channels.html#classref-channel"><span class="std std-ref">Channels</span></a>.</p>
 <div class="section" id="multivariableexplorerpolicy">
 <span id="classref-policy-multivariableexplorerpolicy"></span><h2>MultivariableExplorerPolicy<a class="headerlink" href="#multivariableexplorerpolicy" title="Permalink to this headline">¶</a></h2>
 <dl class="class">

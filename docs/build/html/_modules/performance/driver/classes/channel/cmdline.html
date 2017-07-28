@@ -176,21 +176,29 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Channel</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
 
-<span class="k">class</span> <span class="nc">CmdlineExitEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+<div class="viewcode-block" id="CmdlineExitEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.CmdlineExitEvent">[docs]</a><span class="k">class</span> <span class="nc">CmdlineExitEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">  This event is submitted when the process launched through the cmdline channel</span>
+<span class="sd">  This event is published when the process launched through the cmdline channel</span>
 <span class="sd">  has completed. The exit code is tracked.</span>
 <span class="sd">  &quot;&quot;&quot;</span>
 
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exitcode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="n">exitcode</span>
 
-<span class="k">class</span> <span class="nc">CmdlineExitZeroEvent</span><span class="p">(</span><span class="n">CmdlineExitEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The exit code of the application launched by the command-line channel</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="n">exitcode</span></div>
 
-<span class="k">class</span> <span class="nc">CmdlineExitNonzeroEvent</span><span class="p">(</span><span class="n">CmdlineExitEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+<div class="viewcode-block" id="CmdlineExitZeroEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.CmdlineExitZeroEvent">[docs]</a><span class="k">class</span> <span class="nc">CmdlineExitZeroEvent</span><span class="p">(</span><span class="n">CmdlineExitEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  This event is published when the process exited and the exit code</span>
+<span class="sd">  is zero</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="CmdlineExitNonzeroEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.CmdlineExitNonzeroEvent">[docs]</a><span class="k">class</span> <span class="nc">CmdlineExitNonzeroEvent</span><span class="p">(</span><span class="n">CmdlineExitEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  This event is published when the process exited and the exit code</span>
+<span class="sd">  is non-zero</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="CmdlineChannel"><a class="viewcode-back" href="../../../../../classes/Channels.html#performance.driver.classes.channel.CmdlineChannel">[docs]</a><span class="k">class</span> <span class="nc">CmdlineChannel</span><span class="p">(</span><span class="n">Channel</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>

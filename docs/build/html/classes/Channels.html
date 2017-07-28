@@ -104,6 +104,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Channels</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cmdlinechannel">CmdlineChannel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#httpchannel">HTTPChannel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathonupdatechannel">MarathonUpdateChannel</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Observers.html">Observers</a></li>
@@ -112,6 +113,8 @@
 <li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventReference.html">Event Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventFilters.html">Event Filters</a></li>
 </ul>
 </li>
 </ul>
@@ -181,7 +184,13 @@
             
   <div class="section" id="channels">
 <span id="classref-channel"></span><h1>Channels<a class="headerlink" href="#channels" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">channel</span></code> classes are responsible for passing parameter changes down to the application being tested.</p>
+<p>The <code class="docutils literal"><span class="pre">channel</span></code> classes are <strong>applying the test values</strong> to the application being
+tested. They are responsible for translating the modification of the scalar test
+parameter to one or more actions that need to be taken in order to implement the test.</p>
+<p>After a channel has applied the values, the <a class="reference internal" href="Observers.html#classref-observers"><span class="std std-ref">Observers</span></a> are used
+to extract useful events from the application for further processing.</p>
+<p>For example, the <a class="reference internal" href="#classref-channel-cmdlinechannel"><span class="std std-ref">CmdlineChannel</span></a> is re-starting the application
+with a different command-line, every time the test parameters have changed.</p>
 <div class="section" id="cmdlinechannel">
 <span id="classref-channel-cmdlinechannel"></span><h2>CmdlineChannel<a class="headerlink" href="#cmdlinechannel" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -330,6 +339,51 @@ it through the <code class="docutils literal"><span class="pre">headers</span></
 <p class="last">Note that a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> can be dynamically injected via an
 authentication task.</p>
 </div>
+</dd></dl>
+
+</div>
+<div class="section" id="marathonupdatechannel">
+<span id="classref-channel-marathonupdatechannel"></span><h2>MarathonUpdateChannel<a class="headerlink" href="#marathonupdatechannel" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.channel.MarathonUpdateChannel">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.channel.</code><code class="descname">MarathonUpdateChannel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/channel/marathon.html#MarathonUpdateChannel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.channel.MarathonUpdateChannel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>Marathon Update Channel</em> is performing arbitrary updates to existing apps,
+groups or pods in marathon, based on the given rules.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">channels</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">channel.MarathonUpdateChannel</span>
+
+    <span class="c1"># The base url to marathon</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+
+    <span class="c1"># One or more updates to perform</span>
+    <span class="l l-Scalar l-Scalar-Plain">update</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># `patch_app` action is updating all or some applications</span>
+      <span class="c1"># and modifies the given properties</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">action</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">patch_app</span>
+
+        <span class="c1"># The properties to patch</span>
+        <span class="l l-Scalar l-Scalar-Plain">patch</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">instances</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+
+        <span class="c1"># [Optional] Update only application names that match the regex.</span>
+        <span class="c1">#            If missing, all applications are selected.</span>
+        <span class="l l-Scalar l-Scalar-Plain">filter</span><span class="p p-Indicator">:</span> <span class="s">&quot;^/groups/variable_&quot;</span>
+
+        <span class="c1"># [Optional] Update at most the given number of apps.</span>
+        <span class="c1">#            If missing, all applications are updated.</span>
+        <span class="l l-Scalar l-Scalar-Plain">limit</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+
+        <span class="c1"># [Optional] Shuffle apps before picking them (default: yes)</span>
+        <span class="l l-Scalar l-Scalar-Plain">shuffle</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">no</span>
+
+    <span class="c1"># [Optional] Additional headers to include to the marathon request</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">x-Originating-From</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Python</span>
+</pre></div>
+</div>
+<p>When a parameter is changed, the channel will kill the process and re-launch
+it with the new command-line.</p>
 </dd></dl>
 
 </div>

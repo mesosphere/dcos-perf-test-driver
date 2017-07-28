@@ -168,13 +168,13 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.events</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">LogLineEvent</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
 
-<span class="k">class</span> <span class="nc">LogLineTokenMatchEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+<div class="viewcode-block" id="LogLineTokenMatchEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.logline.LogLineTokenMatchEvent">[docs]</a><span class="k">class</span> <span class="nc">LogLineTokenMatchEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div>
 
-<div class="viewcode-block" id="LogLineObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.LogLineObserver">[docs]</a><span class="k">class</span> <span class="nc">LogLineObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+<div class="viewcode-block" id="LogLineObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.logline.LogLineObserver">[docs]</a><span class="k">class</span> <span class="nc">LogLineObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The **Log Line Observer** is post-processing every ``LogLineEvent`` and</span>
 <span class="sd">  extracts tokens that can be later converted into metrics.</span>

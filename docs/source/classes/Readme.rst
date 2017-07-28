@@ -18,3 +18,5 @@ class available in the DC/OS Performance Test Driver.
    Reporters
    Indicators
    Summarizers
+   EventReference
+   EventFilters

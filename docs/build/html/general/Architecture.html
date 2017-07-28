@@ -191,7 +191,7 @@ in order to allow adaption to the needs of every party.</p>
 <div class="section" id="event-cascading">
 <h2>Event Cascading<a class="headerlink" href="#event-cascading" title="Permalink to this headline">¶</a></h2>
 <p>Since everything in <code class="docutils literal"><span class="pre">dcos-perf-test-driver</span></code> is orchestrated through messages it’s important to identify the test case each event belogs into. For this reason the driver is using <em>Event Cascading</em> as the means to describe which event was emitted as a response to another.</p>
-<p>The <em>Event Cascading</em> is implemented by assigning unique IDs to every event and carrying the related event IDs along when an event is emitted as a response (or in relation) to another.</p>
+<p>The <em>Event Cascading</em> is implemented by assigning unique IDs (called <code class="docutils literal"><span class="pre">traceids</span></code>) to every event and carrying the related event IDs along when an event is emitted as a response (or in relation) to another.</p>
 <p>Usually, the <em>root</em> event is the <code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code> that is emitted when a scale test is initiated. Therefore, every other event that takes place in the test is carrying this ID.</p>
 <p>If you are implementing your own class it’s important to follow the event cascading principle.</p>
 </div>

@@ -5,7 +5,8 @@
 Reporters
 =========
 
-The ``reporter`` classes collect the test results and report them to a particular endpoint.
+The ``reporter`` classes are **reporting the results** into a human-readable, or
+machine-processable format.
 
 .. _classref-reporter-CSVReporter:
 

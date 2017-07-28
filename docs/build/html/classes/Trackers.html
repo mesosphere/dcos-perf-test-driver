@@ -104,15 +104,19 @@
 <li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Observers.html">Observers</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Trackers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#eventattributetracker">EventAttributeTracker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#counttracker">CountTracker</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#durationtracker">DurationTracker</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#loglinetokentracker">LogLineTokenTracker</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dumpmetrictracker">DumpMetricTracker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loglinetokentracker">LogLineTokenTracker</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Tasks.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventReference.html">Event Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventFilters.html">Event Filters</a></li>
 </ul>
 </li>
 </ul>
@@ -182,14 +186,131 @@
             
   <div class="section" id="trackers">
 <span id="classref-tracker"></span><h1>Trackers<a class="headerlink" href="#trackers" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">tracker</span></code> classes are monitoring various events in the event bus and are
-collecting performance measurement metrics.</p>
+<p>The <code class="docutils literal"><span class="pre">tracker</span></code> classes are <strong>monitoring events</strong> in the event bus and are
+<strong>producing metric values</strong>. You most certainly need them in order to collect
+your results.</p>
+<p>Refer to the <a class="reference internal" href="EventReference.html#classref-events"><span class="std std-ref">Event Reference</span></a> to know the events broadcasted in the bus.</p>
+<div class="section" id="eventattributetracker">
+<span id="classref-tracker-eventattributetracker"></span><h2>EventAttributeTracker<a class="headerlink" href="#eventattributetracker" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tracker.EventAttributeTracker">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tracker.</code><code class="descname">EventAttributeTracker</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tracker/event.html#EventAttributeTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tracker.EventAttributeTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>Event Value Tracker</em> is extracting a value of an attribute of an event
+into a metric.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">trackers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tracker.EventAttributeTracker</span>
+
+    <span class="c1"># The event to handle</span>
+    <span class="l l-Scalar l-Scalar-Plain">event</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">HTTPResponseEnd</span>
+
+    <span class="c1"># One or more attributes to extract</span>
+    <span class="l l-Scalar l-Scalar-Plain">extract</span><span class="p p-Indicator">:</span>
+
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">attrib</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">eventAttrib</span>
+        <span class="l l-Scalar l-Scalar-Plain">metric</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">metricName</span>
+
+    <span class="c1"># [Optional] Filter events for with the given python</span>
+    <span class="c1"># expression returns a truthly value.</span>
+    <span class="l l-Scalar l-Scalar-Plain">filter</span><span class="p p-Indicator">:</span> <span class="s">&quot;event.attrib</span><span class="nv"> </span><span class="s">&gt;</span><span class="nv"> </span><span class="s">3&quot;</span>
+
+    <span class="c1"># [Optional] If set to `yes` the tracker will use the traceid</span>
+    <span class="c1"># from the last `ParameterUpdateEvent` instead of the event itself.</span>
+    <span class="c1"># This is useful if the event being tracked does not cascade from</span>
+    <span class="c1"># a `ParameterUdateEvent`. If set to `no` and the event has no correct</span>
+    <span class="c1"># trace ID, an warning will be raised and the metric won&#39;t be tracked.</span>
+    <span class="c1"># (Default is `yes`)</span>
+    <span class="l l-Scalar l-Scalar-Plain">autocascade</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">no</span>
+</pre></div>
+</div>
+<p>This tracker is frequently used in conjunction with</p>
+</dd></dl>
+
+</div>
+<div class="section" id="counttracker">
+<span id="classref-tracker-counttracker"></span><h2>CountTracker<a class="headerlink" href="#counttracker" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tracker.CountTracker">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tracker.</code><code class="descname">CountTracker</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tracker/count.html#CountTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tracker.CountTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks the occurrences of an <code class="docutils literal"><span class="pre">event</span></code> within the tracking session.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">trackers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tracker.CountTracker</span>
+
+    <span class="c1"># The metric where to write the measured value to</span>
+    <span class="l l-Scalar l-Scalar-Plain">metric</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">someMetric</span>
+
+    <span class="c1"># The event to count</span>
+    <span class="c1"># (This can be a filter expression)</span>
+    <span class="l l-Scalar l-Scalar-Plain">event</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">SomeEvent</span>
+</pre></div>
+</div>
+<p>This tracker always operates within a tracking session, initiated by a
+<code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code> and terminated by the next <code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code>,
+or the completion of the test.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">The <code class="docutils literal"><span class="pre">event</span></code> must contain the trace IDs of the originating
+<code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code>, otherwise the events won’t be measured.</p>
+</div>
+</dd></dl>
+
+</div>
 <div class="section" id="durationtracker">
 <span id="classref-tracker-durationtracker"></span><h2>DurationTracker<a class="headerlink" href="#durationtracker" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.tracker.DurationTracker">
 <em class="property">class </em><code class="descclassname">performance.driver.classes.tracker.</code><code class="descname">DurationTracker</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tracker/duration.html#DurationTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tracker.DurationTracker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tracks the duration between a <code class="docutils literal"><span class="pre">start</span></code> and an <code class="docutils literal"><span class="pre">end</span></code> event.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">trackers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tracker.DurationTracker</span>
+
+    <span class="c1"># The metric where to write the measured value to</span>
+    <span class="l l-Scalar l-Scalar-Plain">metric</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">someMetric</span>
+
+    <span class="c1"># The relevant events</span>
+    <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># The event to start counting from</span>
+      <span class="c1"># (This can be a filter expression)</span>
+      <span class="l l-Scalar l-Scalar-Plain">start</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">StartEventFilter</span>
+
+      <span class="c1"># The event to stop counting at</span>
+      <span class="c1"># (This can be a filter expression)</span>
+      <span class="l l-Scalar l-Scalar-Plain">end</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EndEventFilter</span>
+</pre></div>
+</div>
+<p>This tracker always operates within a tracking session, initiated by a
+<code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code> and terminated by the next <code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code>,
+or the completion of the test.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">The <code class="docutils literal"><span class="pre">start</span></code> and <code class="docutils literal"><span class="pre">end</span></code> events must contain the trace IDs of the
+originating <code class="docutils literal"><span class="pre">ParameterUpdateEvent</span></code>. Otherwise they won’t be measured.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="dumpmetrictracker">
+<span id="classref-tracker-dumpmetrictracker"></span><h2>DumpMetricTracker<a class="headerlink" href="#dumpmetrictracker" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tracker.DumpMetricTracker">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tracker.</code><code class="descname">DumpMetricTracker</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tracker/metric.html#DumpMetricTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tracker.DumpMetricTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>Dump Metric Tracker</em> is dumping metrics collected by observers into
+the results.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">trackers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tracker.DumpMetricTracker</span>
+
+    <span class="c1"># The mapping between the marathon metric and the configured metric</span>
+    <span class="l l-Scalar l-Scalar-Plain">map</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.memory.total.used.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonMemTotalUsage</span>
+      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.memory.heap.used.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonMemHeapUsage</span>
+      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.threads.count.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonThreadsCount</span>
+      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.threads.blocked.count.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonThreadsBlocked</span>
+      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.threads.waiting.count.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonThreadsWaiting</span>
+</pre></div>
+</div>
+<p>This tracker is simply translating the name of the metric collected by
+an observer (usually the <code class="docutils literal"><span class="pre">MarathonMetricsObserver</span></code>) into the metric
+collected by the scale test.</p>
 </dd></dl>
 
 </div>
@@ -217,31 +338,6 @@ int result metrics.</p>
 </div>
 <p>You can use this tracker in combination with <code class="docutils literal"><span class="pre">LogLineObserver</span></code> in order
 to collect metrics dumped in the log lines of the application being tested.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="dumpmetrictracker">
-<span id="classref-tracker-dumpmetrictracker"></span><h2>DumpMetricTracker<a class="headerlink" href="#dumpmetrictracker" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="performance.driver.classes.tracker.DumpMetricTracker">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.tracker.</code><code class="descname">DumpMetricTracker</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tracker/metric.html#DumpMetricTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tracker.DumpMetricTracker" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <em>Dump Metric Tracker</em> is dumping metrics collected by observers into
-the results.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">trackers</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tracker.DumpMetricTracker</span>
-
-    <span class="c1"># The mapping between the marathon metric and the configured metric</span>
-    <span class="l l-Scalar l-Scalar-Plain">map</span><span class="p p-Indicator">:</span>
-      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.memory.total.used.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonMemTotalUsage</span>
-      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.memory.heap.used.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonMemHeapUsage</span>
-      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.threads.count.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonThreadsCount</span>
-      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.threads.blocked.count.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonThreadsBlocked</span>
-      <span class="l l-Scalar l-Scalar-Plain">gauges.jvm.threads.waiting.count.value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">marathonThreadsWaiting</span>
-</pre></div>
-</div>
-<p>This tracker is simply translating the name of the metric collected by
-an observer (usually the <code class="docutils literal"><span class="pre">MarathonMetricsObserver</span></code>) into the metric
-collected by the scale test.</p>
 </dd></dl>
 
 </div>

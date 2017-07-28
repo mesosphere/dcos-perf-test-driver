@@ -201,7 +201,7 @@
 <span class="sd">    Compile and return headers</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Add auth headers if we have an dcos_auth_token defined</span>
-    <span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})</span>
     <span class="n">dcos_auth_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDefinition</span><span class="p">(</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dcos_auth_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
       <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -241,6 +241,10 @@
 
 <span class="sd">        # The base url to marathon</span>
 <span class="sd">        url: &quot;{{marathon_url}}&quot;</span>
+
+<span class="sd">        # [Optional] Additional headers to include to the marathon request</span>
+<span class="sd">        headers:</span>
+<span class="sd">          x-Originating-From: Python</span>
 
 <span class="sd">  This task is enumerating all apps in the root group and delets each one</span>
 <span class="sd">  of them.</span>
@@ -284,7 +288,7 @@
 <span class="sd">  ::</span>
 
 <span class="sd">    tasks:</span>
-<span class="sd">      - class: tasks.marathon.RemoveAllApps</span>
+<span class="sd">      - class: tasks.marathon.RemoveMatchingApps</span>
 <span class="sd">        at: ...</span>
 
 <span class="sd">        # The base url to marathon</span>
@@ -292,6 +296,10 @@
 
 <span class="sd">        # The string portion in the app name to match</span>
 <span class="sd">        match: &quot;test-01-&quot;</span>
+
+<span class="sd">        # [Optional] Additional headers to include to the marathon request</span>
+<span class="sd">        headers:</span>
+<span class="sd">          x-Originating-From: Python</span>
 
 <span class="sd">  This task is enumerating all apps in the root group, checking wich ones</span>
 <span class="sd">  contain the string contained in the ``match`` parameter and removes them.</span>
@@ -341,7 +349,7 @@
 <span class="sd">  ::</span>
 
 <span class="sd">    tasks:</span>
-<span class="sd">      - class: tasks.marathon.RemoveAllApps</span>
+<span class="sd">      - class: tasks.marathon.RemoveGroup</span>
 <span class="sd">        at: ...</span>
 
 <span class="sd">        # The base url to marathon</span>
@@ -349,6 +357,10 @@
 
 <span class="sd">        # The group to remove</span>
 <span class="sd">        group: &quot;tests/01&quot;</span>
+
+<span class="sd">        # [Optional] Additional headers to include to the marathon request</span>
+<span class="sd">        headers:</span>
+<span class="sd">          x-Originating-From: Python</span>
 
 <span class="sd">  This task removes the given group from marathon.</span>
 

@@ -169,56 +169,173 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.template</span> <span class="k">import</span> <span class="n">TemplateString</span><span class="p">,</span> <span class="n">TemplateDict</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Channel</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span><span class="p">,</span> <span class="n">Lock</span>
 
 <span class="c1">###############################</span>
 <span class="c1"># Events</span>
 <span class="c1">###############################</span>
 
-<span class="k">class</span> <span class="nc">HTTPRequestStartEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPRequestStartEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPRequestStartEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPRequestStartEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published before every HTTP request</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verb</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The HTTP verb that was used (in lower-case). Ex: ``get``</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">verb</span> <span class="o">=</span> <span class="n">verb</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1">#: The URL requested</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
 
-<span class="k">class</span> <span class="nc">HTTPFirstRequestStartEvent</span><span class="p">(</span><span class="n">HTTPRequestStartEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The request body</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
 
-<span class="k">class</span> <span class="nc">HTTPLastRequestStartEvent</span><span class="p">(</span><span class="n">HTTPRequestStartEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The request headers</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span></div>
 
-<span class="k">class</span> <span class="nc">HTTPRequestEndEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPFirstRequestStartEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPFirstRequestStartEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPFirstRequestStartEvent</span><span class="p">(</span><span class="n">HTTPRequestStartEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the first request out of many is started.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPLastRequestStartEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPLastRequestStartEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPLastRequestStartEvent</span><span class="p">(</span><span class="n">HTTPRequestStartEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the last request out of many is started.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPRequestEndEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPRequestEndEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPRequestEndEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the HTTP request has completed and the response is starting</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verb</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The HTTP verb that was used (in lower-case). Ex: ``get``</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">verb</span> <span class="o">=</span> <span class="n">verb</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1">#: The URL requested</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
 
-<span class="k">class</span> <span class="nc">HTTPFirstRequestEndEvent</span><span class="p">(</span><span class="n">HTTPRequestEndEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The request body</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
 
-<span class="k">class</span> <span class="nc">HTTPLastRequestEndEvent</span><span class="p">(</span><span class="n">HTTPRequestEndEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The request headers</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span></div>
 
-<span class="k">class</span> <span class="nc">HTTPResponseStartEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPFirstRequestEndEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPFirstRequestEndEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPFirstRequestEndEvent</span><span class="p">(</span><span class="n">HTTPRequestEndEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the first request out of many is completed.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPLastRequestEndEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPLastRequestEndEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPLastRequestEndEvent</span><span class="p">(</span><span class="n">HTTPRequestEndEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the last request out of many is completed.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPResponseStartEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPResponseStartEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPResponseStartEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the HTTP response is starting.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
 
-<span class="k">class</span> <span class="nc">HTTPFirstResponseStartEvent</span><span class="p">(</span><span class="n">HTTPResponseStartEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The URL requested</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span></div>
 
-<span class="k">class</span> <span class="nc">HTTPLastResponseStartEvent</span><span class="p">(</span><span class="n">HTTPResponseStartEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+<div class="viewcode-block" id="HTTPFirstResponseStartEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPFirstResponseStartEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPFirstResponseStartEvent</span><span class="p">(</span><span class="n">HTTPResponseStartEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the first response out of many is starting.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
 
-<span class="k">class</span> <span class="nc">HTTPResponseEndEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPLastResponseStartEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPLastResponseStartEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPLastResponseStartEvent</span><span class="p">(</span><span class="n">HTTPResponseStartEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the last response out of many is starting.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPResponseEndEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPResponseEndEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPResponseEndEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the HTTP response has completed</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The URL requested</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+
+    <span class="c1">#: The response body (as string)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span>
 
-<span class="k">class</span> <span class="nc">HTTPFirstResponseEndEvent</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+    <span class="c1">#: The response headers</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span></div>
 
-<span class="k">class</span> <span class="nc">HTTPLastResponseEndEvent</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">):</span>
-  <span class="k">pass</span>
+<div class="viewcode-block" id="HTTPFirstResponseEndEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPFirstResponseEndEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPFirstResponseEndEvent</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the first response out of many has completed.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPLastResponseEndEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPLastResponseEndEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPLastResponseEndEvent</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the last response out of many has completed.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPErrorEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPErrorEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPErrorEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when an exception is raised during an HTTP operation (ex. connection error)</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The exception that was raised</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="n">exception</span></div>
+
+<div class="viewcode-block" id="HTTPFirstResponseErrorEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPFirstResponseErrorEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPFirstResponseErrorEvent</span><span class="p">(</span><span class="n">HTTPFirstResponseEndEvent</span><span class="p">,</span> <span class="n">HTTPErrorEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the first response out of many has an error.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The exception that was raised</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="n">exception</span></div>
+
+<div class="viewcode-block" id="HTTPLastResponseErrorEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPLastResponseErrorEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPLastResponseErrorEvent</span><span class="p">(</span><span class="n">HTTPLastResponseEndEvent</span><span class="p">,</span> <span class="n">HTTPErrorEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when the last response out of many has an error.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The exception that was raised</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="n">exception</span></div>
+
+<div class="viewcode-block" id="HTTPResponseErrorEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.HTTPResponseErrorEvent">[docs]</a><span class="k">class</span> <span class="nc">HTTPResponseErrorEvent</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">,</span> <span class="n">HTTPErrorEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Published when an exception was raised while processing an HTTP response.</span>
+<span class="sd">  This is valid when a ``repeat`` parameter has a value &gt; 1.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#: The exception that was raised</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="n">exception</span></div>
 
 <span class="c1">###############################</span>
 <span class="c1"># Helpers</span>
@@ -279,6 +396,7 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">activeRequest</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">completedCounter</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">lastRequestTs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
 
   <span class="k">def</span> <span class="nf">getBody</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -402,7 +520,8 @@
   <span class="nd">@subscribesToHint</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">)</span>
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">requestState</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">requestStates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">requestStateMutex</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
 
     <span class="c1"># Receive parameter updates and clean-up on teardown</span>
@@ -415,107 +534,147 @@
     <span class="n">HTTPFirstRequestStartEvent</span><span class="p">,</span> <span class="n">HTTPLastRequestStartEvent</span><span class="p">,</span>
     <span class="n">HTTPRequestStartEvent</span><span class="p">,</span> <span class="n">HTTPFirstResponseEndEvent</span><span class="p">,</span>
     <span class="n">HTTPLastResponseEndEvent</span><span class="p">,</span> <span class="n">HTTPResponseEndEvent</span><span class="p">)</span>
-  <span class="k">def</span> <span class="nf">handleRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestState</span>
-    <span class="k">if</span> <span class="n">req</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+  <span class="k">def</span> <span class="nf">handleRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">req</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">req</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Bailing out of </span><span class="si">%s</span><span class="s1"> request to </span><span class="si">%s</span><span class="s1"> due to termination&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">))</span>
       <span class="k">return</span>
 
-    <span class="c1"># Helper function that handles `repeatAfter` events before scheduling</span>
-    <span class="c1"># a new request</span>
-    <span class="k">def</span> <span class="nf">handle_repeatAfter</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">(</span><span class="n">handle_repeatAfter</span><span class="p">)</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">()</span>
+    <span class="c1"># Make sure to process loops in a single stack frame</span>
+    <span class="k">while</span> <span class="n">req</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
 
-    <span class="c1"># Helper function that handles TickEvents until the designated time</span>
-    <span class="c1"># in the `repeatInterval` parameter has passed</span>
-    <span class="k">def</span> <span class="nf">handle_repeatInterval</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-      <span class="n">deltaMs</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">ts</span> <span class="o">-</span> <span class="n">req</span><span class="o">.</span><span class="n">lastRequestTs</span>
-      <span class="k">if</span> <span class="n">deltaMs</span> <span class="o">&gt;=</span> <span class="n">req</span><span class="o">.</span><span class="n">repeatInterval</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">(</span><span class="n">handle_repeatInterval</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">()</span>
+      <span class="c1"># Render body</span>
+      <span class="n">renderedBody</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">getBody</span><span class="p">()</span>
 
-    <span class="c1"># Helper function to notify the message bus when an HTTP response starts</span>
-    <span class="k">def</span> <span class="nf">ack_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+      <span class="c1"># Helper function that handles `repeatAfter` events before scheduling</span>
+      <span class="c1"># a new request</span>
+      <span class="k">def</span> <span class="nf">handle_repeatAfter</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">(</span><span class="n">handle_repeatAfter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+      <span class="c1"># Helper function that handles TickEvents until the designated time</span>
+      <span class="c1"># in the `repeatInterval` parameter has passed</span>
+      <span class="k">def</span> <span class="nf">handle_repeatInterval</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+        <span class="n">deltaMs</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">ts</span> <span class="o">-</span> <span class="n">req</span><span class="o">.</span><span class="n">lastRequestTs</span>
+        <span class="k">if</span> <span class="n">deltaMs</span> <span class="o">&gt;=</span> <span class="n">req</span><span class="o">.</span><span class="n">repeatInterval</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">(</span><span class="n">handle_repeatInterval</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+      <span class="c1"># Helper function to notify the message bus when an HTTP response starts</span>
+      <span class="k">def</span> <span class="nf">ack_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+            <span class="n">HTTPFirstRequestEndEvent</span><span class="p">,</span>
+            <span class="n">HTTPLastRequestEndEvent</span><span class="p">,</span>
+            <span class="n">HTTPRequestEndEvent</span>
+          <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">renderedBody</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+            <span class="n">HTTPFirstResponseStartEvent</span><span class="p">,</span>
+            <span class="n">HTTPLastResponseStartEvent</span><span class="p">,</span>
+            <span class="n">HTTPResponseStartEvent</span>
+          <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>
+        <span class="p">)</span>
+
+      <span class="c1"># Place request</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
           <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
           <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
-          <span class="n">HTTPFirstRequestEndEvent</span><span class="p">,</span>
-          <span class="n">HTTPLastRequestEndEvent</span><span class="p">,</span>
-          <span class="n">HTTPRequestEndEvent</span>
-        <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>
+          <span class="n">HTTPFirstRequestStartEvent</span><span class="p">,</span>
+          <span class="n">HTTPLastRequestStartEvent</span><span class="p">,</span>
+          <span class="n">HTTPRequestStartEvent</span>
+        <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">renderedBody</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span><span class="p">),</span>
+        <span class="n">sync</span><span class="o">=</span><span class="kc">True</span>
       <span class="p">)</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
-          <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
-          <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
-          <span class="n">HTTPFirstResponseStartEvent</span><span class="p">,</span>
-          <span class="n">HTTPLastResponseStartEvent</span><span class="p">,</span>
-          <span class="n">HTTPResponseStartEvent</span>
-        <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>
-      <span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Placing a </span><span class="si">%s</span><span class="s1"> request to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">))</span>
+      <span class="k">try</span><span class="p">:</span>
 
-    <span class="c1"># Place request</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
-        <span class="n">HTTPFirstRequestStartEvent</span><span class="p">,</span>
-        <span class="n">HTTPLastRequestStartEvent</span><span class="p">,</span>
-        <span class="n">HTTPRequestStartEvent</span>
-      <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Placing a </span><span class="si">%s</span><span class="s1"> request to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">))</span>
-    <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-      <span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span>
-      <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-      <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-      <span class="n">data</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">getBody</span><span class="p">(),</span>
-      <span class="n">headers</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
-      <span class="n">hooks</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">ack_response</span><span class="p">)</span>
-    <span class="p">)</span>
+        <span class="c1"># Send request (and trap errors)</span>
+        <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+          <span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span>
+          <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+          <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+          <span class="n">data</span><span class="o">=</span><span class="n">renderedBody</span><span class="p">,</span>
+          <span class="n">headers</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+          <span class="n">hooks</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">ack_response</span><span class="p">)</span>
+        <span class="p">)</span>
 
-    <span class="c1"># Warn errors</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">200</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">):</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;HTTP </span><span class="si">%s</span><span class="s1"> Request to </span><span class="si">%s</span><span class="s1"> returned status code of </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> \
-        <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
+        <span class="c1"># Warn errors</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">200</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;HTTP </span><span class="si">%s</span><span class="s1"> Request to </span><span class="si">%s</span><span class="s1"> returned status code of </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
 
-    <span class="c1"># Process response</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
-        <span class="n">HTTPFirstResponseEndEvent</span><span class="p">,</span>
-        <span class="n">HTTPLastResponseEndEvent</span><span class="p">,</span>
-        <span class="n">HTTPResponseEndEvent</span>
-      <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
-        <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span>
-      <span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Process response</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+            <span class="n">HTTPFirstResponseEndEvent</span><span class="p">,</span>
+            <span class="n">HTTPLastResponseEndEvent</span><span class="p">,</span>
+            <span class="n">HTTPResponseEndEvent</span>
+          <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span>
+          <span class="p">)</span>
+        <span class="p">)</span>
 
-    <span class="c1"># Check for repetitions</span>
-    <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span> <span class="o">&lt;</span> <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">:</span>
+      <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
 
-      <span class="c1"># Register an event listener if we have an `repeatAfter` parameter</span>
-      <span class="k">if</span> <span class="ow">not</span> <span class="n">req</span><span class="o">.</span><span class="n">repeatAfter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">handle_repeatAfter</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">repeatAfter</span><span class="p">,))</span>
-        <span class="k">return</span>
+        <span class="c1"># Dispatch error</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">pickFirstLast</span><span class="p">(</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span><span class="p">,</span>
+            <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+            <span class="n">HTTPFirstResponseErrorEvent</span><span class="p">,</span>
+            <span class="n">HTTPLastResponseErrorEvent</span><span class="p">,</span>
+            <span class="n">HTTPResponseErrorEvent</span>
+          <span class="p">)(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="p">{},</span>
+            <span class="n">e</span><span class="p">,</span>
+            <span class="n">traceid</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">traceids</span>
+          <span class="p">)</span>
+        <span class="p">)</span>
 
-      <span class="c1"># Register a timeout if we have a `repeatInterval` parameter</span>
-      <span class="k">if</span> <span class="ow">not</span> <span class="n">req</span><span class="o">.</span><span class="n">repeatInterval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">req</span><span class="o">.</span><span class="n">lastRequestTs</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">handle_repeatInterval</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TickEvent</span><span class="p">,))</span>
-        <span class="k">return</span>
+      <span class="c1"># Check for repetitions</span>
+      <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">req</span><span class="o">.</span><span class="n">completedCounter</span> <span class="o">&lt;</span> <span class="n">req</span><span class="o">.</span><span class="n">repeat</span><span class="p">:</span>
 
-      <span class="c1"># Otherwise immediately re-schedule request</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">()</span>
+        <span class="c1"># Register an event listener if we have an `repeatAfter` parameter</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">req</span><span class="o">.</span><span class="n">repeatAfter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">handle_repeatAfter</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">repeatAfter</span><span class="p">,))</span>
+          <span class="k">break</span>
+
+        <span class="c1"># Register a timeout if we have a `repeatInterval` parameter</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">req</span><span class="o">.</span><span class="n">repeatInterval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="n">req</span><span class="o">.</span><span class="n">lastRequestTs</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">handle_repeatInterval</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TickEvent</span><span class="p">,))</span>
+          <span class="k">break</span>
+
+        <span class="c1"># Otherwise let the loop continue in order to re-schedule request</span>
+        <span class="k">continue</span>
+
+      <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># Remoe the active reuqest when we are done</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestStateMutex</span><span class="p">:</span>
+          <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requestStates</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+          <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">break</span>
 
   <span class="k">def</span> <span class="nf">handleTeardown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stop pending request(s) at teardown</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestState</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestState</span><span class="o">.</span><span class="n">activeRequest</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">requestState</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">raw</span><span class="o">.</span><span class="n">_fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestStateMutex</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestStates</span><span class="p">:</span>
+        <span class="n">req</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="p">:</span>
+          <span class="n">req</span><span class="o">.</span><span class="n">activeRequest</span><span class="o">.</span><span class="n">raw</span><span class="o">.</span><span class="n">_fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">requestStates</span> <span class="o">=</span> <span class="p">[]</span>
 
   <span class="k">def</span> <span class="nf">handleParameterUpdate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -533,12 +692,18 @@
       <span class="k">return</span>
 
     <span class="c1"># Prepare request state and send initial request</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">requestState</span> <span class="o">=</span> <span class="n">HTTPRequestState</span><span class="p">(</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">HTTPRequestState</span><span class="p">(</span>
       <span class="bp">self</span><span class="p">,</span>
       <span class="n">event</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
       <span class="n">event</span><span class="o">.</span><span class="n">traceids</span>
     <span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">()</span></div>
+
+    <span class="c1"># Keep track of the requests</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">requestStateMutex</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">requestStates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+    <span class="c1"># Start request chain</span>
+    <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handleRequest</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">state</span><span class="p">,))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
 </pre></div>
 
            </div>

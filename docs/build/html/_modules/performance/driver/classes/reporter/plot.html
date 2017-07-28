@@ -591,6 +591,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump a plot for every metric in the time series</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
 
     <span class="c1"># Validate dimentions</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -605,7 +606,7 @@
 
     <span class="c1"># Collect reference data if we have them</span>
     <span class="n">reference</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">refConfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;reference&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">refConfig</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reference&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">refConfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
       <span class="n">url</span> <span class="o">=</span> <span class="n">refConfig</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Fetcing reference data from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
@@ -669,8 +670,8 @@
                    <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="c1"># Create and dump plots</span>
-    <span class="n">filePrefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;plot-&#39;</span><span class="p">)</span>
-    <span class="n">fileSuffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;suffix&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">filePrefix</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;plot-&#39;</span><span class="p">)</span>
+    <span class="n">fileSuffix</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;suffix&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">plotGroup</span> <span class="ow">in</span> <span class="n">metricPlotGroup</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
       <span class="n">dumpFunction</span><span class="p">(</span>
         <span class="n">axisValues</span><span class="p">,</span>

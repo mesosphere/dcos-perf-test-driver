@@ -107,14 +107,17 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tasks</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#auth-authee">auth.AuthEE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#auth-authopen">auth.AuthOpen</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#removeallapps">RemoveAllApps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#removematchingapps">RemoveMatchingApps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#removegroup">RemoveGroup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#http-request">http.Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathon-removeallapps">marathon.RemoveAllApps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathon-removematchingapps">marathon.RemoveMatchingApps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathon-removegroup">marathon.RemoveGroup</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventReference.html">Event Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventFilters.html">Event Filters</a></li>
 </ul>
 </li>
 </ul>
@@ -186,6 +189,15 @@
 <span id="classref-tasks"></span><h1>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h1>
 <p>The <code class="docutils literal"><span class="pre">tasks</span></code> classes contain micro-actions that are executed at some phase
 of the test and do not participate in the final result.</p>
+<p>When these tasks are executed is controlled by the <code class="docutils literal"><span class="pre">at</span></code>, showe supported values
+are the following:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">setup</span></code> : Called when the sytem is ready and right before the policy is started.</li>
+<li><code class="docutils literal"><span class="pre">pretest</span></code> : Called before every run</li>
+<li><code class="docutils literal"><span class="pre">intertest</span></code> : Called right after a parameter change has occured</li>
+<li><code class="docutils literal"><span class="pre">posttest</span></code> : Called after every run</li>
+<li><code class="docutils literal"><span class="pre">teardown</span></code> : Called when the system is tearing down</li>
+</ul>
 <div class="section" id="auth-authee">
 <h2>auth.AuthEE<a class="headerlink" href="#auth-authee" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -241,8 +253,53 @@ for other components to use.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="removeallapps">
-<h2>RemoveAllApps<a class="headerlink" href="#removeallapps" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="http-request">
+<h2>http.Request<a class="headerlink" href="#http-request" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.tasks.http.Request">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.http.</code><code class="descname">Request</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/http.html#Request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.http.Request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform an arbitrary HTTP request as a single-shot task</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.http.Request</span>
+    <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+
+    <span class="c1"># The URL to send the requests at</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://127.0.0.1:8080/v2/apps</span>
+
+    <span class="c1"># [Optional] The body of the HTTP request</span>
+    <span class="l l-Scalar l-Scalar-Plain">body</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">{</span>
+        <span class="no">&quot;cmd&quot;: &quot;sleep 1200&quot;,</span>
+        <span class="no">&quot;cpus&quot;: 0.1,</span>
+        <span class="no">&quot;mem&quot;: 64,</span>
+        <span class="no">&quot;disk&quot;: 0,</span>
+        <span class="no">&quot;instances&quot;: {{instances}},</span>
+        <span class="no">&quot;id&quot;: &quot;/scale-instances/{{uuid()}}&quot;,</span>
+        <span class="no">&quot;backoffFactor&quot;: 1.0,</span>
+        <span class="no">&quot;backoffSeconds&quot;: 0</span>
+      <span class="no">}</span>
+
+    <span class="c1"># [Optional] The HTTP Verb to use (Defaults to &#39;GET&#39;)</span>
+    <span class="l l-Scalar l-Scalar-Plain">verb</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">POST</span>
+
+    <span class="c1"># [Optional] The HTTP headers to send</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">Accept</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">text/plain</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This channel will automatically inject an <code class="docutils literal"><span class="pre">Authorization</span></code> header if
+a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> definition exists, so you don’t have to specify
+it through the <code class="docutils literal"><span class="pre">headers</span></code> configuration.</p>
+<p class="last">Note that a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> can be dynamically injected via an
+authentication task.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="marathon-removeallapps">
+<h2>marathon.RemoveAllApps<a class="headerlink" href="#marathon-removeallapps" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.tasks.marathon.RemoveAllApps">
 <em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.marathon.</code><code class="descname">RemoveAllApps</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/marathon.html#RemoveAllApps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.marathon.RemoveAllApps" title="Permalink to this definition">¶</a></dt>
@@ -253,6 +310,10 @@ for other components to use.</p>
 
     <span class="c1"># The base url to marathon</span>
     <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="s">&quot;{{marathon_url}}&quot;</span>
+
+    <span class="c1"># [Optional] Additional headers to include to the marathon request</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">x-Originating-From</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Python</span>
 </pre></div>
 </div>
 <p>This task is enumerating all apps in the root group and delets each one
@@ -266,14 +327,14 @@ executed in series.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="removematchingapps">
-<h2>RemoveMatchingApps<a class="headerlink" href="#removematchingapps" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="marathon-removematchingapps">
+<h2>marathon.RemoveMatchingApps<a class="headerlink" href="#marathon-removematchingapps" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.tasks.marathon.RemoveMatchingApps">
 <em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.marathon.</code><code class="descname">RemoveMatchingApps</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/marathon.html#RemoveMatchingApps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.marathon.RemoveMatchingApps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes matching apps from marathon</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveAllApps</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveMatchingApps</span>
     <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
 
     <span class="c1"># The base url to marathon</span>
@@ -281,6 +342,10 @@ executed in series.</p>
 
     <span class="c1"># The string portion in the app name to match</span>
     <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span> <span class="s">&quot;test-01-&quot;</span>
+
+    <span class="c1"># [Optional] Additional headers to include to the marathon request</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">x-Originating-From</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Python</span>
 </pre></div>
 </div>
 <p>This task is enumerating all apps in the root group, checking wich ones
@@ -294,14 +359,14 @@ executed in series.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="removegroup">
-<h2>RemoveGroup<a class="headerlink" href="#removegroup" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="marathon-removegroup">
+<h2>marathon.RemoveGroup<a class="headerlink" href="#marathon-removegroup" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.tasks.marathon.RemoveGroup">
 <em class="property">class </em><code class="descclassname">performance.driver.classes.tasks.marathon.</code><code class="descname">RemoveGroup</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/tasks/marathon.html#RemoveGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.tasks.marathon.RemoveGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes a specific group from marathon</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveAllApps</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tasks.marathon.RemoveGroup</span>
     <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
 
     <span class="c1"># The base url to marathon</span>
@@ -309,6 +374,10 @@ executed in series.</p>
 
     <span class="c1"># The group to remove</span>
     <span class="l l-Scalar l-Scalar-Plain">group</span><span class="p p-Indicator">:</span> <span class="s">&quot;tests/01&quot;</span>
+
+    <span class="c1"># [Optional] Additional headers to include to the marathon request</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">x-Originating-From</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Python</span>
 </pre></div>
 </div>
 <p>This task removes the given group from marathon.</p>

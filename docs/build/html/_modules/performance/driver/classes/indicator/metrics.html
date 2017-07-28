@@ -179,19 +179,35 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Get the metric.summarizer to track</span>
-    <span class="p">(</span><span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;metric&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-    <span class="n">v_parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;parameter&#39;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">)</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">v_norm_expr</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;normalizeto&#39;</span><span class="p">]</span>
 
     <span class="c1"># Calculate the normalized average</span>
     <span class="n">v_mean</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
       <span class="n">summ</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
+      <span class="c1"># Get the summariser value (and in case of value/error get the value)</span>
+      <span class="n">sum_value</span> <span class="o">=</span> <span class="n">summ</span><span class="p">[</span><span class="n">v_metric</span><span class="p">][</span><span class="n">v_summarizer</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sum_value</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">sum_value</span> <span class="o">=</span> <span class="n">sum_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;For Axis </span><span class="si">%r</span><span class="s1">, metric </span><span class="si">%s</span><span class="s1">, summariser </span><span class="si">%s</span><span class="s1"> = </span><span class="si">%r</span><span class="s1">&#39;</span>
+        <span class="o">%</span> <span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">,</span> <span class="n">sum_value</span><span class="p">))</span>
+
       <span class="c1"># Calculate normalized value</span>
-      <span class="k">if</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">v_parameter</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v_norm_expr</span><span class="p">,</span> <span class="p">{},</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sum_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Norm expression &quot;</span><span class="si">%s</span><span class="s1">&quot; evaluated to </span><span class="si">%r</span><span class="s1"> = </span><span class="si">%r</span><span class="s1">&#39;</span>
+          <span class="o">%</span> <span class="p">(</span><span class="n">v_norm_expr</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+      <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error evaluating normalization expression: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
         <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
-      <span class="k">else</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">summ</span><span class="p">[</span><span class="n">v_metric</span><span class="p">][</span><span class="n">v_summarizer</span><span class="p">])</span> <span class="o">/</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">v_parameter</span><span class="p">]</span>
+
+      <span class="c1"># Calculate indicator</span>
       <span class="n">v_mean</span> <span class="o">+=</span> <span class="n">value</span>
 
     <span class="c1"># Calculate mean</span>
@@ -214,20 +230,29 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Get the metric.summarizer to track</span>
-    <span class="p">(</span><span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;metric&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-    <span class="n">v_parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;parameter&#39;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">)</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">v_norm_expr</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;normalizeto&#39;</span><span class="p">]</span>
 
     <span class="c1"># Calculate the normalized minimum</span>
     <span class="n">v_min</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
       <span class="n">summ</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-      <span class="c1"># Calculate normalized value</span>
-      <span class="k">if</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">v_parameter</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
-      <span class="k">else</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">summ</span><span class="p">[</span><span class="n">v_metric</span><span class="p">][</span><span class="n">v_summarizer</span><span class="p">])</span> <span class="o">/</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">v_parameter</span><span class="p">]</span>
+      <span class="c1"># Get the summariser value (and in case of value/error get the value)</span>
+      <span class="n">sum_value</span> <span class="o">=</span> <span class="n">summ</span><span class="p">[</span><span class="n">v_metric</span><span class="p">][</span><span class="n">v_summarizer</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sum_value</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">sum_value</span> <span class="o">=</span> <span class="n">sum_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+      <span class="c1"># Calculate normalized value</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v_norm_expr</span><span class="p">,</span> <span class="p">{},</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sum_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+      <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error evaluating normalization expression: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="c1"># Calculate indicator</span>
       <span class="k">if</span> <span class="n">v_min</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">v_min</span> <span class="o">=</span> <span class="n">value</span>
       <span class="k">else</span><span class="p">:</span>
@@ -249,20 +274,29 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Get the metric.summarizer to track</span>
-    <span class="p">(</span><span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;metric&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-    <span class="n">v_parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;parameter&#39;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">v_metric</span><span class="p">,</span> <span class="n">v_summarizer</span><span class="p">)</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">v_norm_expr</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;normalizeto&#39;</span><span class="p">]</span>
 
     <span class="c1"># Calculate the normalized minimum</span>
     <span class="n">v_max</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
       <span class="n">summ</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-      <span class="c1"># Calculate normalized value</span>
-      <span class="k">if</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">v_parameter</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
-      <span class="k">else</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">summ</span><span class="p">[</span><span class="n">v_metric</span><span class="p">][</span><span class="n">v_summarizer</span><span class="p">])</span> <span class="o">/</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">v_parameter</span><span class="p">]</span>
+      <span class="c1"># Get the summariser value (and in case of value/error get the value)</span>
+      <span class="n">sum_value</span> <span class="o">=</span> <span class="n">summ</span><span class="p">[</span><span class="n">v_metric</span><span class="p">][</span><span class="n">v_summarizer</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sum_value</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">sum_value</span> <span class="o">=</span> <span class="n">sum_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+      <span class="c1"># Calculate normalized value</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v_norm_expr</span><span class="p">,</span> <span class="p">{},</span> <span class="n">axis</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sum_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+      <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error evaluating normalization expression: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="c1"># Calculate indicator</span>
       <span class="k">if</span> <span class="n">v_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">v_max</span> <span class="o">=</span> <span class="n">value</span>
       <span class="k">else</span><span class="p">:</span>

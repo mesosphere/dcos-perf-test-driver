@@ -103,6 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Policies.html">Policies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Observers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#httptimingobserver">HTTPTimingObserver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#loglineobserver">LogLineObserver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#marathoneventsobserver">MarathonEventsObserver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#marathonmetricsobserver">MarathonMetricsObserver</a></li>
@@ -114,6 +115,8 @@
 <li class="toctree-l2"><a class="reference internal" href="Reporters.html">Reporters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Indicators.html">Indicators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Summarizers.html">Summarizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventReference.html">Event Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EventFilters.html">Event Filters</a></li>
 </ul>
 </li>
 </ul>
@@ -183,8 +186,52 @@
             
   <div class="section" id="observers">
 <span id="classref-observers"></span><h1>Observers<a class="headerlink" href="#observers" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">observer</span></code> classes are responsible for monitoring the application being
-tested and exracting useful events.</p>
+<p>The <code class="docutils literal"><span class="pre">observer</span></code> classes are <strong>monitoring the application being tested</strong> and extract
+useful events. Such events are either required by the <a class="reference internal" href="Policies.html#classref-policy"><span class="std std-ref">Policies</span></a> in
+order to evolve the tests, or tracked by the <a class="reference internal" href="Trackers.html#classref-tracker"><span class="std std-ref">Trackers</span></a> in order
+to calculate the test results.</p>
+<div class="section" id="httptimingobserver">
+<span id="classref-observers-httptimingobserver"></span><h2>HTTPTimingObserver<a class="headerlink" href="#httptimingobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.HTTPTimingObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">HTTPTimingObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/httptiming.html#HTTPTimingObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.HTTPTimingObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>HTTP Timing Observer</em> is performing HTTP requests to the given endpoint
+and is measuring the request and response times.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.HTTPTimingObserver</span>
+
+    <span class="c1"># The URL to send the requests at</span>
+    <span class="l l-Scalar l-Scalar-Plain">url</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">http://127.0.0.1:8080/v2/apps</span>
+
+    <span class="c1"># [Optional] The interval of the reqeusts (seconds)</span>
+    <span class="l l-Scalar l-Scalar-Plain">interval</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+
+    <span class="c1"># [Optional] The body of the HTTP request</span>
+    <span class="l l-Scalar l-Scalar-Plain">body</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">{</span>
+        <span class="no">&quot;cmd&quot;: &quot;sleep 1200&quot;,</span>
+        <span class="no">&quot;cpus&quot;: 0.1,</span>
+        <span class="no">&quot;mem&quot;: 64,</span>
+        <span class="no">&quot;disk&quot;: 0,</span>
+        <span class="no">&quot;instances&quot;: {{instances}},</span>
+        <span class="no">&quot;id&quot;: &quot;/scale-instances/{{uuid()}}&quot;,</span>
+        <span class="no">&quot;backoffFactor&quot;: 1.0,</span>
+        <span class="no">&quot;backoffSeconds&quot;: 0</span>
+      <span class="no">}</span>
+
+    <span class="c1"># [Optional] The HTTP Verb to use (Defaults to &#39;GET&#39;)</span>
+    <span class="l l-Scalar l-Scalar-Plain">verb</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">POST</span>
+
+    <span class="c1"># [Optional] The HTTP headers to send</span>
+    <span class="l l-Scalar l-Scalar-Plain">headers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">Accept</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">text/plain</span>
+</pre></div>
+</div>
+<p>This observer is publishing a <code class="docutils literal"><span class="pre">HTTPTimingResultEvent</span></code> every time a sample
+is taken. Refer to the event documentation for more details.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="loglineobserver">
 <span id="classref-observers-loglineobserver"></span><h2>LogLineObserver<a class="headerlink" href="#loglineobserver" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -256,6 +303,12 @@ successfully established.</p>
 <li><code class="docutils literal"><span class="pre">MarathonDeploymentFailedEvent</span></code></li>
 </ul>
 </div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order to properly populcate the event’s trace ID, this observer is also
+listening for <cite>http</cite> channel requests in order to extract the affected
+application name(s).</p>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>This observer will automatically inject an <code class="docutils literal"><span class="pre">Authorization</span></code> header if

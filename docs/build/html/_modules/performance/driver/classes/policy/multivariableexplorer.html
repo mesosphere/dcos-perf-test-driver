@@ -254,6 +254,10 @@
 <span class="sd">    Entry point state</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+      <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">startEvent</span> <span class="o">=</span> <span class="kc">False</span>
+
     <span class="k">def</span> <span class="nf">onEnter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Reset state when entering the `Start` state</span>
@@ -265,6 +269,7 @@
       <span class="bp">self</span><span class="o">.</span><span class="n">progressTotal</span> <span class="o">=</span> <span class="mi">0</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">progressCurrent</span> <span class="o">=</span> <span class="mi">0</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">startEvent</span> <span class="o">=</span> <span class="kc">False</span>
 
       <span class="c1"># Compose permutation matrix</span>
       <span class="n">renderdConfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
@@ -334,6 +339,13 @@
 
       <span class="k">if</span> <span class="n">isEventMatching</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">startEvent</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">MultivariableExplorerPolicy</span><span class="o">.</span><span class="n">Run</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">onRestartEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      When the tests are re-started, marathon is already running, so only wait</span>
+<span class="sd">      for the restart signal before switching to `Run` state.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">MultivariableExplorerPolicy</span><span class="o">.</span><span class="n">Run</span><span class="p">)</span>
 
   <span class="k">class</span> <span class="nc">Run</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -405,6 +417,9 @@
 <span class="sd">      Process all relevant events</span>
 <span class="sd">      &quot;&quot;&quot;</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="o">.</span><span class="n">hasTrace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traceid</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ev</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">signalEvents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+          <span class="k">if</span> <span class="n">isEventMatching</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Untracked terminal event!!!&#39;</span><span class="p">)</span>
         <span class="k">return</span>
 
       <span class="c1"># Check if this event is a success or a failure trigger</span>
