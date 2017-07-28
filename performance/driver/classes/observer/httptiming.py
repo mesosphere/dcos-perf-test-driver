@@ -13,12 +13,27 @@ class HTTPTimingResultEvent(Event):
 
   def __init__(self, url, verb, statusCode, requestTime, responseTime, totalTime, contentLength, *args, **kwargs):
     super().__init__(*args, **kwargs)
+
+    #: The URL requested
     self.url = url
+
+    #: The HTTP verb used to request this resource
     self.verb = verb
+
+    #: The HTTP response code
     self.statusCode = statusCode
+
+    #: The time the HTTP request took to complete
     self.requestTime = requestTime
+
+    #: The time the HTTP response took to complete
     self.responseTime = responseTime
+
+    #: The overall time from the beginning of the request, till the end of the
+    #: response
     self.totalTime = totalTime
+
+    #: The length of the response body
     self.contentLength = contentLength
 
 class HTTPTimingObserver(Observer):
@@ -57,6 +72,8 @@ class HTTPTimingObserver(Observer):
         headers:
           Accept: text/plain
 
+  This observer is publishing a ``HTTPTimingResultEvent`` every time a sample
+  is taken. Refer to the event documentation for more details.
 
   """
 
