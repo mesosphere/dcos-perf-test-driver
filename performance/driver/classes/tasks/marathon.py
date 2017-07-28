@@ -37,7 +37,7 @@ class MarathonDeploymentMonitorTask(Task):
     Compile and return headers
     """
     # Add auth headers if we have an dcos_auth_token defined
-    headers = {}
+    headers = self.getConfig('headers', {})
     dcos_auth_token = self.getDefinition('dcos_auth_token', None)
     if not dcos_auth_token is None:
       headers = {
@@ -77,6 +77,10 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 
         # The base url to marathon
         url: "{{marathon_url}}"
+
+        # [Optional] Additional headers to include to the marathon request
+        headers:
+          x-Originating-From: Python
 
   This task is enumerating all apps in the root group and delets each one
   of them.
@@ -128,6 +132,10 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
 
         # The string portion in the app name to match
         match: "test-01-"
+
+        # [Optional] Additional headers to include to the marathon request
+        headers:
+          x-Originating-From: Python
 
   This task is enumerating all apps in the root group, checking wich ones
   contain the string contained in the ``match`` parameter and removes them.
@@ -185,6 +193,10 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
 
         # The group to remove
         group: "tests/01"
+
+        # [Optional] Additional headers to include to the marathon request
+        headers:
+          x-Originating-From: Python
 
   This task removes the given group from marathon.
 
