@@ -90,8 +90,8 @@ class Request(Task):
 
       # Log error status codes
       self.logger.debug('Completed with HTTP %s' % res.status_code)
-      if res.status_code != 200:
-        self.logger.warn('Endpoint at %s responded with HTTP %i' % (
+      if res.status_code < 200 or res.status_code >= 300:
+        self.logger.error('Endpoint at %s responded with HTTP %i' % (
           url, res.status_code))
 
     except requests.exceptions.ConnectionError as e:
