@@ -12,68 +12,166 @@ from threading import Thread, Lock
 ###############################
 
 class HTTPRequestStartEvent(Event):
+  """
+  Published before every HTTP request
+  """
+
   def __init__(self, verb, url, body, headers, *args, **kwargs):
     super().__init__(*args, **kwargs)
+
+    #: The HTTP verb that was used (in lower-case). Ex: ``get``
     self.verb = verb.lower()
+
+    #: The URL requested
     self.url = url
+
+    #: The request body
     self.body = body
+
+    #: The request headers
     self.headers = headers
 
 class HTTPFirstRequestStartEvent(HTTPRequestStartEvent):
-  pass
+  """
+  Published when the first request out of many is started.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPLastRequestStartEvent(HTTPRequestStartEvent):
-  pass
+  """
+  Published when the last request out of many is started.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPRequestEndEvent(Event):
+  """
+  Published when the HTTP request has completed and the response is starting
+  """
+
   def __init__(self, verb, url, body, headers, *args, **kwargs):
     super().__init__(*args, **kwargs)
+
+    #: The HTTP verb that was used (in lower-case). Ex: ``get``
     self.verb = verb.lower()
+
+    #: The URL requested
     self.url = url
+
+    #: The request body
     self.body = body
+
+    #: The request headers
     self.headers = headers
 
 class HTTPFirstRequestEndEvent(HTTPRequestEndEvent):
-  pass
+  """
+  Published when the first request out of many is completed.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPLastRequestEndEvent(HTTPRequestEndEvent):
-  pass
+  """
+  Published when the last request out of many is completed.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPResponseStartEvent(Event):
+  """
+  Published when the HTTP response is starting.
+  """
   def __init__(self, url, *args, **kwargs):
     super().__init__(*args, **kwargs)
+
+    #: The URL requested
     self.url = url
 
 class HTTPFirstResponseStartEvent(HTTPResponseStartEvent):
-  pass
+  """
+  Published when the first response out of many is starting.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPLastResponseStartEvent(HTTPResponseStartEvent):
-  pass
+  """
+  Published when the last response out of many is starting.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPResponseEndEvent(Event):
+  """
+  Published when the HTTP response has completed
+  """
+
   def __init__(self, url, body, headers, *args, **kwargs):
     super().__init__(*args, **kwargs)
+
+    #: The URL requested
     self.url = url
+
+    #: The response body (as string)
     self.body = body
+
+    #: The response headers
     self.headers = headers
 
 class HTTPFirstResponseEndEvent(HTTPResponseEndEvent):
-  pass
+  """
+  Published when the first response out of many has completed.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
 class HTTPLastResponseEndEvent(HTTPResponseEndEvent):
-  pass
+  """
+  Published when the last response out of many has completed.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
 
-class HTTPErrorResponseEvent(Event):
-  pass
+class HTTPErrorEvent(Event):
+  """
+  Published when an exception is raised during an HTTP operation (ex. connection error)
+  """
 
-class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorResponseEvent):
-  pass
+  def __init__(self, exception, *args, **kwargs):
+    super().__init__(*args, **kwargs)
 
-class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorResponseEvent):
-  pass
+    #: The exception that was raised
+    self.exception = exception
 
-class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorResponseEvent):
-  pass
+class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorEvent):
+  """
+  Published when the first response out of many has an error.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
+
+  def __init__(self, url, body, headers, exception, *args, **kwargs):
+    super().__init__(url, body, headers, *args, **kwargs)
+
+    #: The exception that was raised
+    self.exception = exception
+
+class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorEvent):
+  """
+  Published when the last response out of many has an error.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
+
+  def __init__(self, url, body, headers, exception, *args, **kwargs):
+    super().__init__(url, body, headers, *args, **kwargs)
+
+    #: The exception that was raised
+    self.exception = exception
+
+class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorEvent):
+  """
+  Published when an exception was raised while processing an HTTP response.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
+
+  def __init__(self, url, body, headers, exception, *args, **kwargs):
+    super().__init__(url, body, headers, *args, **kwargs)
+
+    #: The exception that was raised
+    self.exception = exception
 
 ###############################
 # Helpers
@@ -370,6 +468,7 @@ class HTTPChannel(Channel):
           )(req.url,
             "",
             {},
+            e,
             traceid=req.traceids
           )
         )
@@ -396,7 +495,10 @@ class HTTPChannel(Channel):
 
         # Remoe the active reuqest when we are done
         with self.requestStateMutex:
-          self.requestStates.remove(req)
+          try:
+            self.requestStates.remove(req)
+          except ValueError:
+            pass
         break
 
   def handleTeardown(self, event):

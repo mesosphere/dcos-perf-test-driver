@@ -14,19 +14,27 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class CmdlineExitEvent(Event):
   """
-  This event is submitted when the process launched through the cmdline channel
+  This event is published when the process launched through the cmdline channel
   has completed. The exit code is tracked.
   """
 
   def __init__(self, exitcode, **kwargs):
     super().__init__(**kwargs)
+
+    #: The exit code of the application launched by the command-line channel
     self.exitcode = exitcode
 
 class CmdlineExitZeroEvent(CmdlineExitEvent):
-  pass
+  """
+  This event is published when the process exited and the exit code
+  is zero
+  """
 
 class CmdlineExitNonzeroEvent(CmdlineExitEvent):
-  pass
+  """
+  This event is published when the process exited and the exit code
+  is non-zero
+  """
 
 class CmdlineChannel(Channel):
   """
