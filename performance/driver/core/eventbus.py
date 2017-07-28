@@ -110,8 +110,9 @@ class EventBus:
       self.queue.put((ExitEvent(), None))
 
     self.logger.debug('Waiting for thread pool to exit')
-    for i in range(0, self.threadCount):
-      self.threads[i].join()
+    for thread in self.threads:
+      thread.join()
+    self.threads = []
 
   def flush(self):
     """
