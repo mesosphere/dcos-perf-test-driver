@@ -2,3 +2,4 @@ from .singledeployment import SingleDeploymentPolicy
 from .chaineddeployment import ChainedDeploymentPolicy
 from .timeddeployment import TimedDevelopmentPolicy
 from .multivariableexplorer import MultivariableExplorerPolicy
+from .timeevolution import TimeEvolutionPolicy
