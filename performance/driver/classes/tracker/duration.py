@@ -38,9 +38,6 @@ class DurationTrackerSession:
       self.traceids
     )
 
-  def isRelevant(self, event):
-    return event.hasTraces(self.traceids)
-
   def handle(self, event):
     self.startFilter.handle(event)
     self.endFilter.handle(event)
@@ -61,6 +58,9 @@ class DurationTracker(Tracker):
     trackers:
       - class: tracker.DurationTracker
 
+        # The metric where to write the measured value to
+        metric: someMetric
+
         # The relevant events
         events:
 
@@ -72,8 +72,14 @@ class DurationTracker(Tracker):
           # (This can be a filter expression)
           end: EndEventFilter
 
+  This tracker always operates within a tracking session, initiated by a
+  ``ParameterUpdateEvent`` and terminated by the next ``ParameterUpdateEvent``,
+  or the completion of the test.
 
-  This tracker will
+  .. important::
+
+    The ``start`` and ``end`` events must contain the trace IDs of the
+    originating ``ParameterUpdateEvent``. Otherwise they won't be measured.
 
   """
 
@@ -111,7 +117,6 @@ class DurationTracker(Tracker):
         self.activeTrace.finalize()
 
       # Start a new session tracker
-      print("START TRACE:", event)
       self.activeTrace = DurationTrackerSession(self, event.traceids)
       self.traces.append(self.activeTrace)
 
