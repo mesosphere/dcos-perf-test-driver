@@ -1,4 +1,6 @@
 import time
+
+from performance.driver.core.events import isEventMatching
 from performance.driver.core.classes import PolicyFSM, State
 
 class TimeEvolutionPolicy(PolicyFSM):
@@ -113,7 +115,9 @@ class TimeEvolutionPolicy(PolicyFSM):
       for config in self.evolveConfig:
         self.records.append(TimeEvolutionRecord(config))
 
-      # (Wait for next clock tick before starting the tests)
+      # Start by submitting the initial values of all parameters
+      for record in self.records:
+        self.setParameter(record.parameter, record.value)
 
     def onTickEvent(self, event):
       """
@@ -187,9 +191,16 @@ class TimeEvolutionRecord:
     if self._intervalRemaining > 0:
       return None
 
+    # Check if we are completed first
+    self._active = (self.value < self.max)
+    if not self._active:
+      return None
+
     # Change value and update _active state
     self.value += self.step
-    self._active = (self.value < self.max)
+
+    # (We are going to detect overflows when the next interval has passed
+    #  in order to allow the test to run while having the last value)
 
     # Reset interval
     self._intervalRemaining = self.interval
