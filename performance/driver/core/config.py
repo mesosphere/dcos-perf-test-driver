@@ -189,7 +189,7 @@ class MetricConfig:
       if type(summ) is str:
         summ = {
           "class": "@%s" % summ,
-          "name": summ
+          "name": summ.split("_")[0]
         }
 
       # Collect summarizer config
