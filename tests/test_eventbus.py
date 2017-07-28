@@ -18,17 +18,17 @@ class TestEventBus(unittest.TestCase):
 
     # Before
     threadsBefore = set(threading.enumerate())
-    self.assertEqual(eventbus.mainThread, None)
+    self.assertEqual(eventbus.threads, [])
 
     eventbus.start()
 
     # After
-    self.assertNotEqual(eventbus.mainThread, None)
+    self.assertNotEqual(eventbus.threads, [])
 
-    # There should be 2 threads : A timer and an event loop thread
+    # There should be 9 threads : 8 threadpool threads and a timer event
     threadsAfter = set(threading.enumerate())
     newThreads = threadsAfter - threadsBefore
-    self.assertEqual(len(newThreads), 2)
+    self.assertEqual(len(newThreads), 9)
 
     # Stop it
     eventbus.stop()
@@ -36,7 +36,7 @@ class TestEventBus(unittest.TestCase):
     # It should be gone
     threadsAfter = set(threading.enumerate())
     newThreads = threadsAfter - threadsBefore
-    self.assertEqual(eventbus.mainThread, None)
+    self.assertEqual(eventbus.threads, [])
     self.assertEqual(len(newThreads), 0)
 
   def test_publish(self):
@@ -54,7 +54,7 @@ class TestEventBus(unittest.TestCase):
       eventbus.publish("String")
 
     # Pop the event from the queue, since the event loop is not running
-    event = eventbus.queue.get()
+    (event, cond) = eventbus.queue.get()
     self.assertEqual(event, pubEvent)
 
   def test_subscribe(self):
