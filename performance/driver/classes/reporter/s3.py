@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 from performance.driver.core.classes import Reporter
 
@@ -69,6 +70,7 @@ class S3Reporter(Reporter):
 
     # Get bucket and filename
     bucket_key = config.get('path', 'results-raw.json')
+    bucket_key = re.sub(r'([\\/]|\.\.)', '_', bucket_key)
     optional_kwargs = {}
     if 'acl' in config:
       optional_kwargs['ACL'] = config['acl']
