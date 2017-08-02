@@ -78,6 +78,7 @@ class S3Reporter(Reporter):
     # Upload into the bucket
     s3.Bucket(config['bucket']) \
       .put_object(Key=bucket_key, Body=json.dumps({
+          'config': self.getRootConfig().config,
           'raw': summarizer.raw(),
           'sum': summarizer.sum(),
           'indicators': summarizer.indicators(),

@@ -108,6 +108,7 @@ class RawReporter(Reporter):
     # Dump the raw timeseries
     with open(filename, 'w') as f:
       f.write(json.dumps({
+          'config': self.getRootConfig().config,
           'raw': summarizer.raw(),
           'sum': summarizer.sum(),
           'indicators': summarizer.indicators(),
