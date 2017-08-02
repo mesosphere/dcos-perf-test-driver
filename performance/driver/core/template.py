@@ -81,7 +81,6 @@ def evaluateExpr(expr, props):
   conds = expr.split("|")
   for cond in conds:
     value = evaluateValue(cond, props)
-    print("Cond='%s' Got='%s'" % (cond, value))
     if value.strip() != "":
       return value
 
