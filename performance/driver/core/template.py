@@ -2,7 +2,8 @@ import re
 import time
 import uuid
 
-MACRO = re.compile(r'{{(.+?)(\|.+?)?}}')
+PATHCOMP = re.compile(r'([\\/]|\.\.)')
+MACRO = re.compile(r'{{(.*?)}}')
 METHOD = re.compile(r'([\w_]+)\((.*)\)')
 
 class TemplateMethods:
@@ -11,19 +12,25 @@ class TemplateMethods:
   """
 
   @staticmethod
-  def uuid(args):
+  def uuid(args, props):
     """
     uuid() method is generating a random ID
     """
     return uuid.uuid4().hex
 
   @staticmethod
-  def date(args):
+  def date(args, props):
     """
     date() method is generating a timestamp
     """
     return time.strftime(args)
 
+  @staticmethod
+  def safepath(args, props):
+    """
+    safepath() method replaces path components with '_'
+    """
+    return PATHCOMP.sub('_', evaluateExpr(args, props))
 
 def toTemplate(obj):
   """
@@ -38,17 +45,48 @@ def toTemplate(obj):
 
   return obj
 
-def evaluateExpr(expr, defaultValue=None):
+def evaluateValue(expr, props):
   """
-  Evaluate the given macro expression
+  Evaluate the given macro method
   """
+
+  # Check for method
   method = METHOD.match(expr)
   if method:
     func = method.group(1)
     if hasattr(TemplateMethods, func):
-      return getattr(TemplateMethods, func)(method.group(2))
+      return getattr(TemplateMethods, func)(method.group(2), props)
 
-  return defaultValue
+  # Check for literal string
+  if expr[0] in ('"', "'"):
+    return expr[1:-1]
+
+  # Check for literal number
+  if expr[0].isnumeric():
+    return expr
+
+  # Check for property
+  if expr in props:
+    return props[expr]
+
+  # Nothing applicable
+  return ""
+
+def evaluateExpr(expr, props):
+  """
+  Evaluate the given macro expression
+  """
+
+  # Process every condition until we find a value
+  conds = expr.split("|")
+  for cond in conds:
+    value = evaluateValue(cond, props)
+    print("Cond='%s' Got='%s'" % (cond, value))
+    if value.strip() != "":
+      return value
+
+  # Nothing applicable
+  return ""
 
 class Template:
   """
@@ -84,21 +122,10 @@ class TemplateString(str, Template):
     Replace all template macros with the values from the properties dict
     given as an argument
     """
-
     def repl(matchobj):
-      name = matchobj.group(1)
-      default = matchobj.group(2)
-
-      if default:
-        default = evaluateExpr(default[1:], default[1:])
-
-      if name in props:
-        return str(props[name])
-
-      return evaluateExpr(name, default)
+      return evaluateExpr(matchobj.group(1), props)
 
     return MACRO.sub(repl, self)
-
 
 class TemplateList(list, Template):
   """
