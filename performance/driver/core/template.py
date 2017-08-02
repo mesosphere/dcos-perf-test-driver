@@ -55,7 +55,7 @@ def evaluateValue(expr, props):
   if method:
     func = method.group(1)
     if hasattr(TemplateMethods, func):
-      return getattr(TemplateMethods, func)(method.group(2), props)
+      return str(getattr(TemplateMethods, func)(method.group(2), props))
 
   # Check for literal string
   if expr[0] in ('"', "'"):
@@ -67,7 +67,7 @@ def evaluateValue(expr, props):
 
   # Check for property
   if expr in props:
-    return props[expr]
+    return str(props[expr])
 
   # Nothing applicable
   return ""
