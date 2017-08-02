@@ -307,6 +307,7 @@ class PlotReporter(Reporter):
 
     # Dump
     fig.tight_layout()
+    self.logger.info('Creating 1D %s' % (filename,))
     plt.savefig(filename)
 
   def dumpPlot_2d(self, axisValues, plotGroup, referencePlotGroup, filename):
@@ -357,6 +358,7 @@ class PlotReporter(Reporter):
         ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
 
         # Dump
+        self.logger.info('Creating 2D Plot %s-%s.png' % (filename[:-4], name))
         plt.savefig('%s-%s.png' % (filename[:-4], name))
 
     # -------------------------------
@@ -414,6 +416,7 @@ class PlotReporter(Reporter):
         axRatio.set_ylabel("Value/" + name + referencePlotGroup.suffix)
 
         # Dump
+        self.logger.info('Creating 2D Plot %s-%s.png' % (filename[:-4], name))
         plt.savefig('%s-%s.png' % (filename[:-4], name))
 
 
