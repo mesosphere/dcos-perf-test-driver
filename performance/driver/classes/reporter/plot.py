@@ -481,6 +481,11 @@ class PlotReporter(Reporter):
         for metric, summarizedValues in testCase['values'].items():
           for sumname, value in summarizedValues.items():
 
+            # Prettify summariser name
+            if '_' in sumname:
+              (pre, post) = sumname.split('_', 1)
+              sumname = '%s (%s)' % (pre, post)
+
             # Make sure values are in (value, error) format always
             pair = value
             if type(value) not in (list, tuple):
@@ -494,6 +499,11 @@ class PlotReporter(Reporter):
       # Process summarized values into the appropriate plot group
       for metric, summarizedValues in testCase['values'].items():
         for sumname, value in summarizedValues.items():
+
+          # Prettify summariser name
+          if '_' in sumname:
+            (pre, post) = sumname.split('_', 1)
+            sumname = '%s (%s)' % (pre, post)
 
           # Make sure values are in (value, error) format always
           pair = value
