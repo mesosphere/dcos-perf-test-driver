@@ -2,6 +2,7 @@ import os
 import re
 import requests
 import threading
+import time
 import json
 
 from performance.driver.core.classes import Task
@@ -101,6 +102,7 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
       raise RuntimeError('Unable to enumerate running apps')
 
     # Destroy every service
+    preemptiveDelay = False
     self.trackDeployments = []
     try:
       for app in response.json()['apps']:
@@ -109,13 +111,22 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
         if response.status_code != 200:
           self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
         else:
-          self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+          if 'Marathon-Deployment-Id' in response.headers:
+            self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+          else:
+            self.logger.warn('Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover')
+            preemptiveDelay = True
 
     except requests.exceptions.ConnectionError as e:
       self.logger.warn('Unable to remove app (%r)' % (e,))
 
     # Wait for deployments to complete
     self.waitDeployments()
+
+    # Apply preemptive delay if needed
+    if preemptiveDelay:
+      self.logger.info('Waiting for 30 seconds for deployments to complete')
+      time.sleep(30)
 
 class RemoveMatchingApps(MarathonDeploymentMonitorTask):
   """
@@ -160,6 +171,7 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
       raise RuntimeError('Unable to enumerate running apps')
 
     # Destroy matching services
+    preemptiveDelay = False
     self.trackDeployments = []
     try:
       for app in response.json()['apps']:
@@ -170,10 +182,19 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
         if response.status_code != 200:
           self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
         else:
-          self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+          if 'Marathon-Deployment-Id' in response.headers:
+            self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+          else:
+            self.logger.warn('Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover')
+            preemptiveDelay = True
 
       # Wait for deployments to complete
       self.waitDeployments()
+
+      # Apply preemptive delay if needed
+      if preemptiveDelay:
+        self.logger.info('Waiting for 30 seconds for deployments to complete')
+        time.sleep(30)
 
     except requests.exceptions.ConnectionError as e:
       self.logger.warn('Unable to remove app (%r)' % (e,))
@@ -211,16 +232,26 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
     self.logger.info('Removing group %s from marathon' % group_name)
 
     # Destroy group
-    self.logger.debug('Removing group %s' % group_name)
+    preemptiveDelay = False
+    self.trackDeployments = []
     try:
       response = requests.delete('%s/v2/groups/%s/?force=true' % (self.url, group_name), verify=False, headers=self.getHeaders())
       if response.status_code != 200:
         self.logger.warn('Unable to remove group %s (HTTP response %i)' % (group_name, response.status_code))
       else:
-        self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+        if 'Marathon-Deployment-Id' in response.headers:
+          self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+        else:
+          self.logger.warn('Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover')
+          preemptiveDelay = True
 
       # Wait for deployments to complete
       self.waitDeployments()
+
+      # Apply preemptive delay if needed
+      if preemptiveDelay:
+        self.logger.info('Waiting for 30 seconds for deployments to complete')
+        time.sleep(30)
 
     except requests.exceptions.ConnectionError as e:
       self.logger.warn('Unable to remove group %s (%r)' % (group_name, e))
