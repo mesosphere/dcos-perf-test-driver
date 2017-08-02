@@ -296,7 +296,13 @@ class RootConfig:
     Apply template variables to definitions
     """
     self.definitions.update(cmdlineDefinitions)
-    self.definitions = DefinitionsDict(self.definitions.apply(self.definitions))
+    self.definitions = DefinitionsDict(
+      self.definitions.apply(
+        self.definitions.fork(
+          dict([('meta:' + kv[0], kv[1]) for kv in self.meta.items()])
+        )
+      )
+    )
 
   def policies(self):
     """
