@@ -149,6 +149,9 @@ class Configurable:
   def getConfigMacros(self):
     return TemplateDict(self.config).macros()
 
+  def getRootConfig(self):
+    return self.config.rootConfig
+
   def getConfig(self, key, default=None, required=True):
     if not key in self.config:
       if required and default is None:
