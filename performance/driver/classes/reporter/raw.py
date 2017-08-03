@@ -1,4 +1,5 @@
 import json
+import datetime
 from performance.driver.core.classes import Reporter
 
 class RawReporter(Reporter):
@@ -19,6 +20,18 @@ class RawReporter(Reporter):
   .. code-block:: js
 
     {
+
+      // Timing information
+      "time": {
+        "started": "",
+        "completed": ""
+      },
+
+      // The configuration used to run this test
+      "config": {
+        ...
+      },
+
       // The values for the indicators
       "indicators": {
         "indicator": 1.23,
@@ -96,6 +109,10 @@ class RawReporter(Reporter):
 
   """
 
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.timeStarted = datetime.datetime.now().isoformat()
+
   def dump(self, summarizer):
     """
     Dump summarizer values to the csv file
@@ -108,6 +125,10 @@ class RawReporter(Reporter):
     # Dump the raw timeseries
     with open(filename, 'w') as f:
       f.write(json.dumps({
+          'time': {
+            'started': self.timeStarted,
+            'completed': datetime.datetime.now().isoformat()
+          },
           'config': self.getRootConfig().config,
           'raw': summarizer.raw(),
           'sum': summarizer.sum(),

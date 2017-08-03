@@ -1,5 +1,6 @@
-import os
+import datetime
 import json
+import os
 import re
 
 from performance.driver.core.classes import Reporter
@@ -48,6 +49,10 @@ class S3Reporter(Reporter):
   in your local filesystem.
   """
 
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.timeStarted = datetime.datetime.now().isoformat()
+
   def dump(self, summarizer):
     """
     Dump summarizer values to the csv file
@@ -78,6 +83,10 @@ class S3Reporter(Reporter):
     # Upload into the bucket
     s3.Bucket(config['bucket']) \
       .put_object(Key=bucket_key, Body=json.dumps({
+          'time': {
+            'started': self.timeStarted,
+            'completed': datetime.datetime.now().isoformat()
+          },
           'config': self.getRootConfig().config,
           'raw': summarizer.raw(),
           'sum': summarizer.sum(),
