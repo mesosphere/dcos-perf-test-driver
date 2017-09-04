@@ -130,7 +130,7 @@ class MarathonEventsObserver(Observer):
     self.eventReceiverThread = None
     self.eventEmitterThread = None
     self.eventQueue = Queue()
-    self.appTraceIDs = {}
+    self.instanceTraceIDs = {}
     self.running = True
     self.activeSse = None
 
@@ -161,7 +161,7 @@ class MarathonEventsObserver(Observer):
     if ('/v2/apps' in event.url) and (event.verb in ('delete', 'post', 'put', 'patch')):
       try:
         body = json.loads(event.body)
-        self.appTraceIDs[body['id']] = event.traceids
+        self.instanceTraceIDs[body['id']] = event.traceids
       except json.JSONDecodeError as e:
         self.logger.exception(e)
 
@@ -235,8 +235,8 @@ class MarathonEventsObserver(Observer):
   #     """
   #     if isinstance(obj, dict):
   #       if 'id' in obj:
-  #         if obj['id'] in self.appTraceIDs:
-  #           traceids.update(self.appTraceIDs[obj['id']])
+  #         if obj['id'] in self.instanceTraceIDs:
+  #           traceids.update(self.instanceTraceIDs[obj['id']])
   #       for k,v in obj.items():
   #         walk(v)
   #     elif isinstance(obj, list):
@@ -254,8 +254,8 @@ class MarathonEventsObserver(Observer):
     traceids = set()
 
     for id in ids:
-      if id in self.appTraceIDs:
-        traceids.update(self.appTraceIDs[id])
+      if id in self.instanceTraceIDs:
+        traceids.update(self.instanceTraceIDs[id])
 
     return list(traceids)
 
@@ -283,8 +283,8 @@ class MarathonEventsObserver(Observer):
     Remove IDs from the list
     """
     for id in ids:
-      if id in self.appTraceIDs:
-        del self.appTraceIDs[id]
+      if id in self.instanceTraceIDs:
+        del self.instanceTraceIDs[id]
 
   @publishesHint(MarathonStartedEvent, MarathonDeploymentStepSuccessEvent, \
     MarathonDeploymentStepFailureEvent, MarathonDeploymentInfoEvent, \
