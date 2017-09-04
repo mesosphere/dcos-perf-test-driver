@@ -131,8 +131,7 @@ class MarathonUpdateChannel(Channel):
         self.logger.debug('Patching %s with %r' % (app['id'], patch))
         app.update(patch)
 
-        # remove uris and fetch, because this leads to errors during updates
-        del app['uris']
+        # remove fetch, because they are deprecated and producing errors in marathon 1.4 and older
         del app['fetch']
 
         # Delete version if persent
