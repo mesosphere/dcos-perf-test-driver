@@ -19,7 +19,7 @@ class TimeEvolutionPolicy(PolicyFSM):
           # The name of the parameter to change
           - parameter: parameterName
 
-            # [Optional] The interval (in full seconds) at which to evolve the
+            # [Optional] The interval (in seconds) at which to evolve the
             # parameter (default is 1 second)
             interval: 1
 
@@ -109,6 +109,7 @@ class TimeEvolutionPolicy(PolicyFSM):
       Prepare the cases to run
       """
       self.logger.info('Starting the evolution of %i parameter(s)' % len(self.evolveConfig))
+      self.tickDelta = 0
 
       # Initialize counters
       self.records = []
@@ -121,7 +122,7 @@ class TimeEvolutionPolicy(PolicyFSM):
 
     def onTickEvent(self, event):
       """
-      Handle one second ticks from the event bus
+      Wait for some time to pass
       """
 
       # If all records are inactive, quit
@@ -137,7 +138,7 @@ class TimeEvolutionPolicy(PolicyFSM):
 
       # Process records
       for record in self.records:
-        value = record.handleOneSecondTick()
+        value = record.handleTick(event.delta)
 
         # Update parameters if changed
         if not value is None:
@@ -178,7 +179,7 @@ class TimeEvolutionRecord:
     self._active = True
     self._intervalRemaining = self.interval
 
-  def handleOneSecondTick(self):
+  def handleTick(self, delta):
     """
     Handle parameter evolution on clock ticks and return the new value or
     None if nothing changed
@@ -187,7 +188,7 @@ class TimeEvolutionRecord:
       return None
 
     # Apply interval
-    self._intervalRemaining -= 1
+    self._intervalRemaining -= delta
     if self._intervalRemaining > 0:
       return None
 

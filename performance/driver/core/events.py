@@ -118,9 +118,10 @@ class TickEvent(Event):
   """
   A clock event is dispatched every second
   """
-  def __init__(self, count, *args, **kwargs):
+  def __init__(self, count, delta, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.count = count
+    self.delta = delta
 
 class ParameterUpdateEvent(Event):
   """
