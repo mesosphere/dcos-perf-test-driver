@@ -8,14 +8,51 @@ Tasks
 The ``tasks`` classes contain micro-actions that are executed at some phase
 of the test and do not participate in the final result.
 
-When these tasks are executed is controlled by the ``at``, showe supported values
-are the following:
+These tasks are executed on a specified trigger, through the `at:` configuration
+parameter. For example:
 
-* ``setup`` : Called when the sytem is ready and right before the policy is started.
-* ``pretest`` : Called before every run
-* ``intertest`` : Called right after a parameter change has occured
-* ``posttest`` : Called after every run
-* ``teardown`` : Called when the system is tearing down
+::
+
+  tasks:
+
+    - at: setup
+      class: ...
+      ...
+
+.. _classref-tasks-supported:
+
+Known Triggers
+--------------
+
+The following table summarises the task triggers available in the driver.
+
++-------------------+------------+---------------------------------------------+
+| Task Name         |   Source   | Description                                 |
++===================+============+=============================================+
+| ``setup``         |  Session   | Called when the sytem is ready and right    |
+|                   |            | before the first policy is started. Use     |
+|                   |            | this trigger to initialize your app state.  |
++-------------------+------------+---------------------------------------------+
+| ``pretest``       |  Session   | Called before every run is started. Use this|
+|                   |            | trigger to wipe the state before the tests  |
+|                   |            | are started.                                |
++-------------------+------------+---------------------------------------------+
+| ``posttest``      |  Session   | Called right after every run. Use this      |
+|                   |            | trigger to clean-up your system between the |
+|                   |            | runs.                                       |
++-------------------+------------+---------------------------------------------+
+| ``teardown``      |  Session   | Called when the system has finished all     |
+|                   |            | tests and is about to start reporting. Use  |
+|                   |            | this trigger to clean-up your system.       |
++-------------------+------------+---------------------------------------------+
+| ``intertest``     |  Policy    | Called inbetween the tests, when a parameter|
+|                   |            | changes. This implementation depends on the |
+|                   |            | policy you are using. Usually you should use|
+|                   |            | this trigger to bring your system into a    |
+|                   |            | known state right before every value is     |
+|                   |            | applied.                                    |
+|                   |            |                                             |
++-------------------+------------+---------------------------------------------+
 
 
 auth.AuthEE

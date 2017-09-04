@@ -257,6 +257,47 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">valueSeries</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
       <span class="p">)</span>
 
+<span class="k">class</span> <span class="nc">RawPlotGroup</span><span class="p">:</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">suffix</span> <span class="o">=</span> <span class="n">suffix</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;desc&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="k">def</span> <span class="nf">firstAxis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">axisNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+  <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">binValue</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">axisValues</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">binValue</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisName</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">axisName</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+          <span class="nb">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+          <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">axisName</span><span class="p">]),</span>
+          <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="PlotReporter"><a class="viewcode-back" href="../../../../../classes/Reporters.html#performance.driver.classes.reporter.PlotReporter">[docs]</a><span class="k">class</span> <span class="nc">PlotReporter</span><span class="p">(</span><span class="n">Reporter</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The **Plot Reporter** is creating a PNG plot with the measured values</span>
@@ -282,6 +323,9 @@
 <span class="sd">        # [Optional] The colormap to use when plotting 2D plots</span>
 <span class="sd">        # Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html</span>
 <span class="sd">        colormap: plasma</span>
+
+<span class="sd">        # [Optional] Plot the raw values and not the summarised</span>
+<span class="sd">        raw: False</span>
 
 <span class="sd">        # [Optional] Reference data structure</span>
 <span class="sd">        reference:</span>
@@ -355,7 +399,7 @@
 
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">dumpPlot_1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">dumpPlot_sum1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump an 1-D plot group</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -471,9 +515,10 @@
 
     <span class="c1"># Dump</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating 1D </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,))</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">dumpPlot_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">dumpPlot_sum2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump an 2-D plot group</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -521,6 +566,7 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">p2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span>
 
         <span class="c1"># Dump</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating 2D Plot </span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="n">name</span><span class="p">))</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="n">name</span><span class="p">))</span>
 
     <span class="c1"># -------------------------------</span>
@@ -578,58 +624,27 @@
         <span class="n">axRatio</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Value/&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="n">referencePlotGroup</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
 
         <span class="c1"># Dump</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating 2D Plot </span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="n">name</span><span class="p">))</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="n">name</span><span class="p">))</span>
 
 
-  <span class="k">def</span> <span class="nf">dumpPlot_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">dumpPlot_sum3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump an 3-D plot group</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;The 3-axis plot is nt yet implemented&#39;</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">plot_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">refConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Dump a plot for every metric in the time series</span>
+<span class="sd">    Dump summarised plots</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
-
-    <span class="c1"># Validate dimentions</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Requested to dump a plot without having any parameters&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Requested to dump a plot with more than 3 parameters&#39;</span><span class="p">)</span>
 
     <span class="c1"># Prepare plot group</span>
     <span class="n">axisValues</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">metricPlotGroup</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">referencePlotGroup</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="c1"># Collect reference data if we have them</span>
-    <span class="n">reference</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">refConfig</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reference&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">refConfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="n">url</span> <span class="o">=</span> <span class="n">refConfig</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Fetcing reference data from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
-
-      <span class="c1"># Make the request and collect data</span>
-      <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">refConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{}))</span>
-      <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">200</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Got unexpected HTTP </span><span class="si">%i</span><span class="s1"> response. Disabling reference&#39;</span>
-           <span class="o">%</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
-      <span class="k">else</span><span class="p">:</span>
-        <span class="n">reference</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        <span class="n">referencePlotGroup</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="c1"># Include metadata and re-evaluate templates of the reference config</span>
-        <span class="n">renderedConfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">(</span>
-            <span class="nb">dict</span><span class="p">(</span>
-              <span class="nb">map</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;refmeta:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-                <span class="n">reference</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-              <span class="p">)</span>
-            <span class="p">)</span>
-          <span class="p">)</span>
-        <span class="n">refConfig</span> <span class="o">=</span> <span class="n">renderedConfig</span><span class="p">[</span><span class="s1">&#39;reference&#39;</span><span class="p">]</span>
+    <span class="n">referencePlotGroup</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">referencePlotGroup</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># Create one plot for every observed value</span>
     <span class="k">for</span> <span class="n">metricName</span><span class="p">,</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -645,6 +660,11 @@
         <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">summarizedValues</span> <span class="ow">in</span> <span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
           <span class="k">for</span> <span class="n">sumname</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">summarizedValues</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
+            <span class="c1"># Prettify summariser name</span>
+            <span class="k">if</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">sumname</span><span class="p">:</span>
+              <span class="p">(</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span> <span class="o">=</span> <span class="n">sumname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+              <span class="n">sumname</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span>
+
             <span class="c1"># Make sure values are in (value, error) format always</span>
             <span class="n">pair</span> <span class="o">=</span> <span class="n">value</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -659,6 +679,11 @@
       <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">summarizedValues</span> <span class="ow">in</span> <span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">sumname</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">summarizedValues</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
+          <span class="c1"># Prettify summariser name</span>
+          <span class="k">if</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">sumname</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span> <span class="o">=</span> <span class="n">sumname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">sumname</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span>
+
           <span class="c1"># Make sure values are in (value, error) format always</span>
           <span class="n">pair</span> <span class="o">=</span> <span class="n">value</span>
           <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -666,7 +691,7 @@
           <span class="n">metricPlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">sumname</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
 
     <span class="c1"># Dump plots using the correct function</span>
-    <span class="n">dumpFunction</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_1d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_2d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_3d</span><span class="p">]</span> \
+    <span class="n">dumpFunction</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_sum1d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_sum2d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_sum3d</span><span class="p">]</span> \
                    <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="c1"># Create and dump plots</span>
@@ -678,7 +703,136 @@
         <span class="n">plotGroup</span><span class="p">,</span>
         <span class="kc">None</span> <span class="k">if</span> <span class="n">referencePlotGroup</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">referencePlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span>
         <span class="s1">&#39;</span><span class="si">%s%s%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filePrefix</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">fileSuffix</span><span class="p">)</span>
-      <span class="p">)</span></div>
+      <span class="p">)</span>
+
+
+  <span class="k">def</span> <span class="nf">dumpPlot_raw1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump a raw 1D plot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createPlot</span><span class="p">()</span>
+    <span class="n">axisName</span> <span class="o">=</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">firstAxis</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">axisName</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+      <span class="c1"># Plot data</span>
+      <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">pairs</span><span class="p">(</span><span class="n">axisName</span><span class="p">)</span>
+      <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">plotGroup</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+      <span class="c1"># Plot reference</span>
+      <span class="k">if</span> <span class="n">referencePlotGroup</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">referencePlotGroup</span><span class="o">.</span><span class="n">pairs</span><span class="p">(</span><span class="n">axisName</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">referencePlotGroup</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+      <span class="c1"># Lookup the parameter details</span>
+      <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">axisName</span><span class="p">:</span>
+          <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">param</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span>
+
+    <span class="c1"># Show legend</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">plotGroup</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">plotGroup</span><span class="o">.</span><span class="n">units</span><span class="p">))</span>
+
+    <span class="c1"># Dump</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating 1D </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+
+  <span class="k">def</span> <span class="nf">plot_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">refConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump raw data points (scatter plot)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Prepare plot group</span>
+    <span class="n">localPlotGroup</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">referencePlotGroup</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Create one plot for every observed value</span>
+    <span class="k">for</span> <span class="n">metricName</span><span class="p">,</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="n">localPlotGroup</span><span class="p">[</span><span class="n">metricName</span><span class="p">]</span> <span class="o">=</span> <span class="n">RawPlotGroup</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">reference</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">referencePlotGroup</span><span class="p">[</span><span class="n">metricName</span><span class="p">]</span> <span class="o">=</span> <span class="n">RawPlotGroup</span><span class="p">(</span>
+          <span class="n">metric</span><span class="p">,</span> <span class="s1">&#39; (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Process summarizer values</span>
+    <span class="k">for</span> <span class="n">testCase</span> <span class="ow">in</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">raw</span><span class="p">():</span>
+      <span class="n">axisValue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizeAxisValues</span><span class="p">(</span><span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span>
+
+      <span class="c1"># Process summarized values into the appropriate plot group</span>
+      <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">rawValues</span> <span class="ow">in</span> <span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">localPlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">rawValues</span><span class="p">:</span>
+          <span class="n">group</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">axisValue</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># Process reference values</span>
+    <span class="k">if</span> <span class="n">reference</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">testCase</span> <span class="ow">in</span> <span class="n">reference</span><span class="p">[</span><span class="s1">&#39;raw&#39;</span><span class="p">]:</span>
+        <span class="n">axisValue</span> <span class="o">=</span> <span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">rawValues</span> <span class="ow">in</span> <span class="n">testCase</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+          <span class="n">group</span> <span class="o">=</span> <span class="n">referencePlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+          <span class="k">for</span> <span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">rawValues</span><span class="p">:</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">axisValue</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># Plot</span>
+    <span class="n">filePrefix</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;plot-&#39;</span><span class="p">)</span>
+    <span class="n">fileSuffix</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;suffix&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">plotGroup</span> <span class="ow">in</span> <span class="n">localPlotGroup</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">dumpPlot_raw1d</span><span class="p">(</span>
+        <span class="n">plotGroup</span><span class="p">,</span>
+        <span class="kc">None</span> <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">referencePlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span>
+        <span class="s1">&#39;</span><span class="si">%s%s%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filePrefix</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">fileSuffix</span><span class="p">)</span>
+      <span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dump a plot for every metric in the time series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
+
+    <span class="c1"># Validate dimentions</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Requested to dump a plot without having any parameters&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Requested to dump a plot with more than 3 parameters&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Collect reference data if we have them</span>
+    <span class="n">reference</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">refConfig</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reference&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">refConfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">url</span> <span class="o">=</span> <span class="n">refConfig</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Fetcing reference data from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
+
+      <span class="c1"># Make the request and collect data</span>
+      <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">refConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+      <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">200</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Got unexpected HTTP </span><span class="si">%i</span><span class="s1"> response. Disabling reference&#39;</span>
+           <span class="o">%</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+        <span class="c1"># Include metadata and re-evaluate templates of the reference config</span>
+        <span class="n">renderedConfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span>
+              <span class="nb">map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;refmeta:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="n">reference</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+              <span class="p">)</span>
+            <span class="p">)</span>
+          <span class="p">)</span>
+        <span class="n">refConfig</span> <span class="o">=</span> <span class="n">renderedConfig</span><span class="p">[</span><span class="s1">&#39;reference&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;raw&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">plot_raw</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">refConfig</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">plot_sum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">refConfig</span><span class="p">)</span></div>
+
+
 </pre></div>
 
            </div>

@@ -190,12 +190,12 @@
 <span class="sd">            type: discreet</span>
 <span class="sd">            values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]</span>
 
-<span class="sd">          # A &quot;scalar&quot; parameter takes any value within a numerical range</span>
+<span class="sd">          # A &quot;sample&quot; parameter takes any value within a numerical range</span>
 <span class="sd">          size:</span>
-<span class="sd">            type: scalar</span>
+<span class="sd">            type: sample</span>
 <span class="sd">            min: 0 # Default</span>
 <span class="sd">            max: 1 # Default</span>
-<span class="sd">            step: 0.1 # Default</span>
+<span class="sd">            step: 1 # Default</span>
 <span class="sd">            samples: 10 # Default</span>
 
 <span class="sd">        # The event binding configuration</span>
@@ -276,11 +276,11 @@
       <span class="n">matrix</span> <span class="o">=</span> <span class="n">renderdConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;matrix&#39;</span><span class="p">)</span>
       <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">matrix</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parameterNames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="n">v_type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;scalar&#39;</span><span class="p">)</span>
+        <span class="n">v_type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;sample&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Sample of scalar values values</span>
-        <span class="k">if</span> <span class="n">v_type</span> <span class="o">==</span> <span class="s1">&#39;scalar&#39;</span><span class="p">:</span>
-          <span class="n">v_step</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="c1"># Sample of sample values values</span>
+        <span class="k">if</span> <span class="n">v_type</span> <span class="o">==</span> <span class="s1">&#39;sample&#39;</span><span class="p">:</span>
+          <span class="n">v_step</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
           <span class="n">v_min</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
           <span class="n">v_max</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
           <span class="n">v_samples</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;samples&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>

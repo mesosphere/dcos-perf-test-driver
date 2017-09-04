@@ -322,6 +322,9 @@ and storing it in the results folder.</p>
     <span class="c1"># Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html</span>
     <span class="l l-Scalar l-Scalar-Plain">colormap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">plasma</span>
 
+    <span class="c1"># [Optional] Plot the raw values and not the summarised</span>
+    <span class="l l-Scalar l-Scalar-Plain">raw</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+
     <span class="c1"># [Optional] Reference data structure</span>
     <span class="l l-Scalar l-Scalar-Plain">reference</span><span class="p p-Indicator">:</span>
 
@@ -395,7 +398,7 @@ or versions of the same project.</p>
 <span id="classref-reporter-rawreporter"></span><h2>RawReporter<a class="headerlink" href="#rawreporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.RawReporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">RawReporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/raw.html#RawReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.RawReporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">RawReporter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/raw.html#RawReporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.RawReporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>Raw Reporter</strong> is creating a raw dump of the results in the results
 folder in JSON format.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>
@@ -407,6 +410,18 @@ folder in JSON format.</p>
 </div>
 <p>The JSON structure of the data included is the following:</p>
 <div class="highlight-js"><div class="highlight"><pre><span></span><span class="p">{</span>
+
+  <span class="c1">// Timing information</span>
+  <span class="s2">&quot;time&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;started&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;completed&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span>
+  <span class="p">},</span>
+
+  <span class="c1">// The configuration used to run this test</span>
+  <span class="s2">&quot;config&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">},</span>
+
   <span class="c1">// The values for the indicators</span>
   <span class="s2">&quot;indicators&quot;</span><span class="o">:</span> <span class="p">{</span>
     <span class="s2">&quot;indicator&quot;</span><span class="o">:</span> <span class="mf">1.23</span><span class="p">,</span>
@@ -490,7 +505,7 @@ folder in JSON format.</p>
 <span id="classref-reporter-s3reporter"></span><h2>S3Reporter<a class="headerlink" href="#s3reporter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="performance.driver.classes.reporter.S3Reporter">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">S3Reporter</code><span class="sig-paren">(</span><em>config</em>, <em>generalConfig</em>, <em>eventbus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/s3.html#S3Reporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.S3Reporter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">performance.driver.classes.reporter.</code><code class="descname">S3Reporter</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/reporter/s3.html#S3Reporter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.reporter.S3Reporter" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>S3 Reporter</strong> is uploading a raw dump of the results in a bucket in
 Amazon’s S3 services</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">reporters</span><span class="p p-Indicator">:</span>

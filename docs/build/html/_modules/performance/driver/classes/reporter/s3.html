@@ -162,8 +162,10 @@
            <div itemprop="articleBody">
             
   <h1>Source code for performance.driver.classes.reporter.s3</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Reporter</span>
 
@@ -211,6 +213,10 @@
 <span class="sd">  in your local filesystem.</span>
 <span class="sd">  &quot;&quot;&quot;</span>
 
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">timeStarted</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+
   <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summarizer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump summarizer values to the csv file</span>
@@ -241,6 +247,11 @@
     <span class="c1"># Upload into the bucket</span>
     <span class="n">s3</span><span class="o">.</span><span class="n">Bucket</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;bucket&#39;</span><span class="p">])</span> \
       <span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Key</span><span class="o">=</span><span class="n">bucket_key</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+          <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStarted</span><span class="p">,</span>
+            <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+          <span class="p">},</span>
+          <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRootConfig</span><span class="p">()</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
           <span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">raw</span><span class="p">(),</span>
           <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
           <span class="s1">&#39;indicators&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">indicators</span><span class="p">(),</span>

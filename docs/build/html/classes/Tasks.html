@@ -105,6 +105,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Observers.html">Observers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Trackers.html">Trackers</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tasks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#known-triggers">Known Triggers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#auth-authee">auth.AuthEE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#auth-authopen">auth.AuthOpen</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#http-request">http.Request</a></li>
@@ -189,15 +190,67 @@
 <span id="classref-tasks"></span><h1>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h1>
 <p>The <code class="docutils literal"><span class="pre">tasks</span></code> classes contain micro-actions that are executed at some phase
 of the test and do not participate in the final result.</p>
-<p>When these tasks are executed is controlled by the <code class="docutils literal"><span class="pre">at</span></code>, showe supported values
-are the following:</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">setup</span></code> : Called when the sytem is ready and right before the policy is started.</li>
-<li><code class="docutils literal"><span class="pre">pretest</span></code> : Called before every run</li>
-<li><code class="docutils literal"><span class="pre">intertest</span></code> : Called right after a parameter change has occured</li>
-<li><code class="docutils literal"><span class="pre">posttest</span></code> : Called after every run</li>
-<li><code class="docutils literal"><span class="pre">teardown</span></code> : Called when the system is tearing down</li>
-</ul>
+<p>These tasks are executed on a specified trigger, through the <cite>at:</cite> configuration
+parameter. For example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">at</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">setup</span>
+    <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<div class="section" id="known-triggers">
+<span id="classref-tasks-supported"></span><h2>Known Triggers<a class="headerlink" href="#known-triggers" title="Permalink to this headline">¶</a></h2>
+<p>The following table summarises the task triggers available in the driver.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="16%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Task Name</th>
+<th class="head">Source</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">setup</span></code></td>
+<td>Session</td>
+<td>Called when the sytem is ready and right
+before the first policy is started. Use
+this trigger to initialize your app state.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">pretest</span></code></td>
+<td>Session</td>
+<td>Called before every run is started. Use this
+trigger to wipe the state before the tests
+are started.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">posttest</span></code></td>
+<td>Session</td>
+<td>Called right after every run. Use this
+trigger to clean-up your system between the
+runs.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">teardown</span></code></td>
+<td>Session</td>
+<td>Called when the system has finished all
+tests and is about to start reporting. Use
+this trigger to clean-up your system.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">intertest</span></code></td>
+<td>Policy</td>
+<td>Called inbetween the tests, when a parameter
+changes. This implementation depends on the
+policy you are using. Usually you should use
+this trigger to bring your system into a
+known state right before every value is
+applied.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="auth-authee">
 <h2>auth.AuthEE<a class="headerlink" href="#auth-authee" title="Permalink to this headline">¶</a></h2>
 <dl class="class">

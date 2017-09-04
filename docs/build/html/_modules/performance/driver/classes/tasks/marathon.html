@@ -166,6 +166,7 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">json</span>
 
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Task</span>
@@ -265,6 +266,7 @@
       <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to enumerate running apps&#39;</span><span class="p">)</span>
 
     <span class="c1"># Destroy every service</span>
+    <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="k">for</span> <span class="n">app</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;apps&#39;</span><span class="p">]:</span>
@@ -273,13 +275,22 @@
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app </span><span class="si">%s</span><span class="s1"> (HTTP response </span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+          <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span><span class="p">)</span>
+            <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app (</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span>
 
     <span class="c1"># Wait for deployments to complete</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">waitDeployments</span><span class="p">()</span></div>
+    <span class="bp">self</span><span class="o">.</span><span class="n">waitDeployments</span><span class="p">()</span>
+
+    <span class="c1"># Apply preemptive delay if needed</span>
+    <span class="k">if</span> <span class="n">preemptiveDelay</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Waiting for 30 seconds for deployments to complete&#39;</span><span class="p">)</span>
+      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RemoveMatchingApps"><a class="viewcode-back" href="../../../../../classes/Tasks.html#performance.driver.classes.tasks.marathon.RemoveMatchingApps">[docs]</a><span class="k">class</span> <span class="nc">RemoveMatchingApps</span><span class="p">(</span><span class="n">MarathonDeploymentMonitorTask</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -324,6 +335,7 @@
       <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to enumerate running apps&#39;</span><span class="p">)</span>
 
     <span class="c1"># Destroy matching services</span>
+    <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="k">for</span> <span class="n">app</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;apps&#39;</span><span class="p">]:</span>
@@ -334,10 +346,19 @@
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app </span><span class="si">%s</span><span class="s1"> (HTTP response </span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+          <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span><span class="p">)</span>
+            <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">True</span>
 
       <span class="c1"># Wait for deployments to complete</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">waitDeployments</span><span class="p">()</span>
+
+      <span class="c1"># Apply preemptive delay if needed</span>
+      <span class="k">if</span> <span class="n">preemptiveDelay</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Waiting for 30 seconds for deployments to complete&#39;</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app (</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span></div>
@@ -375,16 +396,26 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing group </span><span class="si">%s</span><span class="s1"> from marathon&#39;</span> <span class="o">%</span> <span class="n">group_name</span><span class="p">)</span>
 
     <span class="c1"># Destroy group</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Removing group </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">group_name</span><span class="p">)</span>
+    <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/groups/</span><span class="si">%s</span><span class="s1">/?force=true&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">group_name</span><span class="p">),</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
       <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove group </span><span class="si">%s</span><span class="s1"> (HTTP response </span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
       <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span><span class="p">)</span>
+          <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">True</span>
 
       <span class="c1"># Wait for deployments to complete</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">waitDeployments</span><span class="p">()</span>
+
+      <span class="c1"># Apply preemptive delay if needed</span>
+      <span class="k">if</span> <span class="n">preemptiveDelay</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Waiting for 30 seconds for deployments to complete&#39;</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove group </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div>

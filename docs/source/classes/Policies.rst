@@ -15,3 +15,17 @@ MultivariableExplorerPolicy
 ---------------------------
 
 .. autoclass:: performance.driver.classes.policy.MultivariableExplorerPolicy
+
+.. _classref-policy-TimeEvolutionPolicy:
+
+TimeEvolutionPolicy
+---------------------------
+
+.. autoclass:: performance.driver.classes.policy.TimeEvolutionPolicy
+
+.. _classref-policy-BurstPolicy:
+
+BurstPolicy
+---------------------------
+
+.. autoclass:: performance.driver.classes.policy.BurstPolicy
