@@ -102,7 +102,7 @@ class Session(EventBusSubscriber):
     """
     Interrupt the tests and force exit
     """
-    self.logger.error('Tests interrupted; continuing with reporting. Interrupt again to quit')
+    self.logger.error('Tests interrupted; trying to report. Interrupt again to force quit')
 
     # Restore signal handler
     signal.signal(signal.SIGINT, self.prevSigHandler)
