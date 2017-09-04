@@ -137,6 +137,18 @@ class HTTPErrorEvent(Event):
     #: The exception that was raised
     self.exception = exception
 
+class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorEvent):
+  """
+  Published when an exception was raised while processing an HTTP response.
+  This is valid when a ``repeat`` parameter has a value > 1.
+  """
+
+  def __init__(self, url, body, headers, exception, *args, **kwargs):
+    super().__init__(url, body, headers, *args, **kwargs)
+
+    #: The exception that was raised
+    self.exception = exception
+
 class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorEvent):
   """
   Published when the first response out of many has an error.
@@ -161,18 +173,6 @@ class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorEvent):
     #: The exception that was raised
     self.exception = exception
 
-class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorEvent):
-  """
-  Published when an exception was raised while processing an HTTP response.
-  This is valid when a ``repeat`` parameter has a value > 1.
-  """
-
-  def __init__(self, url, body, headers, exception, *args, **kwargs):
-    super().__init__(url, body, headers, *args, **kwargs)
-
-    #: The exception that was raised
-    self.exception = exception
-
 ###############################
 # Helpers
 ###############################
@@ -186,10 +186,10 @@ def pickFirstLast(current, total, firstEvent, lastEvent, middleEvent):
   - Pick `lastEvent` if current = total - 1
   - Pick `middleEvent` on any other case
   """
-  if current == 0:
-    return firstEvent
-  elif current == total - 1:
+  if current == total - 1:
     return lastEvent
+  elif current == 0:
+    return firstEvent
   else:
     return middleEvent
 
@@ -359,6 +359,10 @@ class HTTPChannel(Channel):
     self.requestStates = []
     self.requestStateMutex = Lock()
     self.session = requests.Session()
+
+    # Increase pool sizes
+    self.session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100))
+    self.session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100))
 
     # Receive parameter updates and clean-up on teardown
     self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
