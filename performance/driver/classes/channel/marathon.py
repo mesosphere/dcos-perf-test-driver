@@ -131,6 +131,9 @@ class MarathonUpdateChannel(Channel):
         self.logger.debug('Patching %s with %r' % (app['id'], patch))
         app.update(patch)
 
+        # remove fetch, because they are deprecated and producing errors in marathon 1.4 and older
+        del app['fetch']
+
         # Delete version if persent
         if 'version' in app:
           del app['version']
@@ -140,7 +143,7 @@ class MarathonUpdateChannel(Channel):
         response = requests.put('%s/v2/apps%s' % (url, app['id']), json=app, verify=False, headers=self.getHeaders())
         if response.status_code < 200 or response.status_code >= 300:
           self.logger.debug("Server responded with: %s" % response.text)
-          self.logger.error('Unable to update app %s (HTTP response %i)' % (app['id'], response.status_code))
+          self.logger.error('Unable to update app %s (HTTP response %i: %s)' % (app['id'], response.status_code, response.text))
           continue
 
         self.logger.debug('App updated successfully')
