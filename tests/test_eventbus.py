@@ -233,8 +233,8 @@ class TestEventBus(unittest.TestCase):
     # Stop waits for the queue to drain
     eventbus.stop()
 
-    # Check if we were called
-    self.assertEqual(len(subscriber.mock_calls), 1)
+    # Clock runs at 30 fps, so we should have about 30 ticks
+    self.assertIn(len(subscriber.mock_calls), (27,28,29,30,31,32,33,34))
 
   def test_clock_frequency(self):
     """

@@ -27,7 +27,7 @@ class TestTemplate(unittest.TestCase):
     """
     Test default value in missing macros
     """
-    tpl = TemplateString("I am {{missing}} {{things|here!}}")
+    tpl = TemplateString("I am {{missing}} {{things|'here!'}}")
     self.assertEqual(tpl.apply({"what": "here"}), "I am  here!")
 
   def test_apply_list(self):
