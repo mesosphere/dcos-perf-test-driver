@@ -107,6 +107,8 @@ class EventFilter:
       +-----------------+----------------------------------------------------+
       | ``~==``         | Exact regular expression match                     |
       +-----------------+----------------------------------------------------+
+      | ``<~``          | Value in list or key in dictionary (like ``in``)   |
+      +-----------------+----------------------------------------------------+
 
     * _Selector_ specifies which event out of many similar to chose. Valid
       selectors are:
@@ -189,6 +191,10 @@ class EventFilter:
               'lambda event: not regex.match(str(event.%s)) is None' % (left,),
               {'regex': re.compile(right)}
             ))
+
+          # Handle `in` operator
+          elif op == "<~":
+            attrib.append(lambda event: right in list(getattr(event, left)))
 
           # Handle operator match
           else:
