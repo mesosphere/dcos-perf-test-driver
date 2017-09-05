@@ -47,7 +47,7 @@ class EventAttributeTracker(Tracker):
     config = self.getRenderedConfig()
     self.autocascade = config.get('autocascade', True)
     self.extract = config.get('extract', [])
-    self.filter = eval("lambda event: %s" % config.get('filter', 'True'))
+    self.filter = eval("lambda event: {}".format(config.get('filter', 'True')))
 
     # Register event handlers
     self.eventbus.subscribe(
@@ -68,7 +68,7 @@ class EventAttributeTracker(Tracker):
 
     # Apply filter to the event
     if not self.filter(event):
-      self.logger.debug('Event %r did not pass the filter' % event)
+      self.logger.debug('Event {} did not pass the filter'.format(event))
       return
 
     # Pick correct trace ids according to configuration
@@ -83,8 +83,8 @@ class EventAttributeTracker(Tracker):
 
       # Make sure we have that attribute
       if not hasattr(event, x['attrib']):
-        self.logger.warn('Event %s has no attribute %s' %
-                         (type(event).__name__, x['attrib']))
+        self.logger.warn('Event {} has no attribute {}'.format(
+            type(event).__name__, x['attrib']))
         continue
 
       # Track metric

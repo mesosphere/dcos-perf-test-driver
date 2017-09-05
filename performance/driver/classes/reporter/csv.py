@@ -42,14 +42,14 @@ class CSVFile:
       row = ""
       for col in self.cols:
         row += col.name + separator
-      f.write("%s\n" % row)
+      f.write("{}\n".format(row))
 
       # Write data
       for i in range(0, self.rows):
         row = ""
         for col in self.cols:
           row += col.rows[i] + separator
-        f.write("%s\n" % row)
+        f.write("{}\n".format(row))
 
 
 class CSVReporter(Reporter):
@@ -118,11 +118,11 @@ class CSVReporter(Reporter):
       for metric, summarizedValues in testCase['values'].items():
         for summarizer, value in summarizedValues.items():
           if type(value) in (list, tuple):
-            csv.col('%s (%s)' % (metric, summarizer)).set(str(value[0]))
-            csv.col('%s (%s - error)' % (metric,
-                                         summarizer)).set(str(value[1]))
+            csv.col('{} ({})'.format(metric, summarizer)).set(str(value[0]))
+            csv.col('{} ({} - error)'.format(metric, summarizer)).set(
+                str(value[1]))
           else:
-            csv.col('%s (%s)' % (metric, summarizer)).set(str(value))
+            csv.col('{} ({})'.format(metric, summarizer)).set(str(value))
 
       # Process flags
       for name, value in testCase['flags'].items():

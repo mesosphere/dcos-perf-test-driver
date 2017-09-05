@@ -70,7 +70,7 @@ class MarathonUpdateChannel(Channel):
     headers = self.getConfig('headers', {})
     dcos_auth_token = self.getDefinition('dcos_auth_token', None)
     if not dcos_auth_token is None:
-      headers = {'Authorization': 'token=%s' % dcos_auth_token}
+      headers = {'Authorization': 'token={}'.format(dcos_auth_token)}
 
     return headers
 
@@ -95,10 +95,10 @@ class MarathonUpdateChannel(Channel):
 
       # Query all items
       response = requests.get(
-          '%s/v2/apps' % (url, ), verify=False, headers=self.getHeaders())
+          '{}/v2/apps'.format(url), verify=False, headers=self.getHeaders())
       if response.status_code != 200:
-        self.logger.error('Unable to query marathon apps (HTTP response %i)' %
-                          (response.status_code, ))
+        self.logger.error('Unable to query marathon apps (HTTP response {})'.
+                          format(response.status_code))
         return
 
       # Get app list
@@ -120,17 +120,17 @@ class MarathonUpdateChannel(Channel):
         apps = apps[0:int(action['limit'])]
 
     except requests.exceptions.ConnectionError as e:
-      self.logger.error('Unable to query marathon apps (%r)' % (e, ))
+      self.logger.error('Unable to query marathon apps ({})'.format(e))
 
     # Apply the updates
-    self.logger.info('Updating %i applications' % len(apps))
+    self.logger.info('Updating {} applications'.format(len(apps)))
     for app in apps:
       try:
 
         # Apply patch
         action = action_tpl.apply(action_params)
         patch = action.get('patch', {})
-        self.logger.debug('Patching %s with %r' % (app['id'], patch))
+        self.logger.debug('Patching {} with {}'.format(app['id'], patch))
         app.update(patch)
 
         # remove fetch, because they are deprecated and producing errors in marathon 1.4 and older
@@ -142,22 +142,23 @@ class MarathonUpdateChannel(Channel):
           del app['version']
 
         # Update the specified application
-        self.logger.debug('Executing update with body %r' % app)
+        self.logger.debug('Executing update with body {}'.format(app))
         response = requests.put(
-            '%s/v2/apps%s' % (url, app['id']),
+            '{}/v2/apps{}'.format(url, app['id']),
             json=app,
             verify=False,
             headers=self.getHeaders())
         if response.status_code < 200 or response.status_code >= 300:
-          self.logger.debug("Server responded with: %s" % response.text)
-          self.logger.error('Unable to update app %s (HTTP response %i: %s)' %
-                            (app['id'], response.status_code, response.text))
+          self.logger.debug("Server responded with: {}".format(response.text))
+          self.logger.error(
+              'Unable to update app {} (HTTP response {}: {})'.format((app[
+                  'id'], response.status_code, response.text)))
           continue
 
         self.logger.debug('App updated successfully')
 
       except requests.exceptions.ConnectionError as e:
-        self.logger.error('Unable to update app %s (%r)' % (app['id'], e))
+        self.logger.error('Unable to update app {} ({})'.format(app['id'], e))
 
   def handleParameterUpdate(self, event):
     """
@@ -182,4 +183,4 @@ class MarathonUpdateChannel(Channel):
 
       # Unknown action
       else:
-        raise ValueError('Unknown update action "%s"' % action_type)
+        raise ValueError('Unknown update action "{}"'.format(action_type))

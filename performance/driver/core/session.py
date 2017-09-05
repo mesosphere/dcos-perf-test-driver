@@ -32,38 +32,44 @@ class Session(EventBusSubscriber):
     self.policies = []
     for policy in config.policies():
       instance = policy.instance(self.eventbus, self.parameters)
-      self.logger.debug('Registered \'%s\' policy' % type(instance).__name__)
+      self.logger.debug(
+          'Registered \'{}\' policy'.format(type(instance).__name__))
       self.policies.append(instance)
 
     self.channels = []
     for channel in config.channels():
       instance = channel.instance(self.eventbus)
-      self.logger.debug('Registered \'%s\' channel' % type(instance).__name__)
+      self.logger.debug(
+          'Registered \'{}\' channel'.format(type(instance).__name__))
       self.channels.append(instance)
 
     self.observers = []
     for observer in config.observers():
       instance = observer.instance(self.eventbus)
-      self.logger.debug('Registered \'%s\' observer' % type(instance).__name__)
+      self.logger.debug(
+          'Registered \'{}\' observer'.format(type(instance).__name__))
       self.observers.append(instance)
 
     self.trackers = []
     for tracker in config.trackers():
       instance = tracker.instance(self.eventbus, self.summarizer)
-      self.logger.debug('Registered \'%s\' tracker' % type(instance).__name__)
+      self.logger.debug(
+          'Registered \'{}\' tracker'.format(type(instance).__name__))
       self.trackers.append(instance)
 
     self.tasks = []
     for task in config.tasks():
       instance = task.instance(self.eventbus)
-      self.logger.debug('Registered \'%s\' task' % type(instance).__name__)
+      self.logger.debug(
+          'Registered \'{}\' task'.format(type(instance).__name__))
       self.tasks.append(instance)
 
     self.reporters = []
     generalConfig = self.config.general()
     for reporter in config.reporters():
       instance = reporter.instance(generalConfig, self.eventbus)
-      self.logger.debug('Registered \'%s\' reporter' % type(instance).__name__)
+      self.logger.debug(
+          'Registered \'{}\' reporter'.format(type(instance).__name__))
       self.reporters.append(instance)
 
   def handleRunTaskEvent(self, event):
@@ -87,8 +93,8 @@ class Session(EventBusSubscriber):
         try:
           task.run()
         except Exception as e:
-          self.logger.error('Task %s for state \'%s\' raised an exception' % \
-            (type(task).__name__, event.task))
+          self.logger.error('Task {} for state \'{}\' raised an exception'.
+                            format(type(task).__name__, event.task))
           self.logger.exception(e)
           self.eventbus.publish(RunTaskCompletedEvent(event, e))
           return False
@@ -136,9 +142,9 @@ class Session(EventBusSubscriber):
     self.eventbus.publish(RunTaskEvent('setup'))
 
     # Start all policies, effectively starting the tests
-    self.logger.info('Starting tests (%i run(s))' % runs)
+    self.logger.info('Starting tests ({} run(s))'.format(runs))
     for policy in self.policies:
-      self.logger.info('Using test policy `%s`' % type(policy).__name__)
+      self.logger.info('Using test policy `{}`'.format(type(policy).__name__))
       policy.start()
     self.logger.debug('All policies are ready')
 
@@ -169,7 +175,8 @@ class Session(EventBusSubscriber):
             if not stallSignaled and \
               (ts - policy.lastTransitionTs) > generalConfig.staleTimeout:
 
-              self.logger.warn('Policy `%s` stalled' % type(policy).__name__)
+              self.logger.warn(
+                  'Policy `{}` stalled'.format(type(policy).__name__))
               stallSignaled = True
               policy.handleEvent(StalledEvent())
 
@@ -186,7 +193,7 @@ class Session(EventBusSubscriber):
       if not self.interrupted and (runs > 0):
 
         # Start all policies, effectively starting the tests
-        self.logger.info('Restarting tests (%i run(s) left)' % runs)
+        self.logger.info('Restarting tests ({} run(s) left)'.format(runs))
         for policy in self.policies:
           policy.start()
 

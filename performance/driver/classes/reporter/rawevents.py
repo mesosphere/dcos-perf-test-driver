@@ -54,9 +54,10 @@ class RawEventsReporter(Reporter):
     Serialize and dump event
     """
 
-    self.file.write("%f;%s;%s\n" %
-                    (event.ts, type(event).__name__,
-                     json.dumps(event.__dict__, cls=JSONNormalizerEncoder)))
+    self.file.write("{:f};{};{}\n".format(
+        event.ts,
+        type(event).__name__,
+        json.dumps(event.__dict__, cls=JSONNormalizerEncoder)))
 
   def dump(self, summarizer):
     """

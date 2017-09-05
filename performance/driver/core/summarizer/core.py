@@ -128,7 +128,7 @@ class Summarizer(EventBusSubscriber):
     """
     Track a change in the metric
     """
-    self.logger.info('Metric %s changed to %s' % (name, str(value)))
+    self.logger.info('Metric {} changed to {}'.format(name, str(value)))
 
     # Locate the axis that can track the metric update
     axis = None

@@ -17,7 +17,7 @@ class Task(EventBusSubscriber, Configurable):
     """
     Configurable.__init__(self, config)
     EventBusSubscriber.__init__(self, eventbus)
-    self.logger = logging.getLogger('Task<%s>' % type(self).__name__)
+    self.logger = logging.getLogger('Task<{}>'.format(type(self).__name__))
     self.at = config.get('at', None)
 
   def run(self):

@@ -84,8 +84,8 @@ class LogLineObserver(Observer):
       match = extractMatch.match(event.line)
       if not match:
         self.logger.warn(
-            'Passed through line match, but did not find group match on line: "%s"'
-            % event.line)
+            'Passed through line match, but did not find group match on line: "{}"'.
+            format(event.line))
         continue
 
       if len(match.groups()) != len(groups):
@@ -95,8 +95,8 @@ class LogLineObserver(Observer):
         continue
 
       for i in range(0, len(groups)):
-        self.logger.debug('Found token %s=%s' % (groups[i],
-                                                 match.group(i + 1)))
+        self.logger.debug(
+            'Found token {}={}'.format(groups[i], match.group(i + 1)))
         self.eventbus.publish(
             LogLineTokenMatchEvent(
                 groups[i], match.group(i + 1), traceid=event.traceids))

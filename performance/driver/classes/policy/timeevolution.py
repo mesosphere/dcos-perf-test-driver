@@ -108,8 +108,8 @@ class TimeEvolutionPolicy(PolicyFSM):
       """
       Prepare the cases to run
       """
-      self.logger.info(
-          'Starting the evolution of %i parameter(s)' % len(self.evolveConfig))
+      self.logger.info('Starting the evolution of {} parameter(s)'.format(
+          len(self.evolveConfig)))
       self.tickDelta = 0
 
       # Initialize counters

@@ -49,7 +49,7 @@ def loadConfigFile(filename):
     # Load includes
     for path in includes:
       if path[0] != '/':
-        path = '%s/%s' % (os.path.dirname(filename), path)
+        path = '{}/{}'.format(os.path.dirname(filename), path)
       path = os.path.abspath(path)
 
       # Merge every include in the root path
@@ -117,18 +117,19 @@ class ComponentConfig(dict):
 
     # De-compose class path to module and class name
     if self['class'][0] == "@":
-      classPath = 'performance.driver.core.classes.%s' % self['class'][1:]
+      classPath = 'performance.driver.core.classes.{}'.format(
+          self['class'][1:])
     else:
-      classPath = 'performance.driver.classes.%s' % self['class']
-    self.logger.debug('Instantiating %s' % classPath)
+      classPath = 'performance.driver.classes.{}'.format(self['class'])
+    self.logger.debug('Instantiating {}'.format(classPath))
 
     pathComponents = classPath.split('.')
     className = pathComponents.pop()
     modulePath = '.'.join(pathComponents)
 
     # Get a reference to the class type
-    self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className,
-                                                               modulePath))
+    self.logger.debug(
+        'Looking for \'{}\' in module \'{}\''.format(className, modulePath))
     module = importlib.import_module(modulePath)
     classType = getattr(module, className)
 
@@ -164,7 +165,7 @@ class Configurable:
   def getConfig(self, key, default=None, required=True):
     if not key in self.config:
       if required and default is None:
-        raise KeyError('%s.%s' % (self.config.path, key))
+        raise KeyError('{}.{}'.format(self.config.path, key))
     return self.config.get(key, default)
 
   def hasConfig(self, name):
@@ -200,7 +201,7 @@ class MetricConfig:
     # Extract summarizer configuration
     for summ in metricConfig.get('summarize', []):
       if type(summ) is str:
-        summ = {"class": "@%s" % summ, "name": summ}
+        summ = {"class": "@{}".format(summ), "name": summ}
 
       # Collect summarizer config
       self.summarizers.append(summ)
@@ -222,16 +223,16 @@ class MetricConfig:
       if summConfig['class'][0] == "@":
         classPath = 'performance.driver.core.classes.summarizer.BuiltInSummarizer'
       else:
-        classPath = 'performance.driver.classes.%s' % summConfig['class']
-      self.logger.debug('Instantiating %s' % classPath)
+        classPath = 'performance.driver.classes.{}'.format(summConfig['class'])
+      self.logger.debug('Instantiating {}'.format(classPath))
 
       pathComponents = classPath.split('.')
       className = pathComponents.pop()
       modulePath = '.'.join(pathComponents)
 
       # Get a reference to the class type
-      self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className,
-                                                                 modulePath))
+      self.logger.debug(
+          'Looking for \'{}\' in module \'{}\''.format(className, modulePath))
       module = importlib.import_module(modulePath)
       classType = getattr(module, className)
 

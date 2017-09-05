@@ -101,10 +101,8 @@ def dcos_perf_test_driver(args=None):
       if definition['required'] and not name in config.definitions:
         desc = ''
         if 'desc' in definition:
-          desc = ' (%s)' % definition['desc']
-        logger.error('Missing required definition `%s`%s' % \
-          (name, desc)
-        )
+          desc = ' ({})'.format(definition['desc'])
+        logger.error('Missing required definition `{}`{}'.format(name, desc))
         hasMissing = True
     if hasMissing:
       return 1
@@ -119,22 +117,23 @@ def dcos_perf_test_driver(args=None):
     if invalidSubscriptions:
       for name, locations in invalidSubscriptions.items():
         for location in locations:
-          logger.error('Event "%s" used in %s is never published' % (name,
-                                                                     location))
+          logger.error('Event "{}" used in {} is never published'.format(
+              name, location))
       return 1
 
     # Run the tests
-    logger.info("Starting %s" % generalConfig.title)
+    logger.info("Starting {}".format(generalConfig.title))
     session.run()
 
     # Instantiate reporters
     for reporter in session.reporters:
       try:
-        logger.debug('Reporting to \'%s\' reporter' % type(reporter).__name__)
+        logger.debug(
+            'Reporting to \'{}\' reporter'.format(type(reporter).__name__))
         reporter.dump(session.summarizer)
       except Exception as e:
-        logger.error('Reporter \'%s\' failed with error: %s' %
-                     (type(reporter).__name__, str(e)))
+        logger.error('Reporter \'{}\' failed with error: {}'.format(
+            type(reporter).__name__, str(e)))
         if cmdline.verbose:
           logger.exception(e)
 
@@ -142,7 +141,7 @@ def dcos_perf_test_driver(args=None):
     return 0
 
   except Exception as e:
-    logger.error('Error: %s' % str(e))
+    logger.error('Error: {}'.format(str(e)))
     if cmdline.verbose:
       logger.exception(e)
 

@@ -196,7 +196,7 @@ class CmdlineChannel(Channel):
     if not self.killing:
 
       # Dispatch the correct exit message
-      self.logger.debug('Process exited with code %i' % proc.returncode)
+      self.logger.debug('Process exited with code {}'.format(proc.returncode))
       if proc.returncode == 0:
         self.eventbus.publish(
             CmdlineExitZeroEvent(proc.returncode, traceid=self.lastTraceId))
@@ -260,7 +260,7 @@ class CmdlineChannel(Channel):
       env = None
 
     # Launch
-    self.logger.debug('Starting process: \'%s\'' % ' '.join(args))
+    self.logger.debug('Starting process: \'{}\''.format(' '.join(args)))
     self.activeParameters = parameters
     proc = Popen(
         args,

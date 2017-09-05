@@ -10,7 +10,7 @@ class Tracker(EventBusSubscriber, Configurable):
     Configurable.__init__(self, config)
     EventBusSubscriber.__init__(self, eventbus)
     self.summarizer = summarizer
-    self.logger = logging.getLogger('Tracker<%s>' % type(self).__name__)
+    self.logger = logging.getLogger('Tracker<{}>'.format(type(self).__name__))
 
   def trackMetric(self, name, value, traceid=None):
     """

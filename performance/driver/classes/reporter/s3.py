@@ -79,7 +79,7 @@ class S3Reporter(Reporter):
     optional_kwargs = {}
     if 'acl' in config:
       optional_kwargs['ACL'] = config['acl']
-    self.logger.info('Uploading raw results to %s' % bucket_key)
+    self.logger.info('Uploading raw results to {}'.format(bucket_key))
 
     # Upload into the bucket
     s3.Bucket(config['bucket']) \

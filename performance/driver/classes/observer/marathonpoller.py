@@ -115,15 +115,17 @@ class MarathonPollerObserver(Observer):
     # `dcos_auth_token` definition, allocate an `Authorization` header now
     if not 'Authorization' in headers \
        and 'dcos_auth_token' in definitions:
-      headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+      headers['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Fetch metrics
     try:
       res = requests.get(
-          '%s/v2/deployments' % url, headers=headers, verify=False)
+          '{}/v2/deployments'.format(url), headers=headers, verify=False)
       if res.status_code != 200:
-        self.logger.debug('Deployments marathon endpoint not accessible '
-                          '(Received %i HTTP status code)' % res.status_code)
+        self.logger.debug(
+            'Deployments marathon endpoint not accessible (Received {} HTTP status code)'.
+            format(res.status_code))
         return
 
       # Emit MarathonStartedEvent if marathon was not running yet

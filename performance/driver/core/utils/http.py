@@ -39,5 +39,5 @@ def wait_till_accessible(url, timeout=60, headers=None):
     time.sleep(1)
 
   # Timed out, raise exception
-  raise RuntimeError('Timed out after %i seconds, waiting for %s' % (timeout,
-                                                                     url))
+  raise RuntimeError(
+      'Timed out after {} seconds, waiting for {}'.format(timeout, url))

@@ -45,8 +45,8 @@ class DurationTrackerSession:
     self.endFilter.finalize()
 
     if not self.queue.empty():
-      self.logger.warn(
-          'Incomplete traces were present for metric %s' % self.tracker.metric)
+      self.logger.warn('Incomplete traces were present for metric {}'.format(
+          self.tracker.metric))
 
 
 class DurationTracker(Tracker):

@@ -67,8 +67,8 @@ class Request(Task):
       config['headers'] = {}
     if not 'Authorization' in config['headers'] \
        and 'dcos_auth_token' in definitions:
-      config['headers']['Authorization'] = 'token=%s' % \
-        definitions['dcos_auth_token']
+      config['headers']['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Extract useful info
     url = config['url']
@@ -80,15 +80,15 @@ class Request(Task):
     try:
 
       # Send request (and catch errors)
-      self.logger.info('Performing HTTP %s to %s' % (verb, url))
+      self.logger.info('Performing HTTP {} to {}'.format(verb, url))
       res = requests.request(
           verb, url, verify=False, data=body, headers=headers)
 
       # Log error status codes
-      self.logger.debug('Completed with HTTP %s' % res.status_code)
+      self.logger.debug('Completed with HTTP {}'.format(res.status_code))
       if res.status_code < 200 or res.status_code >= 300:
-        self.logger.error('Endpoint at %s responded with HTTP %i' %
-                          (url, res.status_code))
+        self.logger.error('Endpoint at {} responded with HTTP {}'.format(
+            url, res.status_code))
 
     except requests.exceptions.ConnectionError as e:
-      self.logger.error('Unable to connect to %s' % url)
+      self.logger.error('Unable to connect to {}'.format(url))

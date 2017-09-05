@@ -53,8 +53,8 @@ class LogLineTokenTracker(Tracker):
       typeCastFnName = token.get('type', None)
       if typeCastFnName:
         if not typeCastFnName in TYPE_TRANSFORMATIONS:
-          raise ValueError('Unknown type transformation %s for token %s' %
-                           (typeCastFnName, token['token']))
+          raise ValueError('Unknown type transformation {} for token {}'.
+                           format(typeCastFnName, token['token']))
 
         self.tokenCastFn[token['token']] = TYPE_TRANSFORMATIONS[typeCastFnName]
 

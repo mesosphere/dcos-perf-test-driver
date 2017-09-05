@@ -235,8 +235,8 @@ class HTTPRequestState:
       config['headers'] = {}
     if not 'Authorization' in config['headers'] \
        and 'dcos_auth_token' in definitions:
-      config['headers']['Authorization'] = 'token=%s' % \
-        definitions['dcos_auth_token']
+      config['headers']['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Get base request parameters
     self.url = config['url']
@@ -283,7 +283,8 @@ class HTTPRequestState:
         return case['value']
 
       raise ValueError(
-          'Could not find a matching body case for parameters: %r' % body)
+          'Could not find a matching body case for parameters: {0!r}'.format(
+              body))
 
     # Render config and get body
     return body
@@ -413,8 +414,8 @@ class HTTPChannel(Channel):
                  HTTPLastResponseEndEvent, HTTPResponseEndEvent)
   def handleRequest(self, req):
     if req is None or not req.active:
-      self.logger.debug('Bailing out of %s request to %s due to termination' %
-                        (req.verb, req.url))
+      self.logger.debug('Bailing out of {} request to {} due to termination'.
+                        format(req.verb, req.url))
       return
 
     # Make sure to process loops in a single stack frame
@@ -465,7 +466,7 @@ class HTTPChannel(Channel):
                             req.headers,
                             traceid=req.traceids),
           sync=True)
-      self.logger.debug('Placing a %s request to %s' % (req.verb, req.url))
+      self.logger.debug('Placing a {} request to {}'.format(req.verb, req.url))
       try:
 
         # Send request (and trap errors)
@@ -480,8 +481,9 @@ class HTTPChannel(Channel):
         # Warn errors
         if (req.activeRequest.status_code <
             200) or (req.activeRequest.status_code >= 300):
-          self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
-            (req.verb, req.url, req.activeRequest.status_code))
+          self.logger.warn(
+              'HTTP {} Request to {} returned status code of {}'.format(
+                  req.verb, req.url, req.activeRequest.status_code))
 
         # Process response
         self.eventbus.publish(

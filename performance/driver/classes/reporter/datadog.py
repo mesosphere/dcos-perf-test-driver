@@ -78,21 +78,21 @@ class DataDogReporter(Reporter):
 
       # Make sure we have this summarizer
       if not point['indicator'] in indicatorValues:
-        raise TypeError('Unknown indicator `%s` in datadog summarizer' % \
-          point['indicator'])
+        raise TypeError('Unknown indicator `{}` in datadog summarizer'.format(
+            point['indicator']))
 
       # Submit metrics and add all metadata as tags
       series.append({
           "metric":
-          '%s%s' % (prefix, point['name']),
+          '{}{}'.format(prefix, point['name']),
           "points":
           indicatorValues[point['indicator']],
           "tags":
           list(
-              map(lambda v: "%s:%s" % (v[0], str(v[1])), self.getMeta()
-                  .items()))
+              map(lambda v: "{}:{}".format(v[0], str(v[1])),
+                  self.getMeta().items()))
       })
 
     # Send all series in one batch
-    self.logger.info("Submitting series to datadog: %r" % series)
+    self.logger.info("Submitting series to datadog: {}".format(series))
     api.Metric.send(series)

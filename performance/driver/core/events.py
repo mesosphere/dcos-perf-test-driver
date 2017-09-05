@@ -67,7 +67,7 @@ class Event:
     """
     Return a string representation of the event
     """
-    return '%s[trace=%s]' % (self.event, ','.join(self.traceids))
+    return '{}[trace={}]'.format(self.event, ','.join(self.traceids))
 
 
 class StartEvent(Event):
@@ -204,4 +204,4 @@ class LogLineEvent(Event):
     self.kind = kind
 
   def __str__(self):
-    return '%s<%s>' % (super().__str__(), self.line)
+    return '{}<{}>'.format(super().__str__(), self.line)

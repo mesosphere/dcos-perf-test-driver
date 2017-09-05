@@ -134,7 +134,7 @@ class ChainedDeploymentPolicy(PolicyFSM):
       # Check if we ran out of events that we are waiting for
       self.runEvents -= 1
       if self.runEvents > 0:
-        self.logger.info('Waiting for %i more events' % self.runEvents)
+        self.logger.info('Waiting for {} more events'.format(self.runEvents))
         return
 
       # Mark the test status

@@ -34,7 +34,7 @@ class SummarizerAxis:
     Push a parameter update
     """
     if not metric in self.timeseries:
-      raise NameError('Metric %s does not exist' % metric)
+      raise NameError('Metric {} does not exist'.format(metric))
 
     # Collect value to the time series
     self.timeseries[metric].push(value)

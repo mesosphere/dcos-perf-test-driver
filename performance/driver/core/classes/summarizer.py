@@ -16,7 +16,8 @@ class Summarizer(Configurable):
     """
     super().__init__(config)
     self.name = config.get('name', type(self).__name__)
-    self.logger = logging.getLogger('Summarizer<%s>' % type(self).__name__)
+    self.logger = logging.getLogger(
+        'Summarizer<{}>'.format(type(self).__name__))
 
   def calculate(self,
                 timeseries: SummarizerAxisTimeseries,
@@ -75,7 +76,7 @@ class BuiltInSummarizer(Summarizer):
     # Extract the function name from the class configuration
     funcName = config['class'][1:]
     if not hasattr(builtin, funcName):
-      raise TypeError('Unknown built-in summarizer "%s"' % funcName)
+      raise TypeError('Unknown built-in summarizer "{}"'.format(funcName))
 
     # Get a reference to the built-in summarizer
     self.ref = getattr(builtin, funcName)

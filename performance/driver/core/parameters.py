@@ -64,7 +64,7 @@ class ParameterBatch(EventBusSubscriber):
 
       # Then dispatch parameter updates
       if batch:
-        self.logger.info('Setting axis to %s' % json.dumps(parameters))
+        self.logger.info('Setting axis to {}'.format(json.dumps(parameters)))
         self.eventbus.publish(
             ParameterUpdateEvent(
                 parameters, self.parameters, batch,

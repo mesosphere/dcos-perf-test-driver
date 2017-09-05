@@ -31,9 +31,9 @@ def getPlotfn(ax, xscale, yscale):
   Get the correct plot function configuration to the axis string given
   """
   if xscale not in ('linear', 'log', 'log2', 'log10'):
-    raise TypeError('Unknown `xscale` value \'%s\'' % xscale)
+    raise TypeError('Unknown `xscale` value \'{}\''.format(xscale))
   if yscale not in ('linear', 'log', 'log2', 'log10'):
-    raise TypeError('Unknown `yscale` value \'%s\'' % yscale)
+    raise TypeError('Unknown `yscale` value \'{}\''.format(yscale))
 
   if xscale == 'linear' and yscale == 'linear':
     return (ax.plot, {})
@@ -224,7 +224,7 @@ class PlotReporter(Reporter):
               capsize=5,
               fmt='.')
 
-      ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
+      ax.set_xlabel("{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
 
     # -------------------------------
     # 1D Plot WITH Reference
@@ -283,7 +283,7 @@ class PlotReporter(Reporter):
 
         except KeyError as e:
           self.logger.warning(
-              'Could not find summariser %s in reference data' % str(e))
+              'Could not find summariser {} in reference data'.format(str(e)))
         except ValueError as e:
           self.logger.warning('Reference data are in wrong format '
                               '(check your parameter count)')
@@ -291,18 +291,19 @@ class PlotReporter(Reporter):
       axRatio.set_ylim([0.25, 1.75])
       axRatio.set_yticks([0.5, 1, 1.5])
       axRatio.grid(b=True, color='lightgray', linestyle='dotted')
-      axRatio.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
+      axRatio.set_xlabel(
+          "{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
       axRatio.set_ylabel("Value/Reference")
 
     # Show legend
     ax.grid(b=True, color='lightgray', linestyle='dotted')
-    ax.set_title("%s [%s]" % (self.generalConfig.title, plotGroup.title))
+    ax.set_title("{} [{}]".format(self.generalConfig.title, plotGroup.title))
     ax.legend(loc='lower right')
-    ax.set_ylabel("%s (%s)" % (plotGroup.name, plotGroup.units))
+    ax.set_ylabel("{} ({})".format(plotGroup.name, plotGroup.units))
 
     # Dump
     fig.tight_layout()
-    self.logger.info('Creating 1D %s' % (filename, ))
+    self.logger.info('Creating 1D {}'.format(filename))
     plt.savefig(filename)
 
   def dumpPlot_2d(self, axisValues, plotGroup, referencePlotGroup, filename):
@@ -345,17 +346,18 @@ class PlotReporter(Reporter):
         ax.set_aspect("equal")
         ax.scatter(x, y, c=z, linewidths=1, edgecolors='black', cmap=cmap)
         cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label('%s (%s)' % (plotGroup.title, plotGroup.units))
+        cbar.set_label('{} ({})'.format(plotGroup.title, plotGroup.units))
 
         # Show legend
         ax.grid(True)
-        ax.set_title("%s [%s]" % (self.generalConfig.title, name))
-        ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
-        ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
+        ax.set_title("{} [{}]".format(self.generalConfig.title, name))
+        ax.set_xlabel("{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
+        ax.set_ylabel("{} ({})".format(p2['name'], p2.get('units', 'Unknown')))
 
         # Dump
-        self.logger.info('Creating 2D Plot %s-%s.png' % (filename[:-4], name))
-        plt.savefig('%s-%s.png' % (filename[:-4], name))
+        self.logger.info(
+            'Creating 2D Plot {}-{}.png'.format(filename[:-4], name))
+        plt.savefig('{}-{}.png'.format(filename[:-4], name))
 
     # -------------------------------
     # 2D Plots WITH Reference
@@ -376,7 +378,7 @@ class PlotReporter(Reporter):
         im = ax.pcolormesh(xi, yi, zi, cmap=cmap)
         ax.scatter(x, y, c=z, linewidths=1, edgecolors='black', cmap=cmap)
         cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label('%s (%s)' % (plotGroup.title, plotGroup.units))
+        cbar.set_label('{} ({})'.format(plotGroup.title, plotGroup.units))
 
         try:
 
@@ -402,25 +404,26 @@ class PlotReporter(Reporter):
 
         except KeyError as e:
           self.logger.warning(
-              'Could not find summariser %s in reference data' % str(e))
+              'Could not find summariser {} in reference data'.format(str(e)))
         except ValueError as e:
           self.logger.warning('Reference data are in wrong format '
                               '(check your parameter count)')
 
         # Show legends
         ax.grid(True)
-        ax.set_title("%s [%s]" % (self.generalConfig.title, name))
-        ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
-        ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
+        ax.set_title("{} [{}]".format(self.generalConfig.title, name))
+        ax.set_xlabel("{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
+        ax.set_ylabel("{} ({})".format(p2['name'], p2.get('units', 'Unknown')))
 
         axRatio.grid(True)
-        axRatio.set_xlabel("%s (%s)" % (p1['name'],
-                                        p1.get('units', 'Unknown')))
+        axRatio.set_xlabel(
+            "{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
         axRatio.set_ylabel("Value/" + name + referencePlotGroup.suffix)
 
         # Dump
-        self.logger.info('Creating 2D Plot %s-%s.png' % (filename[:-4], name))
-        plt.savefig('%s-%s.png' % (filename[:-4], name))
+        self.logger.info(
+            'Creating 2D Plot {}-{}.png'.format(filename[:-4], name))
+        plt.savefig('{}-{}.png'.format(filename[:-4], name))
 
   def dumpPlot_3d(self, axisValues, plotGroup, referencePlotGroup, filename):
     """
@@ -451,14 +454,14 @@ class PlotReporter(Reporter):
     refConfig = config.get('reference', None)
     if not refConfig is None:
       url = refConfig['url']
-      self.logger.info('Fetcing reference data from %s' % url)
+      self.logger.info('Fetcing reference data from {}'.format(url))
 
       # Make the request and collect data
       r = requests.get(url, headers=refConfig.get('headers', {}))
       if r.status_code < 200 or r.status_code >= 300:
         self.logger.error(
-            'Got unexpected HTTP %i response. Disabling reference' %
-            r.status_code)
+            'Got unexpected HTTP {} response. Disabling reference'.format(
+                r.status_code))
       else:
         reference = r.json()
         referencePlotGroup = {}
@@ -486,7 +489,7 @@ class PlotReporter(Reporter):
             # Prettify summariser name
             if '_' in sumname:
               (pre, post) = sumname.split('_', 1)
-              sumname = '%s (%s)' % (pre, post)
+              sumname = '{} ({})'.format(pre, post)
 
             # Make sure values are in (value, error) format always
             pair = value
@@ -505,7 +508,7 @@ class PlotReporter(Reporter):
           # Prettify summariser name
           if '_' in sumname:
             (pre, post) = sumname.split('_', 1)
-            sumname = '%s (%s)' % (pre, post)
+            sumname = '{} ({})'.format(pre, post)
 
           # Make sure values are in (value, error) format always
           pair = value
@@ -522,5 +525,5 @@ class PlotReporter(Reporter):
     fileSuffix = config.get('suffix', '')
     for metric, plotGroup in metricPlotGroup.items():
       dumpFunction(axisValues, plotGroup, None if referencePlotGroup is None
-                   else referencePlotGroup[metric],
-                   '%s%s%s.png' % (filePrefix, metric, fileSuffix))
+                   else referencePlotGroup[metric], '{}{}{}.png'.format(
+                       filePrefix, metric, fileSuffix))

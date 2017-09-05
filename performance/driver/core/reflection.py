@@ -47,7 +47,8 @@ class EventReflection:
     Register an event in the event bus
     """
     name = event.__name__
-    self.logger.debug('Publish hint for event "%s" in %s' % (name, location))
+    self.logger.debug(
+        'Publish hint for event "{}" in {}'.format(name, location))
     if not name in self.events:
       self.events[name] = []
     self.events[name].append(location)
@@ -57,8 +58,8 @@ class EventReflection:
     Register an event usage from the event bus
     """
     name = event.__name__
-    self.logger.debug('Subscribes hint for event "%s" in %s' % (name,
-                                                                location))
+    self.logger.debug(
+        'Subscribes hint for event "{}" in {}'.format(name, location))
     self.usages.append((name, location))
 
   def validate(self):

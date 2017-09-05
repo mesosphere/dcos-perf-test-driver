@@ -337,7 +337,7 @@ class MarathonEventsObserver(Observer):
         continue
 
       # Dispatch raw event
-      self.logger.debug('Received event %s: %r' % (eventName, eventData))
+      self.logger.debug('Received event {}: {}'.format(eventName, eventData))
       self.eventbus.publish(MarathonAPIEvent(eventData))
 
       # Get the affected IDs
@@ -398,7 +398,7 @@ class MarathonEventsObserver(Observer):
       # Warn unknown events
       else:
         self.logger.debug(
-            'Unhandled marathon event \'%s\' received' % eventName)
+            'Unhandled marathon event \'{}\' received'.format(eventName))
 
       # Inform queue that the task is done
       self.eventQueue.task_done()
@@ -427,12 +427,13 @@ class MarathonEventsObserver(Observer):
       #
       if not 'Authorization' in headers \
          and 'dcos_auth_token' in definitions:
-        headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+        headers['Authorization'] = 'token={}'.format(
+            definitions['dcos_auth_token'])
 
       #
       # Poll the endpoint until it responds
       #
-      self.logger.debug('Checking if %s is alive' % url)
+      self.logger.debug('Checking if {} is alive'.format(url))
       if is_accessible(url, headers=headers, status_code=[200, 405, 400]):
         break
 

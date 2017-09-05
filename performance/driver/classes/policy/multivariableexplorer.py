@@ -134,7 +134,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
 
         # Invalid values
         else:
-          raise ValueError('Unknown matrix value type "%s"' % v_type)
+          raise ValueError('Unknown matrix value type "{}"'.format(v_type))
 
       # Process the events configuration
       eventsConfig = renderdConfig.get('events', {})
@@ -194,8 +194,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = len(self.parameterValues)
       self.progressCurrent = 0
 
-      self.logger.info('Exploring %i variables with %i permutations' % \
-        (len(self.parameterNames), self.progressTotal))
+      self.logger.info('Exploring {} variables with {} permutations'.format(
+          len(self.parameterNames), self.progressTotal))
 
       self.goto(MultivariableExplorerPolicy.Deploy)
 
@@ -259,7 +259,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
       for ev, status in self.signalEvents.items():
         if isEventMatching(event, ev):
           isHandled = True
-          self.logger.info('Run completed with status: %s' % status)
+          self.logger.info('Run completed with status: {}'.format(status))
           self.setStatus(status)
           break
 
@@ -270,7 +270,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
       # Check if we ran out of events that we are waiting for
       self.eventsRemaining -= 1
       if self.eventsRemaining > 0:
-        self.logger.info('Waiting for %i more events' % self.eventsRemaining)
+        self.logger.info(
+            'Waiting for {} more events'.formt(self.eventsRemaining))
         return
 
       # Run the inter-test tasks. Upon completion the

@@ -36,7 +36,7 @@ class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
     fsm.FSM.__init__(self)
     Configurable.__init__(self, config)
     EventBusSubscriber.__init__(self, eventbus)
-    self.logger = logging.getLogger('Policy<%s>' % type(self).__name__)
+    self.logger = logging.getLogger('Policy<{}>'.format(type(self).__name__))
     self.parameterBatch = parameterBatch
 
     # Receive events from the bus

@@ -122,8 +122,8 @@ class HTTPTimingObserver(Observer):
       config['headers'] = {}
     if not 'Authorization' in config['headers'] \
        and 'dcos_auth_token' in definitions:
-      config['headers']['Authorization'] = 'token=%s' % \
-        definitions['dcos_auth_token']
+      config['headers']['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Extract useful info
     url = config['url']
@@ -143,7 +143,7 @@ class HTTPTimingObserver(Observer):
 
       # Send request (and catch errors)
       times[0] = time.time()
-      self.logger.debug('Performing HTTP %s to %s' % (verb, url))
+      self.logger.debug('Performing HTTP {} to {}'.format(verb, url))
       res = requests.request(
           verb,
           url,
@@ -154,18 +154,18 @@ class HTTPTimingObserver(Observer):
       times[2] = time.time()
 
       # Log error status codes
-      self.logger.debug('Completed with HTTP %s' % res.status_code)
+      self.logger.debug('Completed with HTTP {}'.format(res.status_code))
       if res.status_code != 200:
-        self.logger.warn('Endpoint at %s responded with HTTP %i' %
-                         (url, res.status_code))
+        self.logger.warn('Endpoint at {} responded with HTTP {}'.format(
+            url, res.status_code))
 
     except requests.exceptions.ConnectionError as e:
-      self.logger.error('Unable to connect to %s' % url)
+      self.logger.error('Unable to connect to {}'.format(url))
 
     # Broadcast status
-    self.logger.debug('Measurement completed: request=%f, response=%f, '
-                      'total=%f' % (times[1] - times[0], times[2] - times[1],
-                                    times[2] - times[0]))
+    self.logger.debug(
+        'Measurement completed: request={}, response={}, total={}'.format(
+            times[1] - times[0], times[2] - times[1], times[2] - times[0]))
     self.eventbus.publish(
         HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
                               times[2] - times[1], times[2] - times[0],

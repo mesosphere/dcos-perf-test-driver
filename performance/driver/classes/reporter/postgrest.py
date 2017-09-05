@@ -47,9 +47,10 @@ class PostgRESTReporter(Reporter):
 
     # Submit and check for errors
     try:
-      r = requests.post('%s/%s%s' % (url, prefix, table), json=data)
+      r = requests.post('{}/{}{}'.format(url, prefix, table), json=data)
     except Exception as e:
-      self.logger.warn('Unable to insert into %s table (%s)' % (table, str(e)))
+      self.logger.warn(
+          'Unable to insert into {} table ({})'.format(table, str(e)))
       return False
 
     # Check for HTTP response codes
@@ -57,8 +58,8 @@ class PostgRESTReporter(Reporter):
       (r.status_code < 200 or r.status_code >= 300):
       print(data)
       self.logger.warn(
-          'Unable to insert into %s table (Unexpected HTTP response %i)' %
-          (table, r.status_code))
+          'Unable to insert into {} table (Unexpected HTTP response {})'.
+          format(table, r.status_code))
       return False
 
     # Success
@@ -78,7 +79,7 @@ class PostgRESTReporter(Reporter):
     for (metric, metricConfig) in self.generalConfig.metrics.items():
       if not 'uuid' in metricConfig.config:
         self.logger.error(
-            'Missing required `uuid` field for the metric `%s`' % metric)
+            'Missing required `uuid` field for the metric `{}`'.format(metric))
       if not self.insert(
           'lookup_metrics', {
               'metric': metricConfig.config['uuid'],
@@ -94,7 +95,8 @@ class PostgRESTReporter(Reporter):
     for (parameter, config) in self.generalConfig.parameters.items():
       if not 'uuid' in config:
         self.logger.error(
-            'Missing required `uuid` field for the parameter `%s`' % parameter)
+            'Missing required `uuid` field for the parameter `{}`'.format(
+                parameter))
       if not self.insert(
           'lookup_parameters', {
               'parameter': config['uuid'],
@@ -154,7 +156,8 @@ class PostgRESTReporter(Reporter):
       for (param, value) in phase['parameters'].items():
         if not param in param_uuid:
           self.logger.error(
-              'Parameter `%s` was not defined in the configuration!' % param)
+              'Parameter `{}` was not defined in the configuration!'.format(
+                  param))
         data_phase_params.append({
             'pid': pid,
             'parameter': param_uuid[param],
@@ -165,7 +168,8 @@ class PostgRESTReporter(Reporter):
       for (metric, timeseries) in phase['values'].items():
         if not metric in metric_uuid:
           self.logger.error(
-              'Metric `%s` was not defined in the configuration!' % param)
+              'Metric `{}` was not defined in the configuration!'.format(
+                  param))
         for (ts, value) in timeseries:
           data_phase_metrics.append({
               'pid':

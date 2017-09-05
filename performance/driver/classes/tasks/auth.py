@@ -53,14 +53,16 @@ class AuthEE(Task):
     # Try to login
     self.logger.info('Authenticating to cluster')
     response = requests.post(
-        '%s/acs/api/v1/auth/login' % cluster, json=credentials, verify=False)
+        '{}/acs/api/v1/auth/login'.format(cluster),
+        json=credentials,
+        verify=False)
     if response.status_code != 200:
       raise RuntimeError(
           'Unable to authenticate on the cluster with the given credentials')
 
     # Get token
     self.setDefinition('dcos_auth_token', response.json()['token'])
-    self.logger.info('Authenticated as `%s`' % credentials['uid'])
+    self.logger.info('Authenticated as `{}`'.format(credentials['uid']))
 
 
 class AuthOpen(Task):
@@ -103,7 +105,9 @@ class AuthOpen(Task):
     # Try to login
     self.logger.info('Authenticating to cluster')
     response = requests.post(
-        '%s/acs/api/v1/auth/login' % cluster, json=credentials, verify=False)
+        '{}/acs/api/v1/auth/login'.format(cluster),
+        json=credentials,
+        verify=False)
     if response.status_code != 200:
       raise RuntimeError(
           'Unable to authenticate on the cluster with the given credentials')

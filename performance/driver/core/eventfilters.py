@@ -66,12 +66,12 @@ class EventFilterSession:
       self.callback(self.foundEvent)
 
   def __str__(self):
-    return '<Session[%s], traceid=%r>' % (self.filter.expression,
-                                          self.traceids)
+    return '<Session[{}], traceid={}>'.format(self.filter.expression,
+                                              self.traceids)
 
   def __repr__(self):
-    return '<Session[%s], traceid=%r>' % (self.filter.expression,
-                                          self.traceids)
+    return '<Session[{}], traceid={}>'.format(self.filter.expression,
+                                              self.traceids)
 
 
 class EventFilter:
@@ -161,8 +161,9 @@ class EventFilter:
     # Find all the events to match against
     matches = DSL_TOKENS.findall(expression)
     if not matches:
-      raise ValueError('The given expression "%s" is not a valid event '
-                       'filter DSL' % expression)
+      raise ValueError(
+          'The given expression "{}" is not a valid event filter DSL'.format(
+              expression))
 
     # Process event matches
     self.events = []
@@ -183,21 +184,21 @@ class EventFilter:
           # Handle loose regex match
           if op == "~=":
             attrib.append(
-                eval('lambda event: not regex.search(str(event.%s)) is None' %
-                     (left, ), {'regex': re.compile(right)}))
+                eval('lambda event: not regex.search(str(event.{})) is None'.
+                     format(left), {'regex': re.compile(right)}))
 
           # Handle exact regex match
           elif op == "~==":
             attrib.append(
-                eval('lambda event: not regex.match(str(event.%s)) is None' % (
-                    left, ), {'regex': re.compile(right)}))
+                eval('lambda event: not regex.match(str(event.{})) is None'.
+                     format(left), {'regex': re.compile(right)}))
 
           # Handle operator match
           else:
             if not right.isnumeric():
-              right = '"%s"' % right.replace('"', '\\"')
+              right = '"{}"'.format(right.replace('"', '\\"'))
             attrib.append(
-                eval('lambda event: event.%s %s %s' % (left, op, right)))
+                eval('lambda event: event.{} {} {}'.format(left, op, right)))
 
       # Collect flags
       self.events.append((event, attrib, flags))
@@ -209,7 +210,7 @@ class EventFilter:
     return EventFilterSession(self, traceids, callback)
 
   def __str__(self):
-    return '<Filter[%s]>' % (self.expression, )
+    return '<Filter[{}]>'.format(self.expression)
 
   def __repr__(self):
-    return '<Filter[%s]>' % (self.expression, )
+    return '<Filter[{}]>'.format(self.expression)
