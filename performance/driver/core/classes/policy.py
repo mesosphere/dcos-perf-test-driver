@@ -16,6 +16,7 @@ class State(fsm.State):
     as possible. This placeholder ensures that policies that haven't implemented
     this behaviour are properly sinked.
     """
+    self.logger.debug("Sinking to FSM.End due to interrupt event")
     self.goto(type(self._fsm).End)
 
   def onStalledEvent(self, event):
@@ -23,6 +24,7 @@ class State(fsm.State):
     When a policy receives a stalled event it should either continue the tests
     or if it's not possible, it should be properly sinked.
     """
+    self.logger.debug("Sinking to FSM.End due to stalled event")
     self.goto(type(self._fsm).End)
 
 class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
