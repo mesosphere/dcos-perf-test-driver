@@ -132,7 +132,8 @@ class MarathonUpdateChannel(Channel):
         app.update(patch)
 
         # remove fetch, because they are deprecated and producing errors in marathon 1.4 and older
-        del app['fetch']
+        if 'fetch' in app:
+          del app['fetch']
 
         # Delete version if persent
         if 'version' in app:
