@@ -194,6 +194,15 @@ def pickFirstLast(current, total, firstEvent, lastEvent, middleEvent):
     return middleEvent
 
 class HTTPRequestState:
+  """
+  This class keeps track of the request state.
+
+  This includes the request information (url, headers, body), the repeat
+  information (how many times to repeat the request and how many times we have
+  done this already) and other information used by the HTTPChannel.handleRequest
+  thread handler to complete the request.
+  """
+
   def __init__(self, channel, eventParameters, traceids):
 
     # Render config and definitions
