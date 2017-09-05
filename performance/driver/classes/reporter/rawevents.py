@@ -3,10 +3,12 @@ import json
 from requests.structures import CaseInsensitiveDict
 from performance.driver.core.classes import Reporter
 
+
 class JSONNormalizerEncoder(json.JSONEncoder):
   """
   Normalize stuff that cannot be serialized
   """
+
   def default(self, obj):
 
     # CaseInsensitiveDict needs to become a dict
@@ -14,6 +16,7 @@ class JSONNormalizerEncoder(json.JSONEncoder):
       obj = dict(obj.items())
 
     return json.JSONEncoder.encode(self, obj)
+
 
 class RawEventsReporter(Reporter):
   """
@@ -51,11 +54,9 @@ class RawEventsReporter(Reporter):
     Serialize and dump event
     """
 
-    self.file.write("%f;%s;%s\n" % (
-      event.ts,
-      type(event).__name__,
-      json.dumps(event.__dict__, cls=JSONNormalizerEncoder)
-    ))
+    self.file.write("%f;%s;%s\n" %
+                    (event.ts, type(event).__name__,
+                     json.dumps(event.__dict__, cls=JSONNormalizerEncoder)))
 
   def dump(self, summarizer):
     """

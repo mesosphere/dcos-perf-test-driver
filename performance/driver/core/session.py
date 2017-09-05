@@ -11,8 +11,8 @@ from .summarizer import Summarizer
 
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
-class Session(EventBusSubscriber):
 
+class Session(EventBusSubscriber):
   @subscribesToHint(RunTaskEvent)
   def __init__(self, config):
     """
@@ -26,7 +26,7 @@ class Session(EventBusSubscriber):
     self.interrupted = False
 
     # Subscribe to event task
-    self.eventbus.subscribe(self.handleRunTaskEvent, events=(RunTaskEvent,))
+    self.eventbus.subscribe(self.handleRunTaskEvent, events=(RunTaskEvent, ))
 
     # Instantiate components
     self.policies = []
@@ -102,7 +102,8 @@ class Session(EventBusSubscriber):
     """
     Interrupt the tests and force exit
     """
-    self.logger.error('Tests interrupted; trying to report. Interrupt again to force quit')
+    self.logger.error(
+        'Tests interrupted; trying to report. Interrupt again to force quit')
 
     # Restore signal handler
     signal.signal(signal.SIGINT, self.prevSigHandler)
@@ -114,7 +115,8 @@ class Session(EventBusSubscriber):
     self.interrupted = True
     self.eventbus.publish(InterruptEvent(), sync=True)
 
-  @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent, RunTaskEvent)
+  @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent,
+                 RunTaskEvent)
   def run(self):
     """
     Entry point for the test session

@@ -5,6 +5,7 @@ from performance.driver.core.eventbus import EventBusSubscriber
 from performance.driver.core import events
 from performance.driver.core import fsm
 
+
 class State(fsm.State):
   """
   The policy state provides some policy-specific functionality to the FSM
@@ -24,6 +25,7 @@ class State(fsm.State):
     or if it's not possible, it should be properly sinked.
     """
     self.goto(type(self._fsm).End)
+
 
 class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
   """

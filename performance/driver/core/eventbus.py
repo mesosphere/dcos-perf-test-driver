@@ -7,10 +7,12 @@ from queue import Queue
 from .events import Event, TickEvent, isEventMatching
 from .reflection import publishesHint
 
+
 class ExitEvent(Event):
   """
   A local event that instructs the main event loop to exit
   """
+
 
 class EventBusSubscriber:
   """
@@ -19,6 +21,7 @@ class EventBusSubscriber:
 
   def __init__(self, eventbus):
     self.eventbus = eventbus
+
 
 class EventBus:
   """
@@ -52,7 +55,7 @@ class EventBus:
       if subscriber[1] == callback:
         self.subscribers.remove(subscriber)
 
-  def publish(self, event:Event, sync=False):
+  def publish(self, event: Event, sync=False):
     """
     Publish an event to all subscribers
     """
@@ -86,7 +89,7 @@ class EventBus:
     # Start thread pool
     self.logger.debug('Starting thread pool of %i threads' % self.threadCount)
     for i in range(0, self.threadCount):
-      t = Thread(target=self._loopthread, name='eventbus-%i' % (i+1))
+      t = Thread(target=self._loopthread, name='eventbus-%i' % (i + 1))
       t.start()
       self.threads.append(t)
 
@@ -152,15 +155,18 @@ class EventBus:
       for order, sub, events, args, kwargs in self.subscribers:
         try:
           start_ts = time.time()
-          if events is None or any(map(lambda cls: isEventMatching(event, cls), events)):
+          if events is None or any(
+              map(lambda cls: isEventMatching(event, cls), events)):
             sub(event, *args, **kwargs)
 
           delta = time.time() - start_ts
           if delta > 0.25:
-            self.logger.warn('Slow handler (%.2fs) %r for event %s' % (delta, sub, type(event).__name__))
+            self.logger.warn('Slow handler (%.2fs) %r for event %s' %
+                             (delta, sub, type(event).__name__))
 
         except Exception as e:
-          self.logger.error('Exception while dispatching event %s' % event.event)
+          self.logger.error(
+              'Exception while dispatching event %s' % event.event)
           self.logger.exception(e)
 
       # Signal condition variable (if any)

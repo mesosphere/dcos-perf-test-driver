@@ -2,6 +2,7 @@ import json
 import datetime
 from performance.driver.core.classes import Reporter
 
+
 class RawReporter(Reporter):
   """
   The **Raw Reporter** is creating a raw dump of the results in the results
@@ -124,14 +125,18 @@ class RawReporter(Reporter):
 
     # Dump the raw timeseries
     with open(filename, 'w') as f:
-      f.write(json.dumps({
-          'time': {
-            'started': self.timeStarted,
-            'completed': datetime.datetime.now().isoformat()
-          },
-          'config': self.getRootConfig().config,
-          'raw': summarizer.raw(),
-          'sum': summarizer.sum(),
-          'indicators': summarizer.indicators(),
-          'meta': self.getMeta()
-        }, sort_keys=True, indent=2))
+      f.write(
+          json.dumps(
+              {
+                  'time': {
+                      'started': self.timeStarted,
+                      'completed': datetime.datetime.now().isoformat()
+                  },
+                  'config': self.getRootConfig().config,
+                  'raw': summarizer.raw(),
+                  'sum': summarizer.sum(),
+                  'indicators': summarizer.indicators(),
+                  'meta': self.getMeta()
+              },
+              sort_keys=True,
+              indent=2))

@@ -2,6 +2,7 @@ import logging
 
 from performance.driver.core.config import Configurable
 
+
 class Indicator(Configurable):
   """
   An indicator is summarizing the entire test into a single value that can

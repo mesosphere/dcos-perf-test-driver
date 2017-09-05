@@ -3,8 +3,8 @@ from performance.driver.core.events import RunTaskEvent, isEventMatching
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
-class ChainedDeploymentPolicy(PolicyFSM):
 
+class ChainedDeploymentPolicy(PolicyFSM):
   class Start(State):
     """
     Entry point state
@@ -51,7 +51,6 @@ class ChainedDeploymentPolicy(PolicyFSM):
       """
       self.goto(ChainedDeploymentPolicy.Run)
 
-
   class Run(State):
     """
     Initialize test cases and prepare for deployment
@@ -67,7 +66,6 @@ class ChainedDeploymentPolicy(PolicyFSM):
       self.traceid = None
 
       self.goto(ChainedDeploymentPolicy.Deploy)
-
 
   class Deploy(State):
     """
@@ -102,7 +100,6 @@ class ChainedDeploymentPolicy(PolicyFSM):
 
       self.goto(ChainedDeploymentPolicy.Waiting)
       self.logger.info('Initiating a test sequence')
-
 
   class Waiting(State):
     """
@@ -155,10 +152,12 @@ class ChainedDeploymentPolicy(PolicyFSM):
       stale and it should be reaped cleanly. This handler will mark the status
       as "Stalled" and go to next test.
       """
-      self.logger.warn('No activity while waiting for a marathon deployment to succeed')
-      self.logger.debug('This means that either marathon failed to deploy the request '
-        'on time, or that you haven\'t registered an observer that emmits a '
-        '`MarathonDeploymentSuccessEvent`.')
+      self.logger.warn(
+          'No activity while waiting for a marathon deployment to succeed')
+      self.logger.debug(
+          'This means that either marathon failed to deploy the request '
+          'on time, or that you haven\'t registered an observer that emmits a '
+          '`MarathonDeploymentSuccessEvent`.')
 
       # Set error status
       self.setStatus('STALLED')
@@ -179,7 +178,6 @@ class ChainedDeploymentPolicy(PolicyFSM):
 
       # Schedule next deployment
       self.goto(ChainedDeploymentPolicy.Deploy)
-
 
   class End(State):
     """

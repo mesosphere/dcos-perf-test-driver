@@ -9,6 +9,7 @@ from performance.driver.core.events import ParameterUpdateEvent
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings()
 
+
 class Request(Task):
   """
   Perform an arbitrary HTTP request as a single-shot task
@@ -81,19 +82,13 @@ class Request(Task):
       # Send request (and catch errors)
       self.logger.info('Performing HTTP %s to %s' % (verb, url))
       res = requests.request(
-        verb,
-        url,
-        verify=False,
-        data=body,
-        headers=headers
-      )
+          verb, url, verify=False, data=body, headers=headers)
 
       # Log error status codes
       self.logger.debug('Completed with HTTP %s' % res.status_code)
       if res.status_code < 200 or res.status_code >= 300:
-        self.logger.error('Endpoint at %s responded with HTTP %i' % (
-          url, res.status_code))
+        self.logger.error('Endpoint at %s responded with HTTP %i' %
+                          (url, res.status_code))
 
     except requests.exceptions.ConnectionError as e:
       self.logger.error('Unable to connect to %s' % url)
-

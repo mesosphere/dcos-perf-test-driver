@@ -4,8 +4,8 @@ from performance.driver.core.config import Configurable
 from performance.driver.core.events import MetricUpdateEvent
 from performance.driver.core.eventbus import EventBusSubscriber
 
-class Tracker(EventBusSubscriber, Configurable):
 
+class Tracker(EventBusSubscriber, Configurable):
   def __init__(self, config, eventbus, summarizer):
     Configurable.__init__(self, config)
     EventBusSubscriber.__init__(self, eventbus)

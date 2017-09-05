@@ -12,6 +12,7 @@ from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
+
 class CmdlineExitEvent(Event):
   """
   This event is published when the process launched through the cmdline channel
@@ -24,17 +25,20 @@ class CmdlineExitEvent(Event):
     #: The exit code of the application launched by the command-line channel
     self.exitcode = exitcode
 
+
 class CmdlineExitZeroEvent(CmdlineExitEvent):
   """
   This event is published when the process exited and the exit code
   is zero
   """
 
+
 class CmdlineExitNonzeroEvent(CmdlineExitEvent):
   """
   This event is published when the process exited and the exit code
   is non-zero
   """
+
 
 class CmdlineChannel(Channel):
   """
@@ -105,9 +109,10 @@ class CmdlineChannel(Channel):
     self.lastTraceId = None
 
     # Receive parameter updates and clean-up on teardown
-    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
-    self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent,))
-    self.eventbus.subscribe(self.handleStart, events=(StartEvent,))
+    self.eventbus.subscribe(
+        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent, ))
+    self.eventbus.subscribe(self.handleStart, events=(StartEvent, ))
 
     # Get some template
     self.cmdlineTpl = TemplateString(self.getConfig('cmdline'))
@@ -115,8 +120,8 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
 
-  @publishesHint(LogLineEvent, CmdlineExitEvent,
-    CmdlineExitZeroEvent, CmdlineExitNonzeroEvent)
+  @publishesHint(LogLineEvent, CmdlineExitEvent, CmdlineExitZeroEvent,
+                 CmdlineExitNonzeroEvent)
   def monitor(self, sourceName, proc, stdin=None):
     """
     Oversees the execution of the process
@@ -141,22 +146,25 @@ class CmdlineChannel(Channel):
 
         # While process is running, use `select` to wait for an stdout/err
         # FD event before reading.
-        (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr], [], [])
+        (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr], [],
+                                              [])
         if proc.stdout in rlist:
           block = proc.stdout.read(1024)
           lines[0] += block.decode('utf-8')
           while '\n' in lines[0]:
             (line, lines[0]) = lines[0].split('\n', 1)
-            self.eventbus.publish(LogLineEvent(line, sourceName, 'stdin',
-                                    traceid=self.lastTraceId))
+            self.eventbus.publish(
+                LogLineEvent(
+                    line, sourceName, 'stdin', traceid=self.lastTraceId))
 
         if proc.stderr in rlist:
           block = proc.stderr.read(1024)
           lines[1] += block.decode('utf-8')
           while '\n' in lines[1]:
             (line, lines[1]) = lines[1].split('\n', 1)
-            self.eventbus.publish(LogLineEvent(line, sourceName, 'stdout',
-                                    traceid=self.lastTraceId))
+            self.eventbus.publish(
+                LogLineEvent(
+                    line, sourceName, 'stdout', traceid=self.lastTraceId))
 
       else:
 
@@ -167,16 +175,18 @@ class CmdlineChannel(Channel):
           lines[0] += block.decode('utf-8')
           for line in lines[0].split('\n'):
             if line.strip():
-              self.eventbus.publish(LogLineEvent(line, sourceName, 'stdin',
-                                      traceid=self.lastTraceId))
+              self.eventbus.publish(
+                  LogLineEvent(
+                      line, sourceName, 'stdin', traceid=self.lastTraceId))
 
         block = proc.stderr.read()
         if block:
           lines[1] += block.decode('utf-8')
           for line in lines[0].split('\n'):
             if line.strip():
-              self.eventbus.publish(LogLineEvent(line, sourceName, 'stdout',
-                                      traceid=self.lastTraceId))
+              self.eventbus.publish(
+                  LogLineEvent(
+                      line, sourceName, 'stdout', traceid=self.lastTraceId))
 
         # Break loop
         break
@@ -188,11 +198,11 @@ class CmdlineChannel(Channel):
       # Dispatch the correct exit message
       self.logger.debug('Process exited with code %i' % proc.returncode)
       if proc.returncode == 0:
-        self.eventbus.publish(CmdlineExitZeroEvent(
-          proc.returncode, traceid=self.lastTraceId))
+        self.eventbus.publish(
+            CmdlineExitZeroEvent(proc.returncode, traceid=self.lastTraceId))
       else:
-        self.eventbus.publish(CmdlineExitNonzeroEvent(
-          proc.returncode, traceid=self.lastTraceId))
+        self.eventbus.publish(
+            CmdlineExitNonzeroEvent(proc.returncode, traceid=self.lastTraceId))
 
       # Relaunch if configured
       if self.getConfig('relaunch', True):
@@ -252,7 +262,14 @@ class CmdlineChannel(Channel):
     # Launch
     self.logger.debug('Starting process: \'%s\'' % ' '.join(args))
     self.activeParameters = parameters
-    proc = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env, cwd=cwd, preexec_fn=os.setsid)
+    proc = Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        cwd=cwd,
+        preexec_fn=os.setsid)
 
     # Launch a thread to monitor it's output
     thread = threading.Thread(target=self.monitor, args=(args[0], proc, stdin))

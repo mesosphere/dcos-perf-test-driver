@@ -5,10 +5,12 @@ import time
 from threading import Condition, Lock
 from queue import Queue, Empty
 
+
 class State:
   """
   A Finite State Machine state handler
   """
+
   def __init__(self, fsm):
     self._fsm = fsm
 
@@ -46,10 +48,12 @@ class State:
       return super().__setattr__(name, value)
     return setattr(self._fsm, name, value)
 
+
 class FSM:
   """
   A finite-state-machine implementation for the purposes of
   """
+
   def __init__(self):
     self.states = {}
     self.state = 'Start'
@@ -60,7 +64,8 @@ class FSM:
     self.logger = logging.getLogger('FSM<%s>' % type(self).__name__)
     self.lastTransitionTs = time.time()
 
-    for (stateName, stateClass) in inspect.getmembers(self, predicate=inspect.isclass):
+    for (stateName, stateClass) in inspect.getmembers(
+        self, predicate=inspect.isclass):
       if issubclass(stateClass, State):
         self.states[stateName] = stateClass(self)
 
@@ -85,7 +90,8 @@ class FSM:
     Switch FSM to the given state
     """
     if not issubclass(state, State):
-      raise TypeError('The state given to the goto function is not a State class')
+      raise TypeError(
+          'The state given to the goto function is not a State class')
 
     # Don't re-enter current state
     if state.__name__ == self.state:

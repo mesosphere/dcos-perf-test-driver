@@ -3,6 +3,7 @@ import time
 from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, MetricUpdateEvent
 
+
 class EventAttributeTracker(Tracker):
   """
   The *Event Value Tracker* is extracting a value of an attribute of an event
@@ -49,8 +50,9 @@ class EventAttributeTracker(Tracker):
     self.filter = eval("lambda event: %s" % config.get('filter', 'True'))
 
     # Register event handlers
-    self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
-    self.eventbus.subscribe(self.handleEvent, events=(config['event'],))
+    self.eventbus.subscribe(
+        self.handleParameterUpdateEvent, events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(self.handleEvent, events=(config['event'], ))
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -81,12 +83,9 @@ class EventAttributeTracker(Tracker):
 
       # Make sure we have that attribute
       if not hasattr(event, x['attrib']):
-        self.logger.warn('Event %s has no attribute %s' % (type(event).__name__, x['attrib']))
+        self.logger.warn('Event %s has no attribute %s' %
+                         (type(event).__name__, x['attrib']))
         continue
 
       # Track metric
-      self.trackMetric(
-        x['metric'],
-        getattr(event, x['attrib']),
-        traceids
-      )
+      self.trackMetric(x['metric'], getattr(event, x['attrib']), traceids)

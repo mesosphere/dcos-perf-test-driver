@@ -11,7 +11,8 @@ try:
 except ModuleNotFoundError:
   import logging
   logging.error('One or more libraries required by DataDogReporter were not'
-    'installed. The reporter will not work.')
+                'installed. The reporter will not work.')
+
 
 class DataDogReporter(Reporter):
   """
@@ -60,10 +61,9 @@ class DataDogReporter(Reporter):
 
     # Initialize DataDog API
     initialize(
-      api_key=config.get('api_key', None),
-      app_key=config.get('app_key', None),
-      hostname=config.get('hostname', socket.gethostname())
-    )
+        api_key=config.get('api_key', None),
+        app_key=config.get('app_key', None),
+        hostname=config.get('hostname', socket.gethostname()))
 
     # Get some configuration options
     prefix = config.get('prefix', 'dcos.perf.')
@@ -83,15 +83,15 @@ class DataDogReporter(Reporter):
 
       # Submit metrics and add all metadata as tags
       series.append({
-          "metric": '%s%s' % (prefix, point['name']),
-          "points": indicatorValues[point['indicator']],
-          "tags": list(
-            map(
-              lambda v: "%s:%s" % (v[0], str(v[1])),
-              self.getMeta().items()
-            )
-          )
-        })
+          "metric":
+          '%s%s' % (prefix, point['name']),
+          "points":
+          indicatorValues[point['indicator']],
+          "tags":
+          list(
+              map(lambda v: "%s:%s" % (v[0], str(v[1])), self.getMeta()
+                  .items()))
+      })
 
     # Send all series in one batch
     self.logger.info("Submitting series to datadog: %r" % series)

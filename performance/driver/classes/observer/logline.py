@@ -4,11 +4,13 @@ from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event, LogLineEvent
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
+
 class LogLineTokenMatchEvent(Event):
   def __init__(self, name, value, **kwargs):
     super().__init__(**kwargs)
     self.name = name
     self.value = value
+
 
 class LogLineObserver(Observer):
   """
@@ -68,7 +70,7 @@ class LogLineObserver(Observer):
       ))
 
     # Stop thread at teardown
-    self.eventbus.subscribe(self.handleLogLine, events=(LogLineEvent,))
+    self.eventbus.subscribe(self.handleLogLine, events=(LogLineEvent, ))
 
   @publishesHint(LogLineTokenMatchEvent)
   def handleLogLine(self, event):
@@ -81,16 +83,20 @@ class LogLineObserver(Observer):
 
       match = extractMatch.match(event.line)
       if not match:
-        self.logger.warn('Passed through line match, but did not find group match on line: "%s"' % event.line)
+        self.logger.warn(
+            'Passed through line match, but did not find group match on line: "%s"'
+            % event.line)
         continue
 
       if len(match.groups()) != len(groups):
-        self.logger.warn('Group count returned by the regex do not match group count defined in the config!')
+        self.logger.warn(
+            'Group count returned by the regex do not match group count defined in the config!'
+        )
         continue
 
       for i in range(0, len(groups)):
-        self.logger.debug('Found token %s=%s' % (groups[i], match.group(i+1)))
-        self.eventbus.publish(LogLineTokenMatchEvent(
-          groups[i], match.group(i+1),
-          traceid=event.traceids
-        ))
+        self.logger.debug('Found token %s=%s' % (groups[i],
+                                                 match.group(i + 1)))
+        self.eventbus.publish(
+            LogLineTokenMatchEvent(
+                groups[i], match.group(i + 1), traceid=event.traceids))

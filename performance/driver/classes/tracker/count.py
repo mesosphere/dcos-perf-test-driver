@@ -6,6 +6,7 @@ from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, T
 from performance.driver.core.eventfilters import EventFilter
 from queue import Queue, Empty
 
+
 class CountTrackerSession:
   """
   A tracking session
@@ -30,11 +31,7 @@ class CountTrackerSession:
     self.eventFilter.finalize()
 
     # Track metric
-    self.tracker.trackMetric(
-      self.tracker.metric,
-      self.counter,
-      self.traceids
-    )
+    self.tracker.trackMetric(self.tracker.metric, self.counter, self.traceids)
 
 
 class CountTracker(Tracker):

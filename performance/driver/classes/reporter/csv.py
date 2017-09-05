@@ -1,5 +1,6 @@
 from performance.driver.core.classes import Reporter
 
+
 class CSVColumn:
   def __init__(self, name, csvfile):
     self.csvfile = csvfile
@@ -8,6 +9,7 @@ class CSVColumn:
 
   def set(self, value):
     self.rows[self.csvfile.rows - 1] = value
+
 
 class CSVFile:
   def __init__(self):
@@ -48,6 +50,7 @@ class CSVFile:
         for col in self.cols:
           row += col.rows[i] + separator
         f.write("%s\n" % row)
+
 
 class CSVReporter(Reporter):
   """
@@ -116,7 +119,8 @@ class CSVReporter(Reporter):
         for summarizer, value in summarizedValues.items():
           if type(value) in (list, tuple):
             csv.col('%s (%s)' % (metric, summarizer)).set(str(value[0]))
-            csv.col('%s (%s - error)' % (metric, summarizer)).set(str(value[1]))
+            csv.col('%s (%s - error)' % (metric,
+                                         summarizer)).set(str(value[1]))
           else:
             csv.col('%s (%s)' % (metric, summarizer)).set(str(value))
 
@@ -127,6 +131,4 @@ class CSVReporter(Reporter):
     # Dump csv file
     config = self.getRenderedConfig()
     csv.saveTo(
-      config.get('filename', 'results.csv'),
-      config.get('separator', ',')
-    )
+        config.get('filename', 'results.csv'), config.get('separator', ','))

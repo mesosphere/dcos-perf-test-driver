@@ -1,8 +1,8 @@
 import time
 from performance.driver.core.classes import PolicyFSM, State
 
-class SingleDeploymentPolicy(PolicyFSM):
 
+class SingleDeploymentPolicy(PolicyFSM):
   class Start(State):
     """
     Entry point state

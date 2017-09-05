@@ -3,6 +3,7 @@ import logging
 from performance.driver.core.config import Configurable
 from performance.driver.core.eventbus import EventBusSubscriber
 
+
 class Reporter(Configurable, EventBusSubscriber):
   """
   A Reporter takes care of passing down the final results
@@ -23,6 +24,7 @@ class Reporter(Configurable, EventBusSubscriber):
     Extract data from the summarizer and dump it to the reporter
     """
     pass
+
 
 class ConsoleReporter(Reporter):
   """

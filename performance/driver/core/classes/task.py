@@ -3,6 +3,7 @@ import logging
 from performance.driver.core.config import Configurable
 from performance.driver.core.eventbus import EventBusSubscriber
 
+
 class Task(EventBusSubscriber, Configurable):
   """
   A Task is an arbitrary piece of python code that executes a stand-alone

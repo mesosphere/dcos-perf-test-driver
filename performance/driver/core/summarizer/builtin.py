@@ -2,7 +2,8 @@ from collections import Counter
 from .timeseries import SummarizerAxisTimeseries
 from .util import confidence_interval
 
-def sum(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def sum(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Summarize the values of the given timeseries
   """
@@ -12,7 +13,8 @@ def sum(timeseries:SummarizerAxisTimeseries, param:dict):
 
   return v_sum
 
-def min(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def min(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Get the minimum of the values
   """
@@ -26,7 +28,8 @@ def min(timeseries:SummarizerAxisTimeseries, param:dict):
 
   return v_min
 
-def max(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def max(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Get the maximum of the values
   """
@@ -40,7 +43,8 @@ def max(timeseries:SummarizerAxisTimeseries, param:dict):
 
   return v_max
 
-def mean(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def mean(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Calculate the mean of the timeseries
   """
@@ -54,16 +58,18 @@ def mean(timeseries:SummarizerAxisTimeseries, param:dict):
     return 0
   return v_mean / count
 
-def median(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def median(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Calculate the median of the timeseries
   """
   values = sorted(list(map(lambda v: v[1], timeseries.values)))
 
   # Return middle value
-  return values[round(len(values)/2)]
+  return values[round(len(values) / 2)]
 
-def mode(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def mode(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Calculate the mode of the timeseries
   """
@@ -73,7 +79,8 @@ def mode(timeseries:SummarizerAxisTimeseries, param:dict):
   data = Counter(values)
   return data.most_common(1)[0][0]
 
-def variance(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def variance(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Calculate the variance of the timeseries
   """
@@ -82,7 +89,7 @@ def variance(timeseries:SummarizerAxisTimeseries, param:dict):
   # Calculate variance
   v_variance = 0
   for ts, value in timeseries.values():
-    v_variance = (value - v_mean) ** 2
+    v_variance = (value - v_mean)**2
 
   # Average
   v_variance = len(timeseries.values)
@@ -90,13 +97,15 @@ def variance(timeseries:SummarizerAxisTimeseries, param:dict):
     return 0
   return mean / v_variance
 
-def sdeviation(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def sdeviation(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Calculate the standard deviation
   """
   return sqrt(variance(timeseries))
 
-def mean_err(timeseries:SummarizerAxisTimeseries, param:dict):
+
+def mean_err(timeseries: SummarizerAxisTimeseries, param: dict):
   """
   Calculate the sample mean, including confidence interval
   """

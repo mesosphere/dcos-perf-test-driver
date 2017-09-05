@@ -7,10 +7,11 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.classes.observer.logline import LogLineTokenMatchEvent
 
 TYPE_TRANSFORMATIONS = {
-  'int': lambda v: int(v),
-  'float': lambda v: float(v),
-  'str': lambda v: str(v)
+    'int': lambda v: int(v),
+    'float': lambda v: float(v),
+    'str': lambda v: str(v)
 }
+
 
 class LogLineTokenTracker(Tracker):
   """
@@ -52,13 +53,13 @@ class LogLineTokenTracker(Tracker):
       typeCastFnName = token.get('type', None)
       if typeCastFnName:
         if not typeCastFnName in TYPE_TRANSFORMATIONS:
-          raise ValueError('Unknown type transformation %s for token %s'
-            % (typeCastFnName, token['token']))
+          raise ValueError('Unknown type transformation %s for token %s' %
+                           (typeCastFnName, token['token']))
 
         self.tokenCastFn[token['token']] = TYPE_TRANSFORMATIONS[typeCastFnName]
 
-
-    self.eventbus.subscribe(self.handleLogLineTokenMatchEvent, events=(LogLineTokenMatchEvent,))
+    self.eventbus.subscribe(
+        self.handleLogLineTokenMatchEvent, events=(LogLineTokenMatchEvent, ))
 
   def handleLogLineTokenMatchEvent(self, event):
     """
@@ -69,9 +70,5 @@ class LogLineTokenTracker(Tracker):
       return
 
     # Track metric
-    self.trackMetric(
-      self.tokens[event.name],
-      self.tokenCastFn[event.name](event.value),
-      event.traceids
-    )
-
+    self.trackMetric(self.tokens[event.name],
+                     self.tokenCastFn[event.name](event.value), event.traceids)

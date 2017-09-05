@@ -3,7 +3,8 @@ from performance.driver.core.events import isEventMatching
 
 DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
-DSL_FLAGS  = re.compile(r'\:([^\:]+)')
+DSL_FLAGS = re.compile(r'\:([^\:]+)')
+
 
 class EventFilterSession:
   """
@@ -65,10 +66,13 @@ class EventFilterSession:
       self.callback(self.foundEvent)
 
   def __str__(self):
-    return '<Session[%s], traceid=%r>' % (self.filter.expression, self.traceids)
+    return '<Session[%s], traceid=%r>' % (self.filter.expression,
+                                          self.traceids)
 
   def __repr__(self):
-    return '<Session[%s], traceid=%r>' % (self.filter.expression, self.traceids)
+    return '<Session[%s], traceid=%r>' % (self.filter.expression,
+                                          self.traceids)
+
 
 class EventFilter:
   """
@@ -158,10 +162,10 @@ class EventFilter:
     matches = DSL_TOKENS.findall(expression)
     if not matches:
       raise ValueError('The given expression "%s" is not a valid event '
-        'filter DSL' % expression)
+                       'filter DSL' % expression)
 
     # Process event matches
-    self.events =[]
+    self.events = []
     for (event, exprAttrib, flags) in matches:
 
       # Process sub-tokens
@@ -178,23 +182,22 @@ class EventFilter:
 
           # Handle loose regex match
           if op == "~=":
-            attrib.append(eval(
-              'lambda event: not regex.search(str(event.%s)) is None' % (left,),
-              {'regex': re.compile(right)}
-            ))
+            attrib.append(
+                eval('lambda event: not regex.search(str(event.%s)) is None' %
+                     (left, ), {'regex': re.compile(right)}))
 
           # Handle exact regex match
           elif op == "~==":
-            attrib.append(eval(
-              'lambda event: not regex.match(str(event.%s)) is None' % (left,),
-              {'regex': re.compile(right)}
-            ))
+            attrib.append(
+                eval('lambda event: not regex.match(str(event.%s)) is None' % (
+                    left, ), {'regex': re.compile(right)}))
 
           # Handle operator match
           else:
             if not right.isnumeric():
               right = '"%s"' % right.replace('"', '\\"')
-            attrib.append(eval('lambda event: event.%s %s %s' % (left, op, right)))
+            attrib.append(
+                eval('lambda event: event.%s %s %s' % (left, op, right)))
 
       # Collect flags
       self.events.append((event, attrib, flags))
@@ -206,7 +209,7 @@ class EventFilter:
     return EventFilterSession(self, traceids, callback)
 
   def __str__(self):
-    return '<Filter[%s]>' % (self.expression,)
+    return '<Filter[%s]>' % (self.expression, )
 
   def __repr__(self):
-    return '<Filter[%s]>' % (self.expression,)
+    return '<Filter[%s]>' % (self.expression, )

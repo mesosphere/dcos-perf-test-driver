@@ -1,6 +1,7 @@
 import time
 import requests
 
+
 def is_accessible(url, timeout=1, headers=None, status_code=None):
   """
   Try to access the given endpoint and return True if the endpointn
@@ -22,6 +23,7 @@ def is_accessible(url, timeout=1, headers=None, status_code=None):
   except Exception as e:
     return False
 
+
 def wait_till_accessible(url, timeout=60, headers=None):
   """
   Wait until the endpoint is accessible
@@ -37,4 +39,5 @@ def wait_till_accessible(url, timeout=60, headers=None):
     time.sleep(1)
 
   # Timed out, raise exception
-  raise RuntimeError('Timed out after %i seconds, waiting for %s' % (timeout, url))
+  raise RuntimeError('Timed out after %i seconds, waiting for %s' % (timeout,
+                                                                     url))

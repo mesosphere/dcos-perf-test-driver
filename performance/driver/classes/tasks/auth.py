@@ -9,6 +9,7 @@ from performance.driver.core.events import ParameterUpdateEvent
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings()
 
+
 class AuthEE(Task):
   """
   Authenticate against an Enterprise-Edition cluster
@@ -39,10 +40,7 @@ class AuthEE(Task):
 
   def run(self):
     config = self.getRenderedConfig()
-    credentials = {
-      'uid': config['user'],
-      'password': config['password']
-    }
+    credentials = {'uid': config['user'], 'password': config['password']}
 
     # Get cluster
     if 'cluster_url' in config:
@@ -54,13 +52,16 @@ class AuthEE(Task):
 
     # Try to login
     self.logger.info('Authenticating to cluster')
-    response = requests.post('%s/acs/api/v1/auth/login' % cluster, json=credentials, verify=False)
+    response = requests.post(
+        '%s/acs/api/v1/auth/login' % cluster, json=credentials, verify=False)
     if response.status_code != 200:
-      raise RuntimeError('Unable to authenticate on the cluster with the given credentials')
+      raise RuntimeError(
+          'Unable to authenticate on the cluster with the given credentials')
 
     # Get token
     self.setDefinition('dcos_auth_token', response.json()['token'])
     self.logger.info('Authenticated as `%s`' % credentials['uid'])
+
 
 class AuthOpen(Task):
   """
@@ -89,9 +90,7 @@ class AuthOpen(Task):
 
   def run(self):
     config = self.getRenderedConfig()
-    credentials = {
-      'token': config['token']
-    }
+    credentials = {'token': config['token']}
 
     # Get cluster
     if 'cluster_url' in config:
@@ -103,9 +102,11 @@ class AuthOpen(Task):
 
     # Try to login
     self.logger.info('Authenticating to cluster')
-    response = requests.post('%s/acs/api/v1/auth/login' % cluster, json=credentials, verify=False)
+    response = requests.post(
+        '%s/acs/api/v1/auth/login' % cluster, json=credentials, verify=False)
     if response.status_code != 200:
-      raise RuntimeError('Unable to authenticate on the cluster with the given credentials')
+      raise RuntimeError(
+          'Unable to authenticate on the cluster with the given credentials')
 
     # Get token
     self.setDefinition('dcos_auth_token', response.json()['token'])
