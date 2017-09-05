@@ -67,7 +67,7 @@ class MarathonLogsObserver(Observer):
     # TODO: Ideally we would need to parse the marathon logs and find the
     # deployments and the apps affected. However since we are using
     # a multi-threading processing it's possible to receive log lines
-    # out-of-band and we will need some complicated logic in order to
+    # out-of-order and we will need some complicated logic in order to
     # align it and process it.
 
   def handleHTTPRequestStart(self, event):
