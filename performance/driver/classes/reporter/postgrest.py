@@ -54,7 +54,6 @@ class PostgRESTReporter(Reporter):
     # Check for HTTP response codes
     if not r.status_code in acceptStatus and \
       (r.status_code < 200 or r.status_code >= 300):
-      print(data)
       self.logger.warn('Unable to insert into %s table (Unexpected HTTP response %i)' % (table, r.status_code))
       return False
 
