@@ -26,12 +26,12 @@ class MultivariableExplorerPolicy(PolicyFSM):
             type: discreet
             values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
 
-          # A "scalar" parameter takes any value within a numerical range
+          # A "sample" parameter takes any value within a numerical range
           size:
-            type: scalar
+            type: sample
             min: 0 # Default
             max: 1 # Default
-            step: 0.1 # Default
+            step: 1 # Default
             samples: 10 # Default
 
         # The event binding configuration
@@ -105,17 +105,18 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = 0
       self.progressCurrent = 0
       self.eventsRemaining = 0
+      self.startEvent = False
 
       # Compose permutation matrix
       renderdConfig = self.getRenderedConfig()
       matrix = renderdConfig.get('matrix')
       for key, config in matrix.items():
         self.parameterNames.append(key)
-        v_type = config.get('type', 'scalar')
+        v_type = config.get('type', 'sample')
 
-        # Sample of scalar values values
-        if v_type == 'scalar':
-          v_step = config.get('step', 0.1)
+        # Sample of sample values values
+        if v_type == 'sample':
+          v_step = config.get('step', 1)
           v_min = config.get('min', 0.0)
           v_max = config.get('max', 1.0)
           v_samples = config.get('samples', 10)
@@ -252,6 +253,9 @@ class MultivariableExplorerPolicy(PolicyFSM):
       Process all relevant events
       """
       if not event.hasTrace(self.traceid):
+        for ev, status in self.signalEvents.items():
+          if isEventMatching(event, ev):
+            self.logger.error('Untracked terminal event!!!')
         return
 
       # Check if this event is a success or a failure trigger
