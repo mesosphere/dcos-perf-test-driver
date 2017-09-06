@@ -7,8 +7,8 @@ from performance.driver.core.reflection import subscribesToHint
 from performance.driver.core.eventbus import EventBusSubscriber
 from threading import Lock
 
-class Summarizer(EventBusSubscriber):
 
+class Summarizer(EventBusSubscriber):
   @subscribesToHint(ParameterUpdateEvent, FlagUpdateEvent)
   def __init__(self, eventbus, config):
     """
@@ -24,10 +24,12 @@ class Summarizer(EventBusSubscriber):
 
     # Every time we have a ParameterUpdateEvent we construct a new axis
     # and we track the traceids
-    self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
+    self.eventbus.subscribe(
+        self.handleParameterUpdateEvent, events=(ParameterUpdateEvent, ))
 
     # Every time a flag gets updated, the respective axis flags should be updated
-    self.eventbus.subscribe(self.handleFlagUpdateEvent, events=(FlagUpdateEvent,))
+    self.eventbus.subscribe(
+        self.handleFlagUpdateEvent, events=(FlagUpdateEvent, ))
 
   def raw(self):
     """
@@ -36,9 +38,9 @@ class Summarizer(EventBusSubscriber):
     data = []
     for axis in self.axes:
       data.append({
-        "parameters": axis.parameters,
-        "values": axis.raw(),
-        "flags": axis.flags
+          "parameters": axis.parameters,
+          "values": axis.raw(),
+          "flags": axis.flags
       })
 
     return data
@@ -50,9 +52,9 @@ class Summarizer(EventBusSubscriber):
     data = []
     for axis in self.axes:
       data.append({
-        "parameters": axis.parameters,
-        "values": axis.sum(),
-        "flags": axis.flags
+          "parameters": axis.parameters,
+          "values": axis.sum(),
+          "flags": axis.flags
       })
 
     return data
@@ -81,7 +83,7 @@ class Summarizer(EventBusSubscriber):
     with self.axisLookupMutex:
       for traceid in event.traceids:
         if traceid in self.axisLookup:
-          self.axisLookup[traceid].flag(event.name ,event.value)
+          self.axisLookup[traceid].flag(event.name, event.value)
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -126,7 +128,7 @@ class Summarizer(EventBusSubscriber):
     """
     Track a change in the metric
     """
-    self.logger.info('Metric %s changed to %s' % (name, str(value)))
+    self.logger.info('Metric {} changed to {}'.format(name, str(value)))
 
     # Locate the axis that can track the metric update
     axis = None
@@ -138,9 +140,9 @@ class Summarizer(EventBusSubscriber):
 
     # We cannot continue without axis
     if axis is None:
-      self.logger.error('Unable to find related axis to the received metric update')
+      self.logger.error(
+          'Unable to find related axis to the received metric update')
       return
 
     # Push the parameter in the timeseries of the correct axis
     axis.push(name, value)
-

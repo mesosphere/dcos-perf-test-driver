@@ -3,6 +3,7 @@ import time
 from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, MetricUpdateEvent
 
+
 class DumpMetricTracker(Tracker):
   """
   The *Dump Metric Tracker* is dumping metrics collected by observers into
@@ -31,8 +32,10 @@ class DumpMetricTracker(Tracker):
     super().__init__(*args, **kwargs)
     self.activeTraceids = None
 
-    self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
-    self.eventbus.subscribe(self.handleMetricUpdateEvent, events=(MetricUpdateEvent,))
+    self.eventbus.subscribe(
+        self.handleParameterUpdateEvent, events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(
+        self.handleMetricUpdateEvent, events=(MetricUpdateEvent, ))
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -51,12 +54,8 @@ class DumpMetricTracker(Tracker):
 
     # Don't track anything until we have a parameter update first
     if self.activeTraceids is None:
-        return
+      return
 
     # Map parameter to value
     if event.name in mapping:
-      self.trackMetric(
-        mapping[event.name],
-        event.value,
-        self.activeTraceids
-      )
+      self.trackMetric(mapping[event.name], event.value, self.activeTraceids)

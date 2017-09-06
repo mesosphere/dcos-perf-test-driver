@@ -9,6 +9,7 @@ from .template import TemplateDict
 # TODO: Make @ expand to `performance.driver.core.classes`
 # TODO: Make MetricConfig use ComponentConfig
 
+
 def mergeConfig(source, destination):
   """
   Merges `source` object into `destination`.
@@ -26,6 +27,7 @@ def mergeConfig(source, destination):
       destination[key] = value
   return destination
 
+
 def loadConfigFile(filename):
   """
   Load just a single YAML configuration file
@@ -35,7 +37,8 @@ def loadConfigFile(filename):
 
   # Validate
   if not config:
-    raise ValueError('This configuration file contains no meaningful information')
+    raise ValueError(
+        'This configuration file contains no meaningful information')
 
   # Process includes
   includes = []
@@ -46,7 +49,7 @@ def loadConfigFile(filename):
     # Load includes
     for path in includes:
       if path[0] != '/':
-        path = '%s/%s' % (os.path.dirname(filename), path)
+        path = '{}/{}'.format(os.path.dirname(filename), path)
       path = os.path.abspath(path)
 
       # Merge every include in the root path
@@ -55,6 +58,7 @@ def loadConfigFile(filename):
 
   # Return config
   return config
+
 
 def loadConfig(filename):
   """
@@ -67,6 +71,7 @@ def loadConfig(filename):
     return config
   else:
     return loadConfigFile(filename)
+
 
 class DefinitionsDict(TemplateDict):
   """
@@ -84,6 +89,7 @@ class DefinitionsDict(TemplateDict):
 
     return DefinitionsDict(copyDict)
 
+
 class ComponentConfig(dict):
   """
   A component config handles configuration sections in the following form:
@@ -92,7 +98,7 @@ class ComponentConfig(dict):
     ... props
   """
 
-  def __init__(self, config:dict, rootConfig, path:str):
+  def __init__(self, config: dict, rootConfig, path: str):
     super().__init__(config)
     self.logger = logging.getLogger('ComponentConfig')
     self.rootConfig = rootConfig
@@ -101,7 +107,8 @@ class ComponentConfig(dict):
     self.path = path
 
     if not 'class' in config:
-      raise TypeError('Missing required \'class\' property in the component config')
+      raise TypeError(
+          'Missing required \'class\' property in the component config')
 
   def instance(self, *args, **kwargs):
     """
@@ -110,22 +117,25 @@ class ComponentConfig(dict):
 
     # De-compose class path to module and class name
     if self['class'][0] == "@":
-      classPath = 'performance.driver.core.classes.%s' % self['class'][1:]
+      classPath = 'performance.driver.core.classes.{}'.format(
+          self['class'][1:])
     else:
-      classPath = 'performance.driver.classes.%s' % self['class']
-    self.logger.debug('Instantiating %s' % classPath)
+      classPath = 'performance.driver.classes.{}'.format(self['class'])
+    self.logger.debug('Instantiating {}'.format(classPath))
 
     pathComponents = classPath.split('.')
     className = pathComponents.pop()
     modulePath = '.'.join(pathComponents)
 
     # Get a reference to the class type
-    self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className, modulePath))
+    self.logger.debug(
+        'Looking for \'{}\' in module \'{}\''.format(className, modulePath))
     module = importlib.import_module(modulePath)
     classType = getattr(module, className)
 
     # Instantiate with the config class as first argument
     return classType(self, *args, **kwargs)
+
 
 class Configurable:
   """
@@ -133,7 +143,7 @@ class Configurable:
   channels, observers and policies.
   """
 
-  def __init__(self, config:ComponentConfig):
+  def __init__(self, config: ComponentConfig):
     self.config = config
 
   def getRenderedConfig(self, macros={}):
@@ -155,7 +165,7 @@ class Configurable:
   def getConfig(self, key, default=None, required=True):
     if not key in self.config:
       if required and default is None:
-        raise KeyError('%s.%s' % (self.config.path, key))
+        raise KeyError('{}.{}'.format(self.config.path, key))
     return self.config.get(key, default)
 
   def hasConfig(self, name):
@@ -175,12 +185,13 @@ class Configurable:
   def setDefinition(self, key, value):
     self.config.definitions[key] = value
 
+
 class MetricConfig:
   """
   Configuration class for the metrics
   """
 
-  def __init__(self, metricConfig:dict):
+  def __init__(self, metricConfig: dict):
     # Process config
     self.logger = logging.getLogger('MetricConfig')
     self.config = metricConfig
@@ -190,10 +201,7 @@ class MetricConfig:
     # Extract summarizer configuration
     for summ in metricConfig.get('summarize', []):
       if type(summ) is str:
-        summ = {
-          "class": "@%s" % summ,
-          "name": summ
-        }
+        summ = {"class": "@{}".format(summ), "name": summ}
 
       # Collect summarizer config
       self.summarizers.append(summ)
@@ -215,15 +223,16 @@ class MetricConfig:
       if summConfig['class'][0] == "@":
         classPath = 'performance.driver.core.classes.summarizer.BuiltInSummarizer'
       else:
-        classPath = 'performance.driver.classes.%s' % summConfig['class']
-      self.logger.debug('Instantiating %s' % classPath)
+        classPath = 'performance.driver.classes.{}'.format(summConfig['class'])
+      self.logger.debug('Instantiating {}'.format(classPath))
 
       pathComponents = classPath.split('.')
       className = pathComponents.pop()
       modulePath = '.'.join(pathComponents)
 
       # Get a reference to the class type
-      self.logger.debug('Looking for \'%s\' in module \'%s\'' % (className, modulePath))
+      self.logger.debug(
+          'Looking for \'{}\' in module \'{}\''.format(className, modulePath))
       module = importlib.import_module(modulePath)
       classType = getattr(module, className)
 
@@ -233,12 +242,13 @@ class MetricConfig:
     # Return summarizer instances
     return self.summarizersInstanes
 
+
 class GeneralConfig:
   """
   General configuration class contains the test-wide configuration parameters
   """
 
-  def __init__(self, generalConfig:dict, rootConfig):
+  def __init__(self, generalConfig: dict, rootConfig):
     # Process metrics
     self.logger = logging.getLogger('GeneralConfig')
     self.metrics = {}
@@ -255,7 +265,7 @@ class GeneralConfig:
     # Process definition configuration
     self.definitions = {}
     for definition in generalConfig.get('definitions', []):
-      if not 'required'in definition:
+      if not 'required' in definition:
         definition['required'] = False
       self.definitions[definition['name']] = definition
 
@@ -263,10 +273,7 @@ class GeneralConfig:
     self.indicators = {}
     for indicator in generalConfig.get('indicators', []):
       self.indicators[indicator['name']] = ComponentConfig(
-        indicator,
-        rootConfig,
-        'config.indicators'
-      )
+          indicator, rootConfig, 'config.indicators')
 
     # Process metadata
     self.meta = generalConfig.get('meta', {})
@@ -283,12 +290,13 @@ class GeneralConfig:
     # Populate timeouts
     self.staleTimeout = generalConfig.get('staleTimeout', 600)
 
+
 class RootConfig:
   """
   Root configuration section
   """
 
-  def __init__(self, config:dict):
+  def __init__(self, config: dict):
     self.logger = logging.getLogger('RootConfig')
     self.config = config
     self.definitions = DefinitionsDict(config.get('define', {}))
@@ -300,57 +308,44 @@ class RootConfig:
     """
     self.definitions.update(cmdlineDefinitions)
     self.definitions = DefinitionsDict(
-      self.definitions.apply(
-        self.definitions.fork(
-          dict([('meta:' + kv[0], kv[1]) for kv in self.meta.items()])
-        )
-      )
-    )
+        self.definitions.apply(
+            self.definitions.fork(
+                dict([('meta:' + kv[0], kv[1]) for kv in self.meta.items()]))))
 
   def policies(self):
     """
     Return all policies in the config
     """
-    return map(
-      lambda c: ComponentConfig(c, self, 'policies'),
-      self.config.get('policies', [])
-    )
+    return map(lambda c: ComponentConfig(c, self, 'policies'),
+               self.config.get('policies', []))
 
   def channels(self):
     """
     Return all channels in the config
     """
-    return map(
-      lambda c: ComponentConfig(c, self, 'channels'),
-      self.config.get('channels', [])
-    )
+    return map(lambda c: ComponentConfig(c, self, 'channels'),
+               self.config.get('channels', []))
 
   def observers(self):
     """
     Return all observers in the config
     """
-    return map(
-      lambda c: ComponentConfig(c, self, 'observers'),
-      self.config.get('observers', [])
-    )
+    return map(lambda c: ComponentConfig(c, self, 'observers'),
+               self.config.get('observers', []))
 
   def trackers(self):
     """
     Return all trackers in the config
     """
-    return map(
-      lambda c: ComponentConfig(c, self, 'trackers'),
-      self.config.get('trackers', [])
-    )
+    return map(lambda c: ComponentConfig(c, self, 'trackers'),
+               self.config.get('trackers', []))
 
   def tasks(self):
     """
     Return all tasks in the config
     """
-    return map(
-      lambda c: ComponentConfig(c, self, 'tasks'),
-      self.config.get('tasks', [])
-    )
+    return map(lambda c: ComponentConfig(c, self, 'tasks'),
+               self.config.get('tasks', []))
 
   def reporters(self):
     """
@@ -360,18 +355,12 @@ class RootConfig:
 
     if len(reporters) == 0:
       self.logger.warn('Missing `reporters` config section. Using defaults')
-      reporters = [
-        { "class": "@reporter.ConsoleReporter" }
-      ]
+      reporters = [{"class": "@reporter.ConsoleReporter"}]
 
-    return map(
-      lambda c: ComponentConfig(c, self, 'reporters'),
-      reporters
-    )
+    return map(lambda c: ComponentConfig(c, self, 'reporters'), reporters)
 
   def general(self):
     """
     Return the general config section
     """
     return GeneralConfig(self.config.get('config', {}), self)
-

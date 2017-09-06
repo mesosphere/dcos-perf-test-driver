@@ -17,66 +17,84 @@ from queue import Queue
 # MarathonEvent
 ################################################################################
 
+
 class MarathonEvent(Event):
   pass
+
 
 class MarathonStartedEvent(MarathonEvent):
   pass
 
+
 ################################################################################
 # MarathonEvent -> MarathonAPIEvent
 ################################################################################
+
 
 class MarathonAPIEvent(Event):
   def __init__(self, data, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.data = data
 
+
 class MarathonAPIPostEvent(MarathonAPIEvent):
   pass
+
 
 class MarathonStatusUpdateEvent(MarathonAPIEvent):
   pass
 
+
 class MarathonFrameworkMessageEvent(MarathonAPIEvent):
   pass
+
 
 class MarathonSubscribeEvent(MarathonAPIEvent):
   pass
 
+
 class MarathonUnsubscribeEvent(MarathonAPIEvent):
   pass
+
 
 ################################################################################
 # MarathonEvent -> MarathonAPIEvent -> MarathonDeploymentEvent
 ################################################################################
+
 
 class MarathonDeploymentEvent(MarathonAPIEvent):
   def __init__(self, deployment, data, *args, **kwargs):
     super().__init__(data, *args, **kwargs)
     self.deployment = deployment
 
+
 class MarathonDeploymentSuccessEvent(MarathonDeploymentEvent):
   def __init__(self, deployment, data, *args, **kwargs):
     super().__init__(deployment, data, *args, **kwargs)
+
 
 class MarathonDeploymentFailedEvent(MarathonDeploymentEvent):
   def __init__(self, deployment, data, *args, **kwargs):
     super().__init__(deployment, data, *args, **kwargs)
 
+
 class MarathonDeploymentStepSuccessEvent(MarathonDeploymentEvent):
   def __init__(self, deployment, data, *args, **kwargs):
     super().__init__(deployment, data, *args, **kwargs)
+
 
 class MarathonDeploymentStepFailureEvent(MarathonDeploymentEvent):
   def __init__(self, deployment, data, *args, **kwargs):
     super().__init__(deployment, data, *args, **kwargs)
 
+
 class MarathonDeploymentInfoEvent(MarathonDeploymentEvent):
   def __init__(self, deployment, data, *args, **kwargs):
     super().__init__(deployment, data, *args, **kwargs)
 
+
 ################################################################################
+
 
 class MarathonEventsObserver(Observer):
   """
@@ -141,15 +159,17 @@ class MarathonEventsObserver(Observer):
 
     # When an HTTP request is initiated, get the application name and use this
     # as the means of linking the traceids to the source
-    self.eventbus.subscribe(self.handleHttpRequest, events=(HTTPRequestStartEvent,), order=2)
+    self.eventbus.subscribe(
+        self.handleHttpRequest, events=(HTTPRequestStartEvent, ), order=2)
 
     # Also subscribe to the teardown event in order to cleanly stop the event
     # handling thread. The order=2 here is ensuring that the `running` flag is
     # set to `False` before marathon thread is killed.
-    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,), order=2)
+    self.eventbus.subscribe(
+        self.handleTeardownEvent, events=(TeardownEvent, ), order=2)
 
     # Also subscribe to the setup event in order to start the polling loop.
-    self.eventbus.subscribe(self.handleStartEvent, events=(StartEvent,))
+    self.eventbus.subscribe(self.handleStartEvent, events=(StartEvent, ))
 
   def handleHttpRequest(self, event):
     """
@@ -158,7 +178,8 @@ class MarathonEventsObserver(Observer):
     """
 
     # App deployment or modification
-    if ('/v2/apps' in event.url) and (event.verb in ('delete', 'post', 'put', 'patch')):
+    if ('/v2/apps' in event.url) and (event.verb in ('delete', 'post', 'put',
+                                                     'patch')):
       try:
         body = json.loads(event.body)
         self.instanceTraceIDs[body['id']] = event.traceids
@@ -166,15 +187,17 @@ class MarathonEventsObserver(Observer):
         self.logger.exception(e)
 
     # Pod deployment or modification
-    elif ('/v2/pods' in event.url) and (event.verb in ('delete', 'post', 'put', 'patch')):
+    elif ('/v2/pods' in event.url) and (event.verb in ('delete', 'post', 'put',
+                                                       'patch')):
       # TODO: Implement
       raise NotImplementedError('Cannot trace the event ID of pod deployment')
 
     # Group deployment or modification
-    elif ('/v2/groups' in event.url) and (event.verb in ('delete', 'post', 'put', 'patch')):
+    elif ('/v2/groups' in event.url) and (event.verb in ('delete', 'post',
+                                                         'put', 'patch')):
       # TODO: Implement
-      raise NotImplementedError('Cannot trace the event ID of group deployment')
-
+      raise NotImplementedError(
+          'Cannot trace the event ID of group deployment')
 
   # @publishesHint(MarathonStartedEvent)
   # def handleLogLineEvent(self, event):
@@ -214,11 +237,13 @@ class MarathonEventsObserver(Observer):
     """
 
     # Start the event reader thread
-    self.eventReceiverThread = threading.Thread(target=self.eventReceiverHandler)
+    self.eventReceiverThread = threading.Thread(
+        target=self.eventReceiverHandler)
     self.eventReceiverThread.start()
 
     # Start the event emmiter thread
-    self.eventEmitterThread = threading.Thread(target=self.eventEmitterThreadHandler)
+    self.eventEmitterThread = threading.Thread(
+        target=self.eventEmitterThreadHandler)
     self.eventEmitterThread.start()
 
   # def getAffectedAppIDs(self, data):
@@ -312,7 +337,7 @@ class MarathonEventsObserver(Observer):
         continue
 
       # Dispatch raw event
-      self.logger.debug('Received event %s: %r' % (eventName, eventData))
+      self.logger.debug('Received event {}: {}'.format(eventName, eventData))
       self.eventbus.publish(MarathonAPIEvent(eventData))
 
       # Get the affected IDs
@@ -323,32 +348,40 @@ class MarathonEventsObserver(Observer):
       #
       if eventName == 'deployment_step_success':
         deploymentId = eventData['plan']['id']
-        self.eventbus.publish(MarathonDeploymentStepSuccessEvent(deploymentId, eventData,
-          traceid=self.getTraceIDs(affectedIDs)))
+        self.eventbus.publish(
+            MarathonDeploymentStepSuccessEvent(
+                deploymentId, eventData, traceid=self.getTraceIDs(
+                    affectedIDs)))
 
       #
       # deployment_step_failure
       #
       elif eventName == 'deployment_step_failure':
         deploymentId = eventData['plan']['id']
-        self.eventbus.publish(MarathonDeploymentStepFailureEvent(deploymentId, eventData,
-          traceid=self.getTraceIDs(affectedIDs)))
+        self.eventbus.publish(
+            MarathonDeploymentStepFailureEvent(
+                deploymentId, eventData, traceid=self.getTraceIDs(
+                    affectedIDs)))
 
       #
       # deployment_info
       #
       elif eventName == 'deployment_info':
         deploymentId = eventData['plan']['id']
-        self.eventbus.publish(MarathonDeploymentInfoEvent(deploymentId, eventData,
-          traceid=self.getTraceIDs(affectedIDs)))
+        self.eventbus.publish(
+            MarathonDeploymentInfoEvent(
+                deploymentId, eventData, traceid=self.getTraceIDs(
+                    affectedIDs)))
 
       #
       # deployment_success
       #
       elif eventName == 'deployment_success':
         deploymentId = eventData['id']
-        self.eventbus.publish(MarathonDeploymentSuccessEvent(deploymentId, eventData,
-          traceid=self.getTraceIDs(affectedIDs)))
+        self.eventbus.publish(
+            MarathonDeploymentSuccessEvent(
+                deploymentId, eventData, traceid=self.getTraceIDs(
+                    affectedIDs)))
         self.removeIDs(affectedIDs)
 
       #
@@ -356,13 +389,16 @@ class MarathonEventsObserver(Observer):
       #
       elif eventName == 'deployment_failed':
         deploymentId = eventData['id']
-        self.eventbus.publish(MarathonDeploymentFailedEvent(deploymentId, eventData,
-          traceid=self.getTraceIDs(affectedIDs)))
+        self.eventbus.publish(
+            MarathonDeploymentFailedEvent(
+                deploymentId, eventData, traceid=self.getTraceIDs(
+                    affectedIDs)))
         self.removeIDs(affectedIDs)
 
       # Warn unknown events
       else:
-        self.logger.debug('Unhandled marathon event \'%s\' received' % eventName)
+        self.logger.debug(
+            'Unhandled marathon event \'{}\' received'.format(eventName))
 
       # Inform queue that the task is done
       self.eventQueue.task_done()
@@ -391,12 +427,13 @@ class MarathonEventsObserver(Observer):
       #
       if not 'Authorization' in headers \
          and 'dcos_auth_token' in definitions:
-        headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+        headers['Authorization'] = 'token={}'.format(
+            definitions['dcos_auth_token'])
 
       #
       # Poll the endpoint until it responds
       #
-      self.logger.debug('Checking if %s is alive' % url)
+      self.logger.debug('Checking if {} is alive'.format(url))
       if is_accessible(url, headers=headers, status_code=[200, 405, 400]):
         break
 
@@ -450,7 +487,8 @@ class MarathonEventsObserver(Observer):
               return
 
             if isinstance(e, requests.exceptions.ConnectionError):
-              self.logger.error('Unable to connect to the remote host. Retrying in 1s sec.')
+              self.logger.error(
+                  'Unable to connect to the remote host. Retrying in 1s sec.')
               time.sleep(1)
             else:
               self.logger.error('Exception in the marathon events main loop')

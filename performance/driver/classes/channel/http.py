@@ -11,6 +11,7 @@ from threading import Thread, Lock
 # Events
 ###############################
 
+
 class HTTPRequestStartEvent(Event):
   """
   Published before every HTTP request
@@ -31,17 +32,20 @@ class HTTPRequestStartEvent(Event):
     #: The request headers
     self.headers = headers
 
+
 class HTTPFirstRequestStartEvent(HTTPRequestStartEvent):
   """
   Published when the first request out of many is started.
   This is valid when a ``repeat`` parameter has a value > 1.
   """
 
+
 class HTTPLastRequestStartEvent(HTTPRequestStartEvent):
   """
   Published when the last request out of many is started.
   This is valid when a ``repeat`` parameter has a value > 1.
   """
+
 
 class HTTPRequestEndEvent(Event):
   """
@@ -63,11 +67,13 @@ class HTTPRequestEndEvent(Event):
     #: The request headers
     self.headers = headers
 
+
 class HTTPFirstRequestEndEvent(HTTPRequestEndEvent):
   """
   Published when the first request out of many is completed.
   This is valid when a ``repeat`` parameter has a value > 1.
   """
+
 
 class HTTPLastRequestEndEvent(HTTPRequestEndEvent):
   """
@@ -75,15 +81,18 @@ class HTTPLastRequestEndEvent(HTTPRequestEndEvent):
   This is valid when a ``repeat`` parameter has a value > 1.
   """
 
+
 class HTTPResponseStartEvent(Event):
   """
   Published when the HTTP response is starting.
   """
+
   def __init__(self, url, *args, **kwargs):
     super().__init__(*args, **kwargs)
 
     #: The URL requested
     self.url = url
+
 
 class HTTPFirstResponseStartEvent(HTTPResponseStartEvent):
   """
@@ -91,11 +100,13 @@ class HTTPFirstResponseStartEvent(HTTPResponseStartEvent):
   This is valid when a ``repeat`` parameter has a value > 1.
   """
 
+
 class HTTPLastResponseStartEvent(HTTPResponseStartEvent):
   """
   Published when the last response out of many is starting.
   This is valid when a ``repeat`` parameter has a value > 1.
   """
+
 
 class HTTPResponseEndEvent(Event):
   """
@@ -114,17 +125,20 @@ class HTTPResponseEndEvent(Event):
     #: The response headers
     self.headers = headers
 
+
 class HTTPFirstResponseEndEvent(HTTPResponseEndEvent):
   """
   Published when the first response out of many has completed.
   This is valid when a ``repeat`` parameter has a value > 1.
   """
 
+
 class HTTPLastResponseEndEvent(HTTPResponseEndEvent):
   """
   Published when the last response out of many has completed.
   This is valid when a ``repeat`` parameter has a value > 1.
   """
+
 
 class HTTPErrorEvent(Event):
   """
@@ -136,6 +150,7 @@ class HTTPErrorEvent(Event):
 
     #: The exception that was raised
     self.exception = exception
+
 
 class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorEvent):
   """
@@ -149,6 +164,7 @@ class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorEvent):
     #: The exception that was raised
     self.exception = exception
 
+
 class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorEvent):
   """
   Published when the first response out of many has an error.
@@ -160,6 +176,7 @@ class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorEvent):
 
     #: The exception that was raised
     self.exception = exception
+
 
 class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorEvent):
   """
@@ -173,9 +190,11 @@ class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorEvent):
     #: The exception that was raised
     self.exception = exception
 
+
 ###############################
 # Helpers
 ###############################
+
 
 def pickFirstLast(current, total, firstEvent, lastEvent, middleEvent):
   """
@@ -192,6 +211,7 @@ def pickFirstLast(current, total, firstEvent, lastEvent, middleEvent):
     return firstEvent
   else:
     return middleEvent
+
 
 class HTTPRequestState:
   """
@@ -215,8 +235,8 @@ class HTTPRequestState:
       config['headers'] = {}
     if not 'Authorization' in config['headers'] \
        and 'dcos_auth_token' in definitions:
-      config['headers']['Authorization'] = 'token=%s' % \
-        definitions['dcos_auth_token']
+      config['headers']['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Get base request parameters
     self.url = config['url']
@@ -249,7 +269,7 @@ class HTTPRequestState:
     """
 
     # Compile the parameters to request
-    parameters = { 'i': self.completedCounter }
+    parameters = {'i': self.completedCounter}
     parameters.update(self.eventParameters)
 
     # Render body
@@ -262,14 +282,18 @@ class HTTPRequestState:
           continue
         return case['value']
 
-      raise ValueError('Could not find a matching body case for parameters: %r' % body)
+      raise ValueError(
+          'Could not find a matching body case for parameters: {0!r}'.format(
+              body))
 
     # Render config and get body
     return body
 
+
 ###############################
 # Entry Point
 ###############################
+
 
 class HTTPChannel(Channel):
   """
@@ -370,22 +394,28 @@ class HTTPChannel(Channel):
     self.session = requests.Session()
 
     # Increase pool sizes
-    self.session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100))
-    self.session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100))
+    self.session.mount('https://',
+                       requests.adapters.HTTPAdapter(
+                           pool_connections=100, pool_maxsize=100))
+    self.session.mount('http://',
+                       requests.adapters.HTTPAdapter(
+                           pool_connections=100, pool_maxsize=100))
 
     # Receive parameter updates and clean-up on teardown
-    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
-    self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent,))
+    self.eventbus.subscribe(
+        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent, ))
 
   @publishesHint(HTTPFirstRequestEndEvent, HTTPLastRequestEndEvent,
-    HTTPRequestEndEvent, HTTPFirstResponseStartEvent,
-    HTTPLastResponseStartEvent, HTTPResponseStartEvent,
-    HTTPFirstRequestStartEvent, HTTPLastRequestStartEvent,
-    HTTPRequestStartEvent, HTTPFirstResponseEndEvent,
-    HTTPLastResponseEndEvent, HTTPResponseEndEvent)
+                 HTTPRequestEndEvent, HTTPFirstResponseStartEvent,
+                 HTTPLastResponseStartEvent, HTTPResponseStartEvent,
+                 HTTPFirstRequestStartEvent, HTTPLastRequestStartEvent,
+                 HTTPRequestStartEvent, HTTPFirstResponseEndEvent,
+                 HTTPLastResponseEndEvent, HTTPResponseEndEvent)
   def handleRequest(self, req):
     if req is None or not req.active:
-      self.logger.debug('Bailing out of %s request to %s due to termination' % (req.verb, req.url))
+      self.logger.debug('Bailing out of {} request to {} due to termination'.
+                        format(req.verb, req.url))
       return
 
     # Make sure to process loops in a single stack frame
@@ -410,81 +440,69 @@ class HTTPChannel(Channel):
 
       # Helper function to notify the message bus when an HTTP response starts
       def ack_response(request, *args, **kwargs):
-        self.eventbus.publish(pickFirstLast(
-            req.completedCounter,
-            req.repeat,
-            HTTPFirstRequestEndEvent,
-            HTTPLastRequestEndEvent,
-            HTTPRequestEndEvent
-          )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids)
-        )
-        self.eventbus.publish(pickFirstLast(
-            req.completedCounter,
-            req.repeat,
-            HTTPFirstResponseStartEvent,
-            HTTPLastResponseStartEvent,
-            HTTPResponseStartEvent
-          )(req.url, traceid=req.traceids)
-        )
+        self.eventbus.publish(
+            pickFirstLast(req.completedCounter, req.repeat,
+                          HTTPFirstRequestEndEvent, HTTPLastRequestEndEvent,
+                          HTTPRequestEndEvent)(
+                              req.verb,
+                              req.url,
+                              renderedBody,
+                              req.headers,
+                              traceid=req.traceids))
+        self.eventbus.publish(
+            pickFirstLast(req.completedCounter, req.repeat,
+                          HTTPFirstResponseStartEvent,
+                          HTTPLastResponseStartEvent, HTTPResponseStartEvent)(
+                              req.url, traceid=req.traceids))
 
       # Place request
-      self.eventbus.publish(pickFirstLast(
-          req.completedCounter,
-          req.repeat,
-          HTTPFirstRequestStartEvent,
-          HTTPLastRequestStartEvent,
-          HTTPRequestStartEvent
-        )(req.verb, req.url, renderedBody, req.headers, traceid=req.traceids),
-        sync=True
-      )
-      self.logger.debug('Placing a %s request to %s' % (req.verb, req.url))
+      self.eventbus.publish(
+          pickFirstLast(req.completedCounter, req.repeat,
+                        HTTPFirstRequestStartEvent, HTTPLastRequestStartEvent,
+                        HTTPRequestStartEvent)(
+                            req.verb,
+                            req.url,
+                            renderedBody,
+                            req.headers,
+                            traceid=req.traceids),
+          sync=True)
+      self.logger.debug('Placing a {} request to {}'.format(req.verb, req.url))
       try:
 
         # Send request (and trap errors)
         req.activeRequest = self.session.request(
-          req.verb,
-          req.url,
-          verify=False,
-          data=renderedBody,
-          headers=req.headers,
-          hooks=dict(response=ack_response)
-        )
+            req.verb,
+            req.url,
+            verify=False,
+            data=renderedBody,
+            headers=req.headers,
+            hooks=dict(response=ack_response))
 
         # Warn errors
-        if (req.activeRequest.status_code < 200) or (req.activeRequest.status_code >= 300):
-          self.logger.warn('HTTP %s Request to %s returned status code of %i' % \
-            (req.verb, req.url, req.activeRequest.status_code))
+        if (req.activeRequest.status_code <
+            200) or (req.activeRequest.status_code >= 300):
+          self.logger.warn(
+              'HTTP {} Request to {} returned status code of {}'.format(
+                  req.verb, req.url, req.activeRequest.status_code))
 
         # Process response
-        self.eventbus.publish(pickFirstLast(
-            req.completedCounter,
-            req.repeat,
-            HTTPFirstResponseEndEvent,
-            HTTPLastResponseEndEvent,
-            HTTPResponseEndEvent
-          )(req.url,
-            req.activeRequest.text,
-            req.activeRequest.headers,
-            traceid=req.traceids
-          )
-        )
+        self.eventbus.publish(
+            pickFirstLast(req.completedCounter, req.repeat,
+                          HTTPFirstResponseEndEvent, HTTPLastResponseEndEvent,
+                          HTTPResponseEndEvent)(
+                              req.url,
+                              req.activeRequest.text,
+                              req.activeRequest.headers,
+                              traceid=req.traceids))
 
       except requests.exceptions.ConnectionError as e:
 
         # Dispatch error
-        self.eventbus.publish(pickFirstLast(
-            req.completedCounter,
-            req.repeat,
-            HTTPFirstResponseErrorEvent,
-            HTTPLastResponseErrorEvent,
-            HTTPResponseErrorEvent
-          )(req.url,
-            "",
-            {},
-            e,
-            traceid=req.traceids
-          )
-        )
+        self.eventbus.publish(
+            pickFirstLast(req.completedCounter, req.repeat,
+                          HTTPFirstResponseErrorEvent,
+                          HTTPLastResponseErrorEvent, HTTPResponseErrorEvent)(
+                              req.url, "", {}, e, traceid=req.traceids))
 
       # Check for repetitions
       req.completedCounter += 1
@@ -492,13 +510,14 @@ class HTTPChannel(Channel):
 
         # Register an event listener if we have an `repeatAfter` parameter
         if not req.repeatAfter is None:
-          self.eventbus.subscribe(handle_repeatAfter, events=(req.repeatAfter,))
+          self.eventbus.subscribe(
+              handle_repeatAfter, events=(req.repeatAfter, ))
           break
 
         # Register a timeout if we have a `repeatInterval` parameter
         if not req.repeatInterval is None:
           req.lastRequestTs = time.time()
-          self.eventbus.subscribe(handle_repeatInterval, events=(TickEvent,))
+          self.eventbus.subscribe(handle_repeatInterval, events=(TickEvent, ))
           break
 
         # Otherwise let the loop continue in order to re-schedule request
@@ -541,15 +560,11 @@ class HTTPChannel(Channel):
       return
 
     # Prepare request state and send initial request
-    state = HTTPRequestState(
-      self,
-      event.parameters,
-      event.traceids
-    )
+    state = HTTPRequestState(self, event.parameters, event.traceids)
 
     # Keep track of the requests
     with self.requestStateMutex:
       self.requestStates.append(state)
 
     # Start request chain
-    Thread(target=self.handleRequest, daemon=True, args=(state,)).start()
+    Thread(target=self.handleRequest, daemon=True, args=(state, )).start()

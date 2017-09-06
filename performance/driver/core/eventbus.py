@@ -7,10 +7,12 @@ from queue import Queue
 from .events import Event, TickEvent, isEventMatching
 from .reflection import publishesHint
 
+
 class ExitEvent(Event):
   """
   A local event that instructs the main event loop to exit
   """
+
 
 class EventBusSubscriber:
   """
@@ -19,6 +21,7 @@ class EventBusSubscriber:
 
   def __init__(self, eventbus):
     self.eventbus = eventbus
+
 
 class EventBus:
   """
@@ -52,7 +55,7 @@ class EventBus:
       if subscriber[1] == callback:
         self.subscribers.remove(subscriber)
 
-  def publish(self, event:Event, sync=False):
+  def publish(self, event: Event, sync=False):
     """
     Publish an event to all subscribers
     """
@@ -67,15 +70,16 @@ class EventBus:
       cond = Condition()
 
     if not type(event) is TickEvent:
-      self.logger.debug('Publishing \'%s\'' % str(event))
+      self.logger.debug('Publishing \'{}\''.format(str(event)))
     self.queue.put((event, cond))
 
     # Wait for condition variable, if requested
     if sync:
-      self.logger.debug('Waiting for condition of event \'%s\'' % str(event))
+      self.logger.debug(
+          'Waiting for condition of event \'{}\''.format(str(event)))
       with cond:
         cond.wait()
-      self.logger.debug('Condition met for event \'%s\'' % str(event))
+      self.logger.debug('Condition met for event \'{}\''.format(str(event)))
 
   def start(self):
     """
@@ -84,9 +88,10 @@ class EventBus:
     self.logger.debug('Starting event bus')
 
     # Start thread pool
-    self.logger.debug('Starting thread pool of %i threads' % self.threadCount)
+    self.logger.debug(
+        'Starting thread pool of {} threads'.format(self.threadCount))
     for i in range(0, self.threadCount):
-      t = Thread(target=self._loopthread, name='eventbus-%i' % (i+1))
+      t = Thread(target=self._loopthread, name='eventbus-{}'.format(i + 1))
       t.start()
       self.threads.append(t)
 
@@ -152,20 +157,23 @@ class EventBus:
       for order, sub, events, args, kwargs in self.subscribers:
         try:
           start_ts = time.time()
-          if events is None or any(map(lambda cls: isEventMatching(event, cls), events)):
+          if events is None or any(
+              map(lambda cls: isEventMatching(event, cls), events)):
             sub(event, *args, **kwargs)
 
           delta = time.time() - start_ts
           if delta > 0.25:
-            self.logger.warn('Slow handler (%.2fs) %r for event %s' % (delta, sub, type(event).__name__))
+            self.logger.warn('Slow handler ({:.2f}s) {} for event {}'.format(
+                delta, sub, type(event).__name__))
 
         except Exception as e:
-          self.logger.error('Exception while dispatching event %s' % event.event)
+          self.logger.error(
+              'Exception while dispatching event {}'.format(event.event))
           self.logger.exception(e)
 
       # Signal condition variable (if any)
       if cond:
-        self.logger.debug('Notifying condition for \'%s\'' % str(event))
+        self.logger.debug('Notifying condition for \'{}\''.format(str(event)))
         with cond:
           cond.notify()
 

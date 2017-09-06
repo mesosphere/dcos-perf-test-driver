@@ -5,10 +5,12 @@ import time
 from threading import Condition, Lock
 from queue import Queue, Empty
 
+
 class State:
   """
   A Finite State Machine state handler
   """
+
   def __init__(self, fsm):
     self._fsm = fsm
 
@@ -46,10 +48,12 @@ class State:
       return super().__setattr__(name, value)
     return setattr(self._fsm, name, value)
 
+
 class FSM:
   """
   A finite-state-machine implementation for the purposes of
   """
+
   def __init__(self):
     self.states = {}
     self.state = 'Start'
@@ -57,10 +61,11 @@ class FSM:
     self.stateMutex = Lock()
     self.statePollerActive = False
     self.stateCv = Condition()
-    self.logger = logging.getLogger('FSM<%s>' % type(self).__name__)
+    self.logger = logging.getLogger('FSM<{}>'.format(type(self).__name__))
     self.lastTransitionTs = time.time()
 
-    for (stateName, stateClass) in inspect.getmembers(self, predicate=inspect.isclass):
+    for (stateName, stateClass) in inspect.getmembers(
+        self, predicate=inspect.isclass):
       if issubclass(stateClass, State):
         self.states[stateName] = stateClass(self)
 
@@ -85,16 +90,18 @@ class FSM:
     Switch FSM to the given state
     """
     if not issubclass(state, State):
-      raise TypeError('The state given to the goto function is not a State class')
+      raise TypeError(
+          'The state given to the goto function is not a State class')
 
     # Don't re-enter current state
     if state.__name__ == self.state:
       return
 
     stateName = state.__name__
-    self.logger.debug('Switching to state %s' % stateName)
+    self.logger.debug('Switching to state {}'.format(stateName))
     if not stateName in self.states:
-      raise TypeError('State \'%s\' was not found in the FSM' % stateName)
+      raise TypeError(
+          'State \'{}\' was not found in the FSM'.format(stateName))
 
     self.stateQueue.put(stateName)
     self._handleEnterState()
@@ -123,7 +130,7 @@ class FSM:
 
       # Call the event handler if we have one
       if hasattr(stateInst, handlerName):
-        self.logger.debug('Handling event %s' % event.event)
+        self.logger.debug('Handling event {}'.format(event.event))
         getattr(stateInst, handlerName)(event)
         return
 
@@ -156,7 +163,7 @@ class FSM:
           self.statePollerActive = False
         return
 
-      self.logger.debug('Entering in state %s' % self.state)
+      self.logger.debug('Entering in state {}'.format(self.state))
       self.lastTransitionTs = time.time()
       stateInst = self.states[self.state]
       stateInst.onEnter()

@@ -13,7 +13,8 @@ try:
 except ModuleNotFoundError:
   import logging
   logging.error('One or more libraries required by S3Reporter were not'
-    'installed. The reporter will not work.')
+                'installed. The reporter will not work.')
+
 
 class S3Reporter(Reporter):
   """
@@ -68,17 +69,17 @@ class S3Reporter(Reporter):
       aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
 
     # Instantiate boto
-    s3 = boto3.resource('s3',
-      aws_access_key_id=aws_access_key_id,
-      aws_secret_access_key=aws_secret_access_key
-    )
+    s3 = boto3.resource(
+        's3',
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key)
 
     # Get bucket and filename
     bucket_key = config.get('path', 'results-raw.json')
     optional_kwargs = {}
     if 'acl' in config:
       optional_kwargs['ACL'] = config['acl']
-    self.logger.info('Uploading raw results to %s' % bucket_key)
+    self.logger.info('Uploading raw results to {}'.format(bucket_key))
 
     # Upload into the bucket
     s3.Bucket(config['bucket']) \

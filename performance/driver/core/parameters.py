@@ -7,6 +7,7 @@ from performance.driver.core.eventbus import EventBusSubscriber
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from threading import Lock
 
+
 class ParameterBatch(EventBusSubscriber):
   """
   This class is used as an interface for triggering parameter update events
@@ -56,25 +57,18 @@ class ParameterBatch(EventBusSubscriber):
       if self.flagUpdates:
         for flagName, flagValue in self.flagUpdates:
           self.eventbus.publish(
-            FlagUpdateEvent(
-              flagName, flagValue,
-              traceid=self.previousTraceId
-            )
-          )
+              FlagUpdateEvent(
+                  flagName, flagValue, traceid=self.previousTraceId))
 
         self.flagUpdates = []
 
       # Then dispatch parameter updates
       if batch:
-        self.logger.info('Setting axis to %s' % json.dumps(parameters))
+        self.logger.info('Setting axis to {}'.format(json.dumps(parameters)))
         self.eventbus.publish(
-          ParameterUpdateEvent(
-            parameters,
-            self.parameters,
-            batch,
-            traceid=self.updateTraceid
-          )
-        )
+            ParameterUpdateEvent(
+                parameters, self.parameters, batch,
+                traceid=self.updateTraceid))
 
         self.paramUpdates = []
         self.parameters = parameters

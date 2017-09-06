@@ -12,6 +12,7 @@ from performance.driver.core.utils import dictDiff
 
 from performance.driver.classes.channel.http import HTTPResponseEndEvent
 
+
 class MarathonPollerObserver(Observer):
   """
   The *Marathon Poller Observer* is a polling-based fallback observer that can
@@ -65,13 +66,14 @@ class MarathonPollerObserver(Observer):
     # When an HTTP request is completed and a marathon deployment is started,
     # we have to keep track of the traceids of the event that initiated the
     # request in order to trace it back to the source event.
-    self.eventbus.subscribe(self.handleHttpResponse, events=(HTTPResponseEndEvent,), order=2)
+    self.eventbus.subscribe(
+        self.handleHttpResponse, events=(HTTPResponseEndEvent, ), order=2)
 
     # Stop thread at teardown
-    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
+    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent, ))
 
     # Start polling thread at start
-    self.eventbus.subscribe(self.handleStart, events=(StartEvent,))
+    self.eventbus.subscribe(self.handleStart, events=(StartEvent, ))
 
   def handleStartEvent(self, event):
     """
@@ -113,14 +115,17 @@ class MarathonPollerObserver(Observer):
     # `dcos_auth_token` definition, allocate an `Authorization` header now
     if not 'Authorization' in headers \
        and 'dcos_auth_token' in definitions:
-      headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+      headers['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Fetch metrics
     try:
-      res = requests.get('%s/v2/deployments' % url, headers=headers, verify=False)
+      res = requests.get(
+          '{}/v2/deployments'.format(url), headers=headers, verify=False)
       if res.status_code != 200:
-        self.logger.debug('Deployments marathon endpoint not accessible '
-          '(Received %i HTTP status code)' % res.status_code)
+        self.logger.debug(
+            'Deployments marathon endpoint not accessible (Received {} HTTP status code)'.
+            format(res.status_code))
         return
 
       # Emit MarathonStartedEvent if marathon was not running yet
@@ -136,12 +141,9 @@ class MarathonPollerObserver(Observer):
         pass
       for removedId in self.prevDeployments.difference(deploymentIds):
         self.eventbus.publish(
-          MarathonDeploymentSuccessEvent(
-            removedId,
-            {},
-            traceid=self.deploymentTraceIDs.get(removedId, None)
-          )
-        )
+            MarathonDeploymentSuccessEvent(
+                removedId, {},
+                traceid=self.deploymentTraceIDs.get(removedId, None)))
       self.prevDeployments = deploymentIds
 
     except requests.exceptions.ConnectionError as e:
@@ -154,4 +156,5 @@ class MarathonPollerObserver(Observer):
     attach it on further marathon events related to the given deployment
     """
     if 'Marathon-Deployment-Id' in event.headers:
-      self.deploymentTraceIDs[event.headers['Marathon-Deployment-Id']] = event.traceids
+      self.deploymentTraceIDs[event.headers[
+          'Marathon-Deployment-Id']] = event.traceids

@@ -6,6 +6,7 @@ PATHCOMP = re.compile(r'([\\/]|\.\.)')
 MACRO = re.compile(r'{{(.*?)}}')
 METHOD = re.compile(r'([\w_]+)\((.*)\)')
 
+
 class TemplateMethods:
   """
   Exposed methods to the template DSL
@@ -32,6 +33,7 @@ class TemplateMethods:
     """
     return PATHCOMP.sub('_', evaluateExpr(args, props))
 
+
 def toTemplate(obj):
   """
   Cast to the appropriate template format
@@ -44,6 +46,7 @@ def toTemplate(obj):
     return TemplateDict(obj)
 
   return obj
+
 
 def evaluateValue(expr, props):
   """
@@ -72,6 +75,7 @@ def evaluateValue(expr, props):
   # Nothing applicable
   return ""
 
+
 def evaluateExpr(expr, props):
   """
   Evaluate the given macro expression
@@ -86,6 +90,7 @@ def evaluateExpr(expr, props):
 
   # Nothing applicable
   return ""
+
 
 class Template:
   """
@@ -121,10 +126,12 @@ class TemplateString(str, Template):
     Replace all template macros with the values from the properties dict
     given as an argument
     """
+
     def repl(matchobj):
       return evaluateExpr(matchobj.group(1), props)
 
     return MACRO.sub(repl, self)
+
 
 class TemplateList(list, Template):
   """
@@ -141,13 +148,15 @@ class TemplateList(list, Template):
     """
     Return an array with all the macros in the list
     """
-    return set().union(*map(lambda v: v.macros() if isinstance(v, Template) else set(), self))
+    return set().union(*map(
+        lambda v: v.macros() if isinstance(v, Template) else set(), self))
 
   def apply(self, props):
     """
     Replace all string keys with template string
     """
-    return list(map(lambda x: x.apply(props) if isinstance(x, Template) else x, self))
+    return list(
+        map(lambda x: x.apply(props) if isinstance(x, Template) else x, self))
 
 
 class TemplateDict(dict, Template):
@@ -165,7 +174,9 @@ class TemplateDict(dict, Template):
     """
     Return an array with all the macros in the dict
     """
-    return set().union(*map(lambda kv: kv[1].macros() if isinstance(kv[1], Template) else set(), self.items()))
+    return set().union(*map(
+        lambda kv: kv[1].macros() if isinstance(kv[1], Template) else set(),
+        self.items()))
 
   def apply(self, props):
     """

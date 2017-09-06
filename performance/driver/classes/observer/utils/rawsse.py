@@ -10,6 +10,7 @@ import ssl
 from urllib.parse import urlparse
 from socket import socket, AF_INET, SOCK_STREAM
 
+
 class ChunkedReader:
   """
   Rough implementation of HTTP/1.1 chunked trasnfer reader
@@ -28,7 +29,8 @@ class ChunkedReader:
         break
 
       self.buffer += body[:size]
-      self.activeChunk = body[size+2:]
+      self.activeChunk = body[size + 2:]
+
 
 class DirectReader:
   """
@@ -40,6 +42,7 @@ class DirectReader:
 
   def feed(self, chunk):
     self.buffer += chunk
+
 
 class RawSSE:
   """
@@ -56,21 +59,21 @@ class RawSSE:
 
   """
 
-  def __init__(self, url, headers={}, secure=False, chunkSize=1024*1024):
+  def __init__(self, url, headers={}, secure=False, chunkSize=1024 * 1024):
     self.logger = logging.getLogger('RawSSE')
     self.chunkSize = chunkSize
     self.url = urlparse(url)
     self.sslctx = None
     self.headers = {
-      'User-Agent': 'RawSSE/1.0 (Python3)',
-      'Accept': 'text/event-stream'
+        'User-Agent': 'RawSSE/1.0 (Python3)',
+        'Accept': 'text/event-stream'
     }
     self.headers.update(headers)
 
     # Validate URL
     if self.url.scheme not in ('http', 'https'):
       raise ValueError('Only the `http` and `https` URL schemes are supported '
-        'through RAW SSE sockets')
+                       'through RAW SSE sockets')
 
     # Crate SSL context if we are using https
     if self.url.scheme == 'https':
@@ -152,7 +155,9 @@ class RawSSE:
 
         # Wait for an I/O Event
         try:
-          rd, wr, er = select.select([self.socket,], [], [], 5)
+          rd, wr, er = select.select([
+              self.socket,
+          ], [], [], 5)
         except select.error:
           self.socket.shutdown(2)
           self.socket.close()
