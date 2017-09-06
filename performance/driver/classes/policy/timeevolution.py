@@ -3,6 +3,7 @@ import time
 from performance.driver.core.events import isEventMatching
 from performance.driver.core.classes import PolicyFSM, State
 
+
 class TimeEvolutionPolicy(PolicyFSM):
   """
   The **Time Evolution Policy** is changing a parameter monotonically as the
@@ -98,7 +99,6 @@ class TimeEvolutionPolicy(PolicyFSM):
       """
       self.goto(TimeEvolutionPolicy.Run)
 
-
   class Run(State):
     """
     Deploy a service on every tick
@@ -108,7 +108,8 @@ class TimeEvolutionPolicy(PolicyFSM):
       """
       Prepare the cases to run
       """
-      self.logger.info('Starting the evolution of %i parameter(s)' % len(self.evolveConfig))
+      self.logger.info('Starting the evolution of {} parameter(s)'.format(
+          len(self.evolveConfig)))
       self.tickDelta = 0
 
       # Initialize counters
@@ -163,6 +164,7 @@ class TimeEvolutionPolicy(PolicyFSM):
     """
     Sink state
     """
+
 
 class TimeEvolutionRecord:
   """

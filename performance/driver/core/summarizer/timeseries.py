@@ -1,5 +1,6 @@
 import time
 
+
 class SummarizerAxisTimeseries:
   def __init__(self, name, config):
     """

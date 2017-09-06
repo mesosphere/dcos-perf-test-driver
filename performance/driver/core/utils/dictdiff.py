@@ -1,4 +1,3 @@
-
 def getAtList(l, idx, default=None):
   """
   Safe .get for lists
@@ -7,6 +6,7 @@ def getAtList(l, idx, default=None):
     return l[idx]
   except IndexError:
     return default
+
 
 def dictDiff(a, b, path=tuple(), fullObjects=False):
   """
@@ -39,11 +39,7 @@ def dictDiff(a, b, path=tuple(), fullObjects=False):
       b = {}
     for key in set(a.keys()).union(set(b.keys())):
       l += dictDiff(
-        a.get(key, None),
-        b.get(key, None),
-        path + (key,),
-        fullObjects
-      )
+          a.get(key, None), b.get(key, None), path + (key, ), fullObjects)
 
   # List
   elif list in (type(a), type(b)) or tuple in (type(a), type(b)):
@@ -57,11 +53,8 @@ def dictDiff(a, b, path=tuple(), fullObjects=False):
       b = []
     for key in range(0, max(len(a), len(b))):
       l += dictDiff(
-        getAtList(a, key, None),
-        getAtList(b, key, None),
-        path + (key,),
-        fullObjects
-      )
+          getAtList(a, key, None),
+          getAtList(b, key, None), path + (key, ), fullObjects)
 
   # Value
   else:

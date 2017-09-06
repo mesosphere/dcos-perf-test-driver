@@ -6,6 +6,7 @@ from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, T
 from performance.driver.core.eventfilters import EventFilter
 from queue import Queue, Empty
 
+
 class DurationTrackerSession:
   """
   A tracking session
@@ -32,11 +33,8 @@ class DurationTrackerSession:
       return
 
     # Track metric
-    self.tracker.trackMetric(
-      self.tracker.metric,
-      event.ts - start_event.ts,
-      self.traceids
-    )
+    self.tracker.trackMetric(self.tracker.metric, event.ts - start_event.ts,
+                             self.traceids)
 
   def handle(self, event):
     self.startFilter.handle(event)
@@ -47,7 +45,9 @@ class DurationTrackerSession:
     self.endFilter.finalize()
 
     if not self.queue.empty():
-      self.logger.warn('Incomplete traces were present for metric %s' % self.tracker.metric)
+      self.logger.warn('Incomplete traces were present for metric {}'.format(
+          self.tracker.metric))
+
 
 class DurationTracker(Tracker):
   """

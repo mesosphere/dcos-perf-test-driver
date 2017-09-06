@@ -8,6 +8,7 @@ from performance.driver.core.session import Session
 from performance.driver.core.classes.reporter import ConsoleReporter
 from performance.driver.core.reflection import validateEventSubscriptions
 
+
 def dcos_perf_test_driver(args=None):
   """
   Entry point for the dcos-perf-test-driver CLI script
@@ -22,24 +23,49 @@ def dcos_perf_test_driver(args=None):
       level='DEBUG' if cmdline.verbose else 'INFO',
       fmt='%(levelname)7s %(asctime)s %(name)s: %(message)s',
       field_styles={
-        'hostname': {'color': 'magenta'},
-        'programname': {'color': 'cyan'},
-        'name': {'color': 'magenta'},
-        'levelname': {'color': 'black','bold': True},
-        'asctime': {'color': 'green'}
+          'hostname': {
+              'color': 'magenta'
+          },
+          'programname': {
+              'color': 'cyan'
+          },
+          'name': {
+              'color': 'magenta'
+          },
+          'levelname': {
+              'color': 'black',
+              'bold': True
+          },
+          'asctime': {
+              'color': 'green'
+          }
       },
       level_styles={
-        'info': {},
-        'notice': {'color': 'magenta'},
-        'verbose': {'color': 'blue'},
-        'spam': {'color': 'green'},
-        'critical': {'color': 'red',
-        'bold': True},
-        'error': {'color': 'red'},
-        'debug': {'color': 'white', 'faint': True},
-        'warning': {'color': 'yellow'}
-      }
-    )
+          'info': {},
+          'notice': {
+              'color': 'magenta'
+          },
+          'verbose': {
+              'color': 'blue'
+          },
+          'spam': {
+              'color': 'green'
+          },
+          'critical': {
+              'color': 'red',
+              'bold': True
+          },
+          'error': {
+              'color': 'red'
+          },
+          'debug': {
+              'color': 'white',
+              'faint': True
+          },
+          'warning': {
+              'color': 'yellow'
+          }
+      })
 
   try:
 
@@ -75,10 +101,8 @@ def dcos_perf_test_driver(args=None):
       if definition['required'] and not name in config.definitions:
         desc = ''
         if 'desc' in definition:
-          desc = ' (%s)' % definition['desc']
-        logger.error('Missing required definition `%s`%s' % \
-          (name, desc)
-        )
+          desc = ' ({})'.format(definition['desc'])
+        logger.error('Missing required definition `{}`{}'.format(name, desc))
         hasMissing = True
     if hasMissing:
       return 1
@@ -93,21 +117,23 @@ def dcos_perf_test_driver(args=None):
     if invalidSubscriptions:
       for name, locations in invalidSubscriptions.items():
         for location in locations:
-          logger.error('Event "%s" used in %s is never published' %
-            (name, location))
+          logger.error('Event "{}" used in {} is never published'.format(
+              name, location))
       return 1
 
     # Run the tests
-    logger.info("Starting %s" % generalConfig.title)
+    logger.info("Starting {}".format(generalConfig.title))
     session.run()
 
     # Instantiate reporters
     for reporter in session.reporters:
       try:
-        logger.debug('Reporting to \'%s\' reporter' % type(reporter).__name__)
+        logger.debug(
+            'Reporting to \'{}\' reporter'.format(type(reporter).__name__))
         reporter.dump(session.summarizer)
       except Exception as e:
-        logger.error('Reporter \'%s\' failed with error: %s' % (type(reporter).__name__, str(e)))
+        logger.error('Reporter \'{}\' failed with error: {}'.format(
+            type(reporter).__name__, str(e)))
         if cmdline.verbose:
           logger.exception(e)
 
@@ -115,7 +141,7 @@ def dcos_perf_test_driver(args=None):
     return 0
 
   except Exception as e:
-    logger.error('Error: %s' % str(e))
+    logger.error('Error: {}'.format(str(e)))
     if cmdline.verbose:
       logger.exception(e)
 

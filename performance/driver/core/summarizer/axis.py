@@ -1,9 +1,11 @@
 from .timeseries import SummarizerAxisTimeseries
 
+
 class SummarizerAxisParameters(dict):
   """
   The parameters the axis is bound on
   """
+
 
 class SummarizerAxis:
   """
@@ -32,7 +34,7 @@ class SummarizerAxis:
     Push a parameter update
     """
     if not metric in self.timeseries:
-      raise NameError('Metric %s does not exist' % metric)
+      raise NameError('Metric {} does not exist'.format(metric))
 
     # Collect value to the time series
     self.timeseries[metric].push(value)
@@ -42,11 +44,7 @@ class SummarizerAxis:
     Check if this axis has the same parameters as the ones given
     """
     return all(
-      map(
-        lambda kv: kv[1] == self.parameters[kv[0]],
-        parameters.items()
-      )
-    )
+        map(lambda kv: kv[1] == self.parameters[kv[0]], parameters.items()))
 
   def raw(self):
     """
@@ -82,5 +80,3 @@ class SummarizerAxis:
       values[metric] = sums
 
     return values
-
-

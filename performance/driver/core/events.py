@@ -5,6 +5,7 @@ import uuid
 # Regex to strip ANSI sequences from the log lines
 ANSI_SEQUENCE = re.compile(r'\x1b[^m]*m')
 
+
 def isEventClassMatchingName(eventClass, className):
   """
   Check if the `eventClass` name or it's parent classes equals to `className`
@@ -12,9 +13,10 @@ def isEventClassMatchingName(eventClass, className):
   if eventClass.__name__ == className:
     return True
 
-  return any(map(
-    lambda c: isEventClassMatchingName(c, className), eventClass.__bases__
-  ))
+  return any(
+      map(lambda c: isEventClassMatchingName(c, className),
+          eventClass.__bases__))
+
 
 def isEventMatching(eventInstance, eventCheck):
   """
@@ -25,6 +27,7 @@ def isEventMatching(eventInstance, eventCheck):
   else:
     return isinstance(eventInstance, eventCheck)
 
+
 class Event:
   """
   Base event
@@ -32,6 +35,7 @@ class Event:
   The `traceid` parameter is a unique string or object that is carried along
   related events and is used to group them together to the same operation.
   """
+
   def __init__(self, traceid=None):
     self.event = type(self).__name__
     self.ts = time.time()
@@ -63,7 +67,8 @@ class Event:
     """
     Return a string representation of the event
     """
-    return '%s[trace=%s]' % (self.event, ','.join(self.traceids))
+    return '{}[trace={}]'.format(self.event, ','.join(self.traceids))
+
 
 class StartEvent(Event):
   """
@@ -71,11 +76,13 @@ class StartEvent(Event):
   and the environment is ready, in order to start the policies.
   """
 
+
 class RestartEvent(Event):
   """
   A restart event is dispatched in place of StartEvent when more than one
   test loops has to be executed.
   """
+
 
 class TeardownEvent(Event):
   """
@@ -83,11 +90,13 @@ class TeardownEvent(Event):
   system is about to be torn down.
   """
 
+
 class InterruptEvent(Event):
   """
   An interrupt event is dispatched when a critical exception has occurred
   or when the user has instructed to interupt the tests via a keystroke
   """
+
 
 class StalledEvent(Event):
   """
@@ -95,13 +104,16 @@ class StalledEvent(Event):
   to a non-terminal state for longer than expected time.
   """
 
+
 class RunTaskEvent(Event):
   """
   This event is dispatched when a policy requires the session to execute a task
   """
+
   def __init__(self, task):
     super().__init__()
     self.task = task
+
 
 class RunTaskCompletedEvent(Event):
   """
@@ -114,63 +126,77 @@ class RunTaskCompletedEvent(Event):
     self.task = previousEvent.task
     self.exception = exception
 
+
 class TickEvent(Event):
   """
   A clock event is dispatched every second
   """
+
   def __init__(self, count, delta, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.count = count
     self.delta = delta
 
+
 class ParameterUpdateEvent(Event):
   """
   A parameter change request
   """
+
   def __init__(self, newParameters, oldParameters, changes, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.parameters = newParameters
     self.oldParameters = oldParameters
     self.changes = changes
 
+
 class FlagUpdateEvent(Event):
   """
   A flag has changed for this run
   """
+
   def __init__(self, name, value, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.name = name
     self.value = value
+
 
 class MetricUpdateEvent(Event):
   """
   A metric has changed
   """
+
   def __init__(self, name, value, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.name = name
     self.value = value
 
+
 class ObserverEvent(Event):
   """
   A metric change is observed
   """
+
   def __init__(self, metric, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.metric = metric
+
 
 class ObserverValueEvent(ObserverEvent):
   """
   A metric has changed to a new value
   """
+
   def __init__(self, metric, value, *args, **kwargs):
     super().__init__(metric, *args, **kwargs)
     self.value = value
+
 
 class LogLineEvent(Event):
   """
   A log line from an observer
   """
+
   def __init__(self, line, source, kind=None, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.line = ANSI_SEQUENCE.sub('', line)
@@ -178,5 +204,4 @@ class LogLineEvent(Event):
     self.kind = kind
 
   def __str__(self):
-    return '%s<%s>' % (super().__str__(), self.line)
-
+    return '{}<{}>'.format(super().__str__(), self.line)

@@ -3,6 +3,7 @@ import logging
 from performance.driver.core.config import Configurable
 from performance.driver.core.eventbus import EventBusSubscriber
 
+
 class Reporter(Configurable, EventBusSubscriber):
   """
   A Reporter takes care of passing down the final results
@@ -16,13 +17,14 @@ class Reporter(Configurable, EventBusSubscriber):
     Configurable.__init__(self, config)
     EventBusSubscriber.__init__(self, eventbus)
     self.generalConfig = generalConfig
-    self.logger = logging.getLogger('Reporter<%s>' % type(self).__name__)
+    self.logger = logging.getLogger('Reporter<{}>'.format(type(self).__name__))
 
   def dump(self, summarizer):
     """
     Extract data from the summarizer and dump it to the reporter
     """
     pass
+
 
 class ConsoleReporter(Reporter):
   """

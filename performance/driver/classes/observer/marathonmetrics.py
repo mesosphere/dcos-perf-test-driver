@@ -9,6 +9,7 @@ from performance.driver.core.events import Event, MetricUpdateEvent, \
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.core.utils import dictDiff
 
+
 class MarathonMetricsObserver(Observer):
   """
   The *Marathon Metrics Observer* is observing for changes in the marathon
@@ -66,9 +67,10 @@ class MarathonMetricsObserver(Observer):
   @subscribesToHint(TeardownEvent, ParameterUpdateEvent, StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
-    self.eventbus.subscribe(self.handleParameterUpdateEvent, events=(ParameterUpdateEvent,))
-    self.eventbus.subscribe(self.handleStart, events=(StartEvent,))
+    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent, ))
+    self.eventbus.subscribe(
+        self.handleParameterUpdateEvent, events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(self.handleStart, events=(StartEvent, ))
     self.previous = {}
     self.forceUpdate = False
     self.pollingActive = False
@@ -81,7 +83,6 @@ class MarathonMetricsObserver(Observer):
     self.pollingActive = True
     self.pollingThread = threading.Thread(target=self.pollingThreadTarget)
     self.pollingThread.start()
-
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -121,14 +122,16 @@ class MarathonMetricsObserver(Observer):
     # `dcos_auth_token` definition, allocate an `Authorization` header now
     if not 'Authorization' in headers \
        and 'dcos_auth_token' in definitions:
-      headers['Authorization'] = 'token=%s' % definitions['dcos_auth_token']
+      headers['Authorization'] = 'token={}'.format(
+          definitions['dcos_auth_token'])
 
     # Fetch metrics
     try:
       res = requests.get(url, headers=headers, verify=False)
       if res.status_code != 200:
-        self.logger.debug('Metrics marathon endpoint not accessible '
-          '(Received %i HTTP status code)' % res.status_code)
+        self.logger.debug(
+            'Metrics marathon endpoint not accessible (Received {} HTTP status code)'.
+            format(res.status_code))
         return
 
       # Get previous value and reset previous if we have a force update

@@ -5,6 +5,7 @@ from performance.driver.core.eventbus import EventBusSubscriber
 from performance.driver.core import events
 from performance.driver.core import fsm
 
+
 class State(fsm.State):
   """
   The policy state provides some policy-specific functionality to the FSM
@@ -27,6 +28,7 @@ class State(fsm.State):
     self.logger.debug("Sinking to FSM.End due to stalled event")
     self.goto(type(self._fsm).End)
 
+
 class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
   """
   A policy-oriented FSM
@@ -36,7 +38,7 @@ class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
     fsm.FSM.__init__(self)
     Configurable.__init__(self, config)
     EventBusSubscriber.__init__(self, eventbus)
-    self.logger = logging.getLogger('Policy<%s>' % type(self).__name__)
+    self.logger = logging.getLogger('Policy<{}>'.format(type(self).__name__))
     self.parameterBatch = parameterBatch
 
     # Receive events from the bus

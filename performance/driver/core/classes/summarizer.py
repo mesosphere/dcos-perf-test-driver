@@ -4,6 +4,7 @@ from performance.driver.core.summarizer import SummarizerAxisTimeseries, Summari
 from performance.driver.core.summarizer import builtin, util
 from performance.driver.core.config import Configurable
 
+
 class Summarizer(Configurable):
   """
   A summarizer receives a timeseries object and calculates a summary
@@ -15,13 +16,17 @@ class Summarizer(Configurable):
     """
     super().__init__(config)
     self.name = config.get('name', type(self).__name__)
-    self.logger = logging.getLogger('Summarizer<%s>' % type(self).__name__)
+    self.logger = logging.getLogger(
+        'Summarizer<{}>'.format(type(self).__name__))
 
-  def calculate(self, timeseries:SummarizerAxisTimeseries, parameters:SummarizerAxisParameters):
+  def calculate(self,
+                timeseries: SummarizerAxisTimeseries,
+                parameters: SummarizerAxisParameters):
     """
     Calculate summarized value and return the summarized metric
     """
     raise NotImplementedError('Summarizer sum() function was not implemented')
+
 
 class BuiltInSummarizer(Summarizer):
   """
@@ -71,12 +76,14 @@ class BuiltInSummarizer(Summarizer):
     # Extract the function name from the class configuration
     funcName = config['class'][1:]
     if not hasattr(builtin, funcName):
-      raise TypeError('Unknown built-in summarizer "%s"' % funcName)
+      raise TypeError('Unknown built-in summarizer "{}"'.format(funcName))
 
     # Get a reference to the built-in summarizer
     self.ref = getattr(builtin, funcName)
 
-  def calculate(self, timeseries:SummarizerAxisTimeseries, parameters:SummarizerAxisParameters):
+  def calculate(self,
+                timeseries: SummarizerAxisTimeseries,
+                parameters: SummarizerAxisParameters):
     """
     Call the built-in summarizer function
     """
@@ -87,5 +94,3 @@ class BuiltInSummarizer(Summarizer):
 
     # Apply the summarizer function
     return self.ref(timeseries, parameters)
-
-

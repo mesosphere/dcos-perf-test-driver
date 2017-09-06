@@ -15,7 +15,8 @@ try:
 except ModuleNotFoundError:
   import logging
   logging.error('One or more libraries required by PlotReporter were not'
-    'installed. The reporter will not work.')
+                'installed. The reporter will not work.')
+
 
 def norm(v, vmin, vmax, tomin=0.0, tomax=1.0, wrap=True):
   if v < vmin and wrap:
@@ -24,14 +25,15 @@ def norm(v, vmin, vmax, tomin=0.0, tomax=1.0, wrap=True):
     return tomax
   return ((float(v) - vmin) / (vmax - vmin)) * (tomax - tomin) + tomin
 
+
 def getPlotfn(ax, xscale, yscale):
   """
   Get the correct plot function configuration to the axis string given
   """
   if xscale not in ('linear', 'log', 'log2', 'log10'):
-    raise TypeError('Unknown `xscale` value \'%s\'' % xscale)
+    raise TypeError('Unknown `xscale` value \'{}\''.format(xscale))
   if yscale not in ('linear', 'log', 'log2', 'log10'):
-    raise TypeError('Unknown `yscale` value \'%s\'' % yscale)
+    raise TypeError('Unknown `yscale` value \'{}\''.format(yscale))
 
   if xscale == 'linear' and yscale == 'linear':
     return (ax.plot, {})
@@ -62,8 +64,8 @@ def getPlotfn(ax, xscale, yscale):
         kwargs['basey'] = 10
       return (ax.semilogy, kwargs)
 
-class PlotGroup:
 
+class PlotGroup:
   def __init__(self, metric, suffix=''):
     self.suffix = suffix
     self.name = metric.config.get('name', 'metric')
@@ -83,18 +85,12 @@ class PlotGroup:
     """
     if name is None:
       return dict(
-        map(
-          lambda kv: (kv[0], np.array(kv[1])),
-          self.valueSeries.items()
-        )
-      )
+          map(lambda kv: (kv[0], np.array(kv[1])), self.valueSeries.items()))
     else:
-      return np.array(
-        self.valueSeries[name]
-      )
+      return np.array(self.valueSeries[name])
+
 
 class RawPlotGroup:
-
   def __init__(self, metric, suffix=''):
     self.suffix = suffix
     self.name = metric.config.get('name', 'metric')
@@ -121,18 +117,11 @@ class RawPlotGroup:
 
   def pairs(self, axisName=None):
     if axisName is None:
-      return dict(
-          map(
-            lambda name: (name, self.pairs(name)),
-            self.x.keys()
-          )
-        )
+      return dict(map(lambda name: (name, self.pairs(name)), self.x.keys()))
 
     else:
-      return (
-          np.array(self.x[axisName]),
-          np.array(self.y)
-        )
+      return (np.array(self.x[axisName]), np.array(self.y))
+
 
 class PlotReporter(Reporter):
   """
@@ -235,7 +224,8 @@ class PlotReporter(Reporter):
 
     return fig, (ax1, ax2)
 
-  def dumpPlot_sum1d(self, axisValues, plotGroup, referencePlotGroup, filename):
+  def dumpPlot_sum1d(self, axisValues, plotGroup, referencePlotGroup,
+                     filename):
     """
     Dump an 1-D plot group
     """
@@ -254,26 +244,24 @@ class PlotReporter(Reporter):
       fig, ax = self.createPlot()
 
       # Prepare plot function according to config
-      (plotfn, plotfn_kwargs) = getPlotfn(
-        ax,
-        self.getConfig('xscale', 'linear'),
-        self.getConfig('yscale', 'linear')
-      )
+      (plotfn, plotfn_kwargs) = getPlotfn(ax,
+                                          self.getConfig('xscale', 'linear'),
+                                          self.getConfig('yscale', 'linear'))
       for name, values in plotGroup.values().items():
-        v = values[:,0]
+        v = values[:, 0]
         dat = plotfn(x1, v, '-', label=name, linewidth=2, **plotfn_kwargs)
 
         # Plot the error bars if we have them
-        if not np.all(values[:,1] == 0):
+        if not np.all(values[:, 1] == 0):
           ax.errorbar(
-            x1, v,
-            yerr=values[:,1],
-            ecolor=dat[0].get_color(),
-            capsize=5,
-            fmt='.'
-          )
+              x1,
+              v,
+              yerr=values[:, 1],
+              ecolor=dat[0].get_color(),
+              capsize=5,
+              fmt='.')
 
-      ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
+      ax.set_xlabel("{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
 
     # -------------------------------
     # 1D Plot WITH Reference
@@ -282,79 +270,81 @@ class PlotReporter(Reporter):
       fig, (ax, axRatio) = self.createPlotWithReference()
 
       # Prepare plot function according to config
-      (plotfn, plotfn_kwargs) = getPlotfn(
-        ax,
-        self.getConfig('xscale', 'linear'),
-        self.getConfig('yscale', 'linear')
-      )
-      (plotfn_ratio, plotfn_kwargs_ratio) = getPlotfn(
-        axRatio,
-        self.getConfig('xscale', 'linear'),
-        'linear'
-      )
+      (plotfn, plotfn_kwargs) = getPlotfn(ax,
+                                          self.getConfig('xscale', 'linear'),
+                                          self.getConfig('yscale', 'linear'))
+      (plotfn_ratio, plotfn_kwargs_ratio) = getPlotfn(axRatio,
+                                                      self.getConfig(
+                                                          'xscale', 'linear'),
+                                                      'linear')
 
       # Plot data
       for name, values in plotGroup.values().items():
-        v = values[:,0]
+        v = values[:, 0]
         dat = plotfn(x1, v, '-', label=name, linewidth=2, **plotfn_kwargs)
 
         # Plot the error bars if we have them
-        if not np.all(values[:,1] == 0):
+        if not np.all(values[:, 1] == 0):
           ax.errorbar(
-            x1, v,
-            yerr=values[:,1],
-            ecolor=dat[0].get_color(),
-            capsize=5
-          )
+              x1, v, yerr=values[:, 1], ecolor=dat[0].get_color(), capsize=5)
 
         # Safely bail if something went wrong while processing the reference
         try:
           rvalues = referencePlotGroup.values(name)
-          rv = rvalues[:,0]
-          ref = plotfn(x1, rv, ls='dashed', label=name + referencePlotGroup.suffix,
-            linewidth=2, c=dat[0].get_color(), **plotfn_kwargs)
+          rv = rvalues[:, 0]
+          ref = plotfn(
+              x1,
+              rv,
+              ls='dashed',
+              label=name + referencePlotGroup.suffix,
+              linewidth=2,
+              c=dat[0].get_color(),
+              **plotfn_kwargs)
 
           # Create ratio plot
-          ratio = v/rv
-          rat = plotfn_ratio(x1, ratio, c=dat[0].get_color(), **plotfn_kwargs_ratio)
+          ratio = v / rv
+          rat = plotfn_ratio(
+              x1, ratio, c=dat[0].get_color(), **plotfn_kwargs_ratio)
 
           # Calculate the ratio error bar values, if we have them
-          if not np.all(values[:,1] == 0):
-            ratio_err = ratio * np.sqrt(
-              values[:,1] ** 2 / values[:,0] + rvalues[:,1] ** 2 / rvalues[:,0]
-            )
+          if not np.all(values[:, 1] == 0):
+            ratio_err = ratio * np.sqrt(values[:, 1]**2 / values[:, 0] +
+                                        rvalues[:, 1]**2 / rvalues[:, 0])
 
             axRatio.fill_between(
-              x1, ratio-ratio_err, ratio+ratio_err,
-              facecolor=rat[0].get_color(),
-              alpha=0.5
-            )
+                x1,
+                ratio - ratio_err,
+                ratio + ratio_err,
+                facecolor=rat[0].get_color(),
+                alpha=0.5)
 
         except KeyError as e:
-          self.logger.warning('Could not find summariser %s in reference data'
-            % str(e))
+          self.logger.warning(
+              'Could not find summariser {} in reference data'.format(str(e)))
         except ValueError as e:
           self.logger.warning('Reference data are in wrong format '
-            '(check your parameter count)')
+                              '(check your parameter count)')
 
       axRatio.set_ylim([0.25, 1.75])
       axRatio.set_yticks([0.5, 1, 1.5])
       axRatio.grid(b=True, color='lightgray', linestyle='dotted')
-      axRatio.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
+      axRatio.set_xlabel(
+          "{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
       axRatio.set_ylabel("Value/Reference")
 
     # Show legend
     ax.grid(b=True, color='lightgray', linestyle='dotted')
-    ax.set_title("%s [%s]" % (self.generalConfig.title, plotGroup.title))
+    ax.set_title("{} [{}]".format(self.generalConfig.title, plotGroup.title))
     ax.legend(loc='lower right')
-    ax.set_ylabel("%s (%s)" % (plotGroup.name, plotGroup.units))
+    ax.set_ylabel("{} ({})".format(plotGroup.name, plotGroup.units))
 
     # Dump
     fig.tight_layout()
-    self.logger.info('Creating 1D %s' % (filename,))
+    self.logger.info('Creating 1D {}'.format(filename))
     plt.savefig(filename)
 
-  def dumpPlot_sum2d(self, axisValues, plotGroup, referencePlotGroup, filename):
+  def dumpPlot_sum2d(self, axisValues, plotGroup, referencePlotGroup,
+                     filename):
     """
     Dump an 2-D plot group
     """
@@ -370,7 +360,8 @@ class PlotReporter(Reporter):
     y = np.array(list(map(lambda x: float(x.get(p2['name'])), axisValues)))
 
     # Set up a regular grid of interpolation points
-    xi, yi = np.linspace(x.min(), x.max(), 100), np.linspace(y.min(), y.max(), 100)
+    xi, yi = np.linspace(x.min(), x.max(), 100), np.linspace(
+        y.min(), y.max(), 100)
     xi, yi = np.meshgrid(xi, yi)
 
     fig = None
@@ -383,7 +374,7 @@ class PlotReporter(Reporter):
       for name, values in plotGroup.values().items():
 
         # Interpolate Z
-        z = values[:,0]
+        z = values[:, 0]
         rbf = scipy.interpolate.Rbf(x, y, z, function='linear')
         zi = rbf(xi, yi)
 
@@ -393,78 +384,87 @@ class PlotReporter(Reporter):
         ax.set_aspect("equal")
         ax.scatter(x, y, c=z, linewidths=1, edgecolors='black', cmap=cmap)
         cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label('%s (%s)' % (plotGroup.title, plotGroup.units))
+        cbar.set_label('{} ({})'.format(plotGroup.title, plotGroup.units))
 
         # Show legend
         ax.grid(True)
-        ax.set_title("%s [%s]" % (self.generalConfig.title, name))
-        ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
-        ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
+        ax.set_title("{} [{}]".format(self.generalConfig.title, name))
+        ax.set_xlabel("{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
+        ax.set_ylabel("{} ({})".format(p2['name'], p2.get('units', 'Unknown')))
 
         # Dump
-        self.logger.info('Creating 2D Plot %s-%s.png' % (filename[:-4], name))
-        plt.savefig('%s-%s.png' % (filename[:-4], name))
+        self.logger.info(
+            'Creating 2D Plot {}-{}.png'.format(filename[:-4], name))
+        plt.savefig('{}-{}.png'.format(filename[:-4], name))
 
     # -------------------------------
     # 2D Plots WITH Reference
     # -------------------------------
     else:
       ratio_cmap = plt.get_cmap(
-        self.getConfig('reference', {}).get('ratiocolormap', 'PuOr')
-      )
+          self.getConfig('reference', {}).get('ratiocolormap', 'PuOr'))
 
       for name, values in plotGroup.values().items():
 
         # Interpolate Z
-        z = values[:,0]
+        z = values[:, 0]
         rbf = scipy.interpolate.Rbf(x, y, z, function='linear')
         zi = rbf(xi, yi)
 
         # Create plot with reference
-        fig, (ax, axRatio) = self.createPlotWithReference(yratio=(1,1))
+        fig, (ax, axRatio) = self.createPlotWithReference(yratio=(1, 1))
         im = ax.pcolormesh(xi, yi, zi, cmap=cmap)
         ax.scatter(x, y, c=z, linewidths=1, edgecolors='black', cmap=cmap)
         cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label('%s (%s)' % (plotGroup.title, plotGroup.units))
+        cbar.set_label('{} ({})'.format(plotGroup.title, plotGroup.units))
 
         try:
 
           # Interpolate Z-Ref
-          zref = referencePlotGroup.values(name)[:,0]
-          zratio = z/zref
+          zref = referencePlotGroup.values(name)[:, 0]
+          zratio = z / zref
           rbf = scipy.interpolate.Rbf(x, y, zratio, function='linear')
           ziratio = rbf(xi, yi)
 
-          rim = axRatio.pcolormesh(xi, yi, ziratio, cmap=ratio_cmap,
-            vmin=0.25, vmax=1.75)
-          axRatio.scatter(x, y, c=zratio, linewidths=1, edgecolors='black',
-            cmap=ratio_cmap, vmin=0.25, vmax=1.75)
+          rim = axRatio.pcolormesh(
+              xi, yi, ziratio, cmap=ratio_cmap, vmin=0.25, vmax=1.75)
+          axRatio.scatter(
+              x,
+              y,
+              c=zratio,
+              linewidths=1,
+              edgecolors='black',
+              cmap=ratio_cmap,
+              vmin=0.25,
+              vmax=1.75)
           cbar = fig.colorbar(rim, ax=axRatio)
           cbar.set_label('Ratio')
 
         except KeyError as e:
-          self.logger.warning('Could not find summariser %s in reference data'
-            % str(e))
+          self.logger.warning(
+              'Could not find summariser {} in reference data'.format(str(e)))
         except ValueError as e:
           self.logger.warning('Reference data are in wrong format '
-            '(check your parameter count)')
+                              '(check your parameter count)')
 
         # Show legends
         ax.grid(True)
-        ax.set_title("%s [%s]" % (self.generalConfig.title, name))
-        ax.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
-        ax.set_ylabel("%s (%s)" % (p2['name'], p2.get('units', 'Unknown')))
+        ax.set_title("{} [{}]".format(self.generalConfig.title, name))
+        ax.set_xlabel("{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
+        ax.set_ylabel("{} ({})".format(p2['name'], p2.get('units', 'Unknown')))
 
         axRatio.grid(True)
-        axRatio.set_xlabel("%s (%s)" % (p1['name'], p1.get('units', 'Unknown')))
+        axRatio.set_xlabel(
+            "{} ({})".format(p1['name'], p1.get('units', 'Unknown')))
         axRatio.set_ylabel("Value/" + name + referencePlotGroup.suffix)
 
         # Dump
-        self.logger.info('Creating 2D Plot %s-%s.png' % (filename[:-4], name))
-        plt.savefig('%s-%s.png' % (filename[:-4], name))
+        self.logger.info(
+            'Creating 2D Plot {}-{}.png'.format(filename[:-4], name))
+        plt.savefig('{}-{}.png'.format(filename[:-4], name))
 
-
-  def dumpPlot_sum3d(self, axisValues, plotGroup, referencePlotGroup, filename):
+  def dumpPlot_sum3d(self, axisValues, plotGroup, referencePlotGroup,
+                     filename):
     """
     Dump an 3-D plot group
     """
@@ -487,8 +487,7 @@ class PlotReporter(Reporter):
       metricPlotGroup[metricName] = PlotGroup(metric)
       if not referencePlotGroup is None:
         referencePlotGroup[metricName] = PlotGroup(
-          metric, ' ({})'.format(refConfig.get('name', 'ref'))
-        )
+            metric, ' ({})'.format(refConfig.get('name', 'ref')))
 
     # Process reference values
     if not referencePlotGroup is None:
@@ -499,7 +498,7 @@ class PlotReporter(Reporter):
             # Prettify summariser name
             if '_' in sumname:
               (pre, post) = sumname.split('_', 1)
-              sumname = '%s (%s)' % (pre, post)
+              sumname = '{} ({})'.format(pre, post)
 
             # Make sure values are in (value, error) format always
             pair = value
@@ -518,7 +517,7 @@ class PlotReporter(Reporter):
           # Prettify summariser name
           if '_' in sumname:
             (pre, post) = sumname.split('_', 1)
-            sumname = '%s (%s)' % (pre, post)
+            sumname = '{} ({})'.format(pre, post)
 
           # Make sure values are in (value, error) format always
           pair = value
@@ -534,13 +533,9 @@ class PlotReporter(Reporter):
     filePrefix = config.get('prefix', 'plot-')
     fileSuffix = config.get('suffix', '')
     for metric, plotGroup in metricPlotGroup.items():
-      dumpFunction(
-        axisValues,
-        plotGroup,
-        None if referencePlotGroup is None else referencePlotGroup[metric],
-        '%s%s%s.png' % (filePrefix, metric, fileSuffix)
-      )
-
+      dumpFunction(axisValues, plotGroup, None if referencePlotGroup is None
+                   else referencePlotGroup[metric], '{}{}{}.png'.foramt(
+                       filePrefix, metric, fileSuffix))
 
   def dumpPlot_raw1d(self, plotGroup, referencePlotGroup, filename):
     """
@@ -564,19 +559,19 @@ class PlotReporter(Reporter):
       # Lookup the parameter details
       for param in self.generalConfig.parameters.values():
         if param['name'] == axisName:
-          ax.set_xlabel("%s (%s)" % (param['name'], param.get('units', 'Unknown')))
+          ax.set_xlabel(
+              "{} ({})".format(param['name'], param.get('units', 'Unknown')))
 
     # Show legend
     ax.grid(b=True, color='lightgray', linestyle='dotted')
-    ax.set_title("%s [%s]" % (self.generalConfig.title, plotGroup.title))
+    ax.set_title("{} [{}]".format(self.generalConfig.title, plotGroup.title))
     ax.legend(loc='lower right')
-    ax.set_ylabel("%s (%s)" % (plotGroup.name, plotGroup.units))
+    ax.set_ylabel("{} ({})".format(plotGroup.name, plotGroup.units))
 
     # Dump
     fig.tight_layout()
-    self.logger.info('Creating 1D %s' % (filename,))
+    self.logger.info('Creating 1D {}'.format(filename))
     plt.savefig(filename)
-
 
   def plot_raw(self, config, summarizer, reference, refConfig):
     """
@@ -592,8 +587,7 @@ class PlotReporter(Reporter):
       localPlotGroup[metricName] = RawPlotGroup(metric)
       if not reference is None:
         referencePlotGroup[metricName] = RawPlotGroup(
-          metric, ' ({})'.format(refConfig.get('name', 'ref'))
-        )
+            metric, ' ({})'.format(refConfig.get('name', 'ref')))
 
     # Process summarizer values
     for testCase in summarizer.raw():
@@ -619,11 +613,9 @@ class PlotReporter(Reporter):
     filePrefix = config.get('prefix', 'plot-')
     fileSuffix = config.get('suffix', '')
     for metric, plotGroup in localPlotGroup.items():
-      self.dumpPlot_raw1d(
-        plotGroup,
-        None if reference is None else referencePlotGroup[metric],
-        '%s%s%s.png' % (filePrefix, metric, fileSuffix)
-      )
+      self.dumpPlot_raw1d(plotGroup, None
+                          if reference is None else referencePlotGroup[metric],
+                          '{}{}{}.png'.format(filePrefix, metric, fileSuffix))
 
   def dump(self, summarizer):
     """
@@ -633,7 +625,8 @@ class PlotReporter(Reporter):
 
     # Validate dimentions
     if len(self.generalConfig.parameters) == 0:
-      raise ValueError('Requested to dump a plot without having any parameters')
+      raise ValueError(
+          'Requested to dump a plot without having any parameters')
     if len(self.generalConfig.parameters) > 3:
       raise ValueError('Requested to dump a plot with more than 3 parameters')
 
@@ -642,30 +635,25 @@ class PlotReporter(Reporter):
     refConfig = config.get('reference', None)
     if not refConfig is None:
       url = refConfig['url']
-      self.logger.info('Fetcing reference data from %s' % url)
+      self.logger.info('Fetcing reference data from {}'.format(url))
 
       # Make the request and collect data
       r = requests.get(url, headers=refConfig.get('headers', {}))
       if r.status_code < 200 or r.status_code >= 300:
-        self.logger.error('Got unexpected HTTP %i response. Disabling reference'
-           % r.status_code)
+        self.logger.error(
+            'Got unexpected HTTP {} response. Disabling reference'.format(
+                r.status_code))
       else:
         reference = r.json()
 
         # Include metadata and re-evaluate templates of the reference config
         renderedConfig = self.getRenderedConfig(
             dict(
-              map(
-                lambda v: ('refmeta:{}'.format(v[0]), v[1]),
-                reference['meta'].items()
-              )
-            )
-          )
+                map(lambda v: ('refmeta:{}'.format(v[0]), v[1]), reference[
+                    'meta'].items())))
         refConfig = renderedConfig['reference']
 
     if config.get('raw', False):
       self.plot_raw(config, summarizer, reference, refConfig)
     else:
       self.plot_sum(config, summarizer, reference, refConfig)
-
-

@@ -1,8 +1,8 @@
 import time
 from performance.driver.core.classes import PolicyFSM, State
 
-class TimedDevelopmentPolicy(PolicyFSM):
 
+class TimedDevelopmentPolicy(PolicyFSM):
   class Start(State):
     """
     Entry point state
@@ -43,7 +43,7 @@ class TimedDevelopmentPolicy(PolicyFSM):
       # are batched together into a single event in the bus at the end of the
       # stack, but they will all share the same trace ID
       self.waiting += 1
-      self.traceids += [ self.setParameters(case) ]
+      self.traceids += [self.setParameters(case)]
 
       # We will be using the trace ID to find out which events are cascade
       # children of the initial request
@@ -55,7 +55,6 @@ class TimedDevelopmentPolicy(PolicyFSM):
       self.waiting -= 1
       if self.waiting <= 0:
         self.goto(TimedDevelopmentPolicy.End)
-
 
   class WaitAll(State):
     """

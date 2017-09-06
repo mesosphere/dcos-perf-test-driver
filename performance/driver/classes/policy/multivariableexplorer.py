@@ -5,6 +5,7 @@ from performance.driver.core.events import RunTaskEvent, isEventMatching
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
+
 class MultivariableExplorerPolicy(PolicyFSM):
   """
   The **Multi-Variable Exploration Policy** is running one scale test for every
@@ -124,20 +125,17 @@ class MultivariableExplorerPolicy(PolicyFSM):
           values = []
           for _ in range(0, v_samples):
             values.append(
-              round(random.uniform(v_min, v_max) / v_step) * v_step
-            )
+                round(random.uniform(v_min, v_max) / v_step) * v_step)
 
           self.parameterOptions.append(values)
 
         # Discreet values
         elif v_type == 'discrete':
-          self.parameterOptions.append(
-            config['values']
-          )
+          self.parameterOptions.append(config['values'])
 
         # Invalid values
         else:
-          raise ValueError('Unknown matrix value type "%s"' % v_type)
+          raise ValueError('Unknown matrix value type "{}"'.format(v_type))
 
       # Process the events configuration
       eventsConfig = renderdConfig.get('events', {})
@@ -146,7 +144,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.signalEvents = {}
       signalEventConfig = eventsConfig.get('signal', {})
       if not signalEventConfig:
-        raise ValueError('`events.signal` configuration must have at least 1 event defined')
+        raise ValueError(
+            '`events.signal` configuration must have at least 1 event defined')
       for status, eventName in signalEventConfig.items():
         if not type(eventName) in (tuple, list):
           eventName = [eventName]
@@ -196,8 +195,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.progressTotal = len(self.parameterValues)
       self.progressCurrent = 0
 
-      self.logger.info('Exploring %i variables with %i permutations' % \
-        (len(self.parameterNames), self.progressTotal))
+      self.logger.info('Exploring {} variables with {} permutations'.format(
+          len(self.parameterNames), self.progressTotal))
 
       self.goto(MultivariableExplorerPolicy.Deploy)
 
@@ -228,7 +227,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
       try:
         self.eventsRemaining = eval(str(self.signalEventCount), {}, evalVars)
       except Exception as e:
-        self.logger.error('Error while parsing the `signalEventcount` expression')
+        self.logger.error(
+            'Error while parsing the `signalEventcount` expression')
         raise e
 
       # Dispatch the request to update the test parameter. All such updates
@@ -263,7 +263,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
       for ev, status in self.signalEvents.items():
         if isEventMatching(event, ev):
           isHandled = True
-          self.logger.info('Run completed with status: %s' % status)
+          self.logger.info('Run completed with status: {}'.format(status))
           self.setStatus(status)
           break
 
@@ -274,7 +274,8 @@ class MultivariableExplorerPolicy(PolicyFSM):
       # Check if we ran out of events that we are waiting for
       self.eventsRemaining -= 1
       if self.eventsRemaining > 0:
-        self.logger.info('Waiting for %i more events' % self.eventsRemaining)
+        self.logger.info(
+            'Waiting for {} more events'.formt(self.eventsRemaining))
         return
 
       # Run the inter-test tasks. Upon completion the
@@ -288,10 +289,12 @@ class MultivariableExplorerPolicy(PolicyFSM):
       stale and it should be reaped cleanly. This handler will mark the status
       as "Stalled" and go to next test.
       """
-      self.logger.warn('No activity while waiting for a marathon deployment to succeed')
-      self.logger.debug('This means that either marathon failed to deploy the request '
-        'on time, or that you haven\'t registered an observer that emmits a '
-        '`MarathonDeploymentSuccessEvent`.')
+      self.logger.warn(
+          'No activity while waiting for a marathon deployment to succeed')
+      self.logger.debug(
+          'This means that either marathon failed to deploy the request '
+          'on time, or that you haven\'t registered an observer that emmits a '
+          '`MarathonDeploymentSuccessEvent`.')
 
       # Set error status
       self.setStatus('stalled')
@@ -313,7 +316,6 @@ class MultivariableExplorerPolicy(PolicyFSM):
 
       # Schedule next deployment
       self.goto(MultivariableExplorerPolicy.Deploy)
-
 
   class End(State):
     """

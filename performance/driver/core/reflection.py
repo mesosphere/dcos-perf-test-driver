@@ -2,6 +2,7 @@ import inspect
 import logging
 import sys
 
+
 class EventLocation:
   """
   Reflection information for the location of an event
@@ -16,7 +17,7 @@ class EventLocation:
 
     # Extract location information
     self.filename = function.__code__.co_filename
-    self.function =  function.__code__.co_name
+    self.function = function.__code__.co_name
     self.lineno = function.__code__.co_firstlineno
     self.classPrefix = info.function + '.'
 
@@ -24,15 +25,12 @@ class EventLocation:
       self.classPrefix = ''
 
   def __str__(self):
-    return "{}:{} (in {}{})".format(
-        self.filename,
-        self.lineno,
-        self.classPrefix,
-        self.function
-      )
+    return "{}:{} (in {}{})".format(self.filename, self.lineno,
+                                    self.classPrefix, self.function)
 
   def __repr__(self):
     return '<{}>'.format(str(self))
+
 
 class EventReflection:
   """
@@ -49,7 +47,8 @@ class EventReflection:
     Register an event in the event bus
     """
     name = event.__name__
-    self.logger.debug('Publish hint for event "%s" in %s' % (name, location))
+    self.logger.debug(
+        'Publish hint for event "{}" in {}'.format(name, location))
     if not name in self.events:
       self.events[name] = []
     self.events[name].append(location)
@@ -59,8 +58,9 @@ class EventReflection:
     Register an event usage from the event bus
     """
     name = event.__name__
-    self.logger.debug('Subscribes hint for event "%s" in %s' % (name, location))
-    self.usages.append( (name, location) )
+    self.logger.debug(
+        'Subscribes hint for event "{}" in {}'.format(name, location))
+    self.usages.append((name, location))
 
   def validate(self):
     """
@@ -80,30 +80,38 @@ class EventReflection:
 
     return failures
 
+
 #: Global singleton of event definitions
 globalDefinitions = EventReflection()
+
 
 def subscribesToHint(*events):
   """
   Hints the function as for being subscribed to the specified events in the bus
   """
+
   def real_decorator(function):
     location = EventLocation(function)
     for event in events:
       globalDefinitions.subscribes(event, location)
     return function
+
   return real_decorator
+
 
 def publishesHint(*events):
   """
   Hints the function as for publishing events to the bus
   """
+
   def real_decorator(function):
     location = EventLocation(function)
     for event in events:
       globalDefinitions.publishes(event, location)
     return function
+
   return real_decorator
+
 
 def validateEventSubscriptions():
   """

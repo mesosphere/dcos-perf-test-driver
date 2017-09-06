@@ -13,6 +13,7 @@ from ..observer.marathonevents import MarathonDeploymentSuccessEvent, \
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings()
 
+
 class MarathonDeploymentMonitorTask(Task):
   """
   Base class that subscribes to the event bus and waits for a success event
@@ -41,9 +42,7 @@ class MarathonDeploymentMonitorTask(Task):
     headers = self.getConfig('headers', {})
     dcos_auth_token = self.getDefinition('dcos_auth_token', None)
     if not dcos_auth_token is None:
-      headers = {
-        'Authorization': 'token=%s' % dcos_auth_token
-      }
+      headers = {'Authorization': 'token={}'.format(dcos_auth_token)}
 
     return headers
 
@@ -65,6 +64,7 @@ class MarathonDeploymentMonitorTask(Task):
     with self.cv:
       while len(self.trackDeployments) > 0:
         self.cv.wait()
+
 
 class RemoveAllApps(MarathonDeploymentMonitorTask):
   """
@@ -97,7 +97,11 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
 
     # Request list of apps
     self.logger.debug('Enumerating all apps')
-    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.url, verify=False, headers=self.getHeaders())
+    response = requests.get(
+        '{}/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods'.
+        format(self.url),
+        verify=False,
+        headers=self.getHeaders())
     if response.status_code != 200:
       raise RuntimeError('Unable to enumerate running apps')
 
@@ -106,19 +110,26 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
     self.trackDeployments = []
     try:
       for app in response.json()['apps']:
-        self.logger.info('Removing app %s' % app['id'])
-        response = requests.delete('%s/v2/apps/%s?force=true' % (self.url, app['id']), verify=False, headers=self.getHeaders())
+        self.logger.info('Removing app {}'.format(app['id']))
+        response = requests.delete(
+            '{}/v2/apps/{}?force=true'.format(self.url, app['id']),
+            verify=False,
+            headers=self.getHeaders())
         if response.status_code != 200:
-          self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
+          self.logger.warn('Unable to remove app {} (HTTP response {})'.format(
+              app['id'], response.status_code))
         else:
           if 'Marathon-Deployment-Id' in response.headers:
-            self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+            self.trackDeployments.append(
+                response.headers['Marathon-Deployment-Id'])
           else:
-            self.logger.warn('Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover')
+            self.logger.warn(
+                'Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover'
+            )
             preemptiveDelay = True
 
     except requests.exceptions.ConnectionError as e:
-      self.logger.warn('Unable to remove app (%r)' % (e,))
+      self.logger.warn('Unable to remove app ({})'.format(e))
 
     # Wait for deployments to complete
     self.waitDeployments()
@@ -127,6 +138,7 @@ class RemoveAllApps(MarathonDeploymentMonitorTask):
     if preemptiveDelay:
       self.logger.info('Waiting for 30 seconds for deployments to complete')
       time.sleep(30)
+
 
 class RemoveMatchingApps(MarathonDeploymentMonitorTask):
   """
@@ -162,11 +174,16 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
     # Compile matching regular expression from match directive
     config = self.getRenderedConfig()
     match = re.compile(config['match'])
-    self.logger.info('Removing apps matching `%s` from marathon' % config['match'])
+    self.logger.info(
+        'Removing apps matching `{}` from marathon'.format(config['match']))
 
     # Request list of apps
     self.logger.debug('Enumerating all apps')
-    response = requests.get('%s/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods' % self.url, verify=False, headers=self.getHeaders())
+    response = requests.get(
+        '{}/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods'.
+        format(self.url),
+        verify=False,
+        headers=self.getHeaders())
     if response.status_code != 200:
       raise RuntimeError('Unable to enumerate running apps')
 
@@ -177,15 +194,22 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
       for app in response.json()['apps']:
         if not match.search(app['id']):
           continue
-        self.logger.info('Removing app %s' % app['id'])
-        response = requests.delete('%s/v2/apps/%s?force=true' % (self.url, app['id']), verify=False, headers=self.getHeaders())
+        self.logger.info('Removing app {}'.format(app['id']))
+        response = requests.delete(
+            '{}/v2/apps/{}?force=true'.format(self.url, app['id']),
+            verify=False,
+            headers=self.getHeaders())
         if response.status_code != 200:
-          self.logger.warn('Unable to remove app %s (HTTP response %i)' % (app['id'], response.status_code))
+          self.logger.warn('Unable to remove app {} (HTTP response {})'.format(
+              app['id'], response.status_code))
         else:
           if 'Marathon-Deployment-Id' in response.headers:
-            self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+            self.trackDeployments.append(
+                response.headers['Marathon-Deployment-Id'])
           else:
-            self.logger.warn('Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover')
+            self.logger.warn(
+                'Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover'
+            )
             preemptiveDelay = True
 
       # Wait for deployments to complete
@@ -197,7 +221,8 @@ class RemoveMatchingApps(MarathonDeploymentMonitorTask):
         time.sleep(30)
 
     except requests.exceptions.ConnectionError as e:
-      self.logger.warn('Unable to remove app (%r)' % (e,))
+      self.logger.warn('Unable to remove app ({})'.format(e))
+
 
 class RemoveGroup(MarathonDeploymentMonitorTask):
   """
@@ -229,20 +254,27 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
 
   def run(self):
     group_name = self.getConfig('group')
-    self.logger.info('Removing group %s from marathon' % group_name)
+    self.logger.info('Removing group {} from marathon'.format(group_name))
 
     # Destroy group
     preemptiveDelay = False
     self.trackDeployments = []
     try:
-      response = requests.delete('%s/v2/groups/%s/?force=true' % (self.url, group_name), verify=False, headers=self.getHeaders())
+      response = requests.delete(
+          '{}/v2/groups/{}/?force=true'.format(self.url, group_name),
+          verify=False,
+          headers=self.getHeaders())
       if response.status_code != 200:
-        self.logger.warn('Unable to remove group %s (HTTP response %i)' % (group_name, response.status_code))
+        self.logger.warn('Unable to remove group {} (HTTP response {})'.format(
+            group_name, response.status_code))
       else:
         if 'Marathon-Deployment-Id' in response.headers:
-          self.trackDeployments.append(response.headers['Marathon-Deployment-Id'])
+          self.trackDeployments.append(
+              response.headers['Marathon-Deployment-Id'])
         else:
-          self.logger.warn('Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover')
+          self.logger.warn(
+              'Did not find "Marathon-Deployment-Id" response header. Using delay of 30 seconds as a failover'
+          )
           preemptiveDelay = True
 
       # Wait for deployments to complete
@@ -254,5 +286,4 @@ class RemoveGroup(MarathonDeploymentMonitorTask):
         time.sleep(30)
 
     except requests.exceptions.ConnectionError as e:
-      self.logger.warn('Unable to remove group %s (%r)' % (group_name, e))
-
+      self.logger.warn('Unable to remove group {} ({})'.format(group_name, e))

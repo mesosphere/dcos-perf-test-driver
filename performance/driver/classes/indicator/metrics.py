@@ -3,6 +3,7 @@ import requests
 
 from performance.driver.core.classes import Indicator
 
+
 class NormalizedMeanMetricIndicator(Indicator):
   """
   Calculates the average of the metrics of all runs, normalized by the given
@@ -29,18 +30,19 @@ class NormalizedMeanMetricIndicator(Indicator):
       if type(sum_value) in (list, tuple):
         sum_value = sum_value[0]
 
-      self.logger.debug('For Axis %r, metric %s, summariser %s = %r'
-        % (axis, v_metric, v_summarizer, sum_value))
+      self.logger.debug('For Axis {}, metric {}, summariser {} = {}'.format(
+          axis, v_metric, v_summarizer, sum_value))
 
       # Calculate normalized value
       try:
         norm = eval(v_norm_expr, {}, axis.parameters)
         value = float(sum_value) / norm
-        self.logger.debug('Norm expression "%s" evaluated to %r = %r'
-          % (v_norm_expr, norm, value))
+        self.logger.debug('Norm expression "{}" evaluated to {} = {}'.format(
+            v_norm_expr, norm, value))
 
       except Exception as e:
-        self.logger.error("Error evaluating normalization expression: %s" % str(e))
+        self.logger.error(
+            "Error evaluating normalization expression: {}".format(str(e)))
         value = 0
 
       # Calculate indicator
@@ -53,6 +55,7 @@ class NormalizedMeanMetricIndicator(Indicator):
 
     # Return
     return v_mean
+
 
 class NormalizedMinMetricIndicator(Indicator):
   """
@@ -85,7 +88,8 @@ class NormalizedMinMetricIndicator(Indicator):
         norm = eval(v_norm_expr, {}, axis.parameters)
         value = float(sum_value) / norm
       except Exception as e:
-        self.logger.error("Error evaluating normalization expression: %s" % str(e))
+        self.logger.error(
+            "Error evaluating normalization expression: {}".format(str(e)))
         value = 0
 
       # Calculate indicator
@@ -97,6 +101,7 @@ class NormalizedMinMetricIndicator(Indicator):
 
     # Return
     return v_min
+
 
 class NormalizedMaxMetricIndicator(Indicator):
   """
@@ -129,7 +134,8 @@ class NormalizedMaxMetricIndicator(Indicator):
         norm = eval(v_norm_expr, {}, axis.parameters)
         value = float(sum_value) / norm
       except Exception as e:
-        self.logger.error("Error evaluating normalization expression: %s" % str(e))
+        self.logger.error(
+            "Error evaluating normalization expression: {}".format(str(e)))
         value = 0
 
       # Calculate indicator
@@ -141,4 +147,3 @@ class NormalizedMaxMetricIndicator(Indicator):
 
     # Return
     return v_max
-

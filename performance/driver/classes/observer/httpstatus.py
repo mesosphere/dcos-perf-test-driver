@@ -4,11 +4,14 @@ import requests
 from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event
 
+
 class HTTPStatusEvent(Event):
   pass
 
+
 class HTTPStatusAliveEvent(HTTPStatusEvent):
   pass
+
 
 class HTTPStatusObserver(Observer):
   """
