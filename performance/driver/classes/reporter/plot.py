@@ -93,6 +93,47 @@ class PlotGroup:
         self.valueSeries[name]
       )
 
+class RawPlotGroup:
+
+  def __init__(self, metric, suffix=''):
+    self.suffix = suffix
+    self.name = metric.config.get('name', 'metric')
+    self.title = metric.config.get('title', self.name)
+    self.desc = metric.config.get('desc', None)
+    self.units = metric.config.get('units', 'Unknown')
+    self.x = {}
+    self.y = []
+
+  def firstAxis(self):
+    if len(self.x) == 0:
+      return None
+    return list(self.x.keys())[0]
+
+  def axisNames(self):
+    return list(self.x.keys())
+
+  def put(self, axisValues, binValue):
+    for key, value in axisValues.items():
+      if not key in self.x:
+        self.x[key] = []
+      self.x[key].append(value)
+    self.y.append(binValue)
+
+  def pairs(self, axisName=None):
+    if axisName is None:
+      return dict(
+          map(
+            lambda name: (name, self.pairs(name)),
+            self.x.keys()
+          )
+        )
+
+    else:
+      return (
+          np.array(self.x[axisName]),
+          np.array(self.y)
+        )
+
 class PlotReporter(Reporter):
   """
   The **Plot Reporter** is creating a PNG plot with the measured values
@@ -118,6 +159,9 @@ class PlotReporter(Reporter):
         # [Optional] The colormap to use when plotting 2D plots
         # Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html
         colormap: plasma
+
+        # [Optional] Plot the raw values as a scatter plot and not the summarised
+        raw: False
 
         # [Optional] Reference data structure
         reference:
@@ -191,7 +235,7 @@ class PlotReporter(Reporter):
 
     return fig, (ax1, ax2)
 
-  def dumpPlot_1d(self, axisValues, plotGroup, referencePlotGroup, filename):
+  def dumpPlot_sum1d(self, axisValues, plotGroup, referencePlotGroup, filename):
     """
     Dump an 1-D plot group
     """
@@ -310,7 +354,7 @@ class PlotReporter(Reporter):
     self.logger.info('Creating 1D %s' % (filename,))
     plt.savefig(filename)
 
-  def dumpPlot_2d(self, axisValues, plotGroup, referencePlotGroup, filename):
+  def dumpPlot_sum2d(self, axisValues, plotGroup, referencePlotGroup, filename):
     """
     Dump an 2-D plot group
     """
@@ -420,55 +464,23 @@ class PlotReporter(Reporter):
         plt.savefig('%s-%s.png' % (filename[:-4], name))
 
 
-  def dumpPlot_3d(self, axisValues, plotGroup, referencePlotGroup, filename):
+  def dumpPlot_sum3d(self, axisValues, plotGroup, referencePlotGroup, filename):
     """
     Dump an 3-D plot group
     """
     raise NotImplementedError('The 3-axis plot is nt yet implemented')
 
-  def dump(self, summarizer):
+  def plot_sum(self, config, summarizer, reference, refConfig):
     """
-    Dump a plot for every metric in the time series
+    Dump summarised plots
     """
-    config = self.getRenderedConfig()
-
-    # Validate dimentions
-    if len(self.generalConfig.parameters) == 0:
-      raise ValueError('Requested to dump a plot without having any parameters')
-    if len(self.generalConfig.parameters) > 3:
-      raise ValueError('Requested to dump a plot with more than 3 parameters')
 
     # Prepare plot group
     axisValues = []
     metricPlotGroup = {}
-    referencePlotGroup = None
-
-    # Collect reference data if we have them
-    reference = None
-    refConfig = config.get('reference', None)
-    if not refConfig is None:
-      url = refConfig['url']
-      self.logger.info('Fetcing reference data from %s' % url)
-
-      # Make the request and collect data
-      r = requests.get(url, headers=refConfig.get('headers', {}))
-      if r.status_code < 200 or r.status_code >= 300:
-        self.logger.error('Got unexpected HTTP %i response. Disabling reference'
-           % r.status_code)
-      else:
-        reference = r.json()
-        referencePlotGroup = {}
-
-        # Include metadata and re-evaluate templates of the reference config
-        renderedConfig = self.getRenderedConfig(
-            dict(
-              map(
-                lambda v: ('refmeta:{}'.format(v[0]), v[1]),
-                reference['meta'].items()
-              )
-            )
-          )
-        refConfig = renderedConfig['reference']
+    referencePlotGroup = {}
+    if reference is None:
+      referencePlotGroup = None
 
     # Create one plot for every observed value
     for metricName, metric in self.generalConfig.metrics.items():
@@ -515,7 +527,7 @@ class PlotReporter(Reporter):
           metricPlotGroup[metric].series(sumname).append(pair)
 
     # Dump plots using the correct function
-    dumpFunction = [self.dumpPlot_1d, self.dumpPlot_2d, self.dumpPlot_3d] \
+    dumpFunction = [self.dumpPlot_sum1d, self.dumpPlot_sum2d, self.dumpPlot_sum3d] \
                    [len(self.generalConfig.parameters)-1]
 
     # Create and dump plots
@@ -528,3 +540,132 @@ class PlotReporter(Reporter):
         None if referencePlotGroup is None else referencePlotGroup[metric],
         '%s%s%s.png' % (filePrefix, metric, fileSuffix)
       )
+
+
+  def dumpPlot_raw1d(self, plotGroup, referencePlotGroup, filename):
+    """
+    Dump a raw 1D plot
+    """
+
+    fig, ax = self.createPlot()
+    axisName = plotGroup.firstAxis()
+
+    if not axisName is None:
+
+      # Plot data
+      (x, y) = plotGroup.pairs(axisName)
+      ax.scatter(x, y, label=plotGroup.name)
+
+      # Plot reference
+      if referencePlotGroup:
+        (x, y) = referencePlotGroup.pairs(axisName)
+        ax.scatter(x, y, label=referencePlotGroup.name)
+
+      # Lookup the parameter details
+      for param in self.generalConfig.parameters.values():
+        if param['name'] == axisName:
+          ax.set_xlabel("%s (%s)" % (param['name'], param.get('units', 'Unknown')))
+
+    # Show legend
+    ax.grid(b=True, color='lightgray', linestyle='dotted')
+    ax.set_title("%s [%s]" % (self.generalConfig.title, plotGroup.title))
+    ax.legend(loc='lower right')
+    ax.set_ylabel("%s (%s)" % (plotGroup.name, plotGroup.units))
+
+    # Dump
+    fig.tight_layout()
+    self.logger.info('Creating 1D %s' % (filename,))
+    plt.savefig(filename)
+
+
+  def plot_raw(self, config, summarizer, reference, refConfig):
+    """
+    Dump raw data points (scatter plot)
+    """
+
+    # Prepare plot group
+    localPlotGroup = {}
+    referencePlotGroup = {}
+
+    # Create one plot for every observed value
+    for metricName, metric in self.generalConfig.metrics.items():
+      localPlotGroup[metricName] = RawPlotGroup(metric)
+      if not reference is None:
+        referencePlotGroup[metricName] = RawPlotGroup(
+          metric, ' ({})'.format(refConfig.get('name', 'ref'))
+        )
+
+    # Process summarizer values
+    for testCase in summarizer.raw():
+      axisValue = self.normalizeAxisValues(testCase['parameters'])
+
+      # Process summarized values into the appropriate plot group
+      for metric, rawValues in testCase['values'].items():
+        group = localPlotGroup[metric]
+        for (ts, value) in rawValues:
+          group.put(axisValue, value)
+
+    # Process reference values
+    if reference:
+      for testCase in reference['raw']:
+        axisValue = testCase['parameters']
+
+        for metric, rawValues in testCase['values'].items():
+          group = referencePlotGroup[metric]
+          for (ts, value) in rawValues:
+            group.put(axisValue, value)
+
+    # Plot
+    filePrefix = config.get('prefix', 'plot-')
+    fileSuffix = config.get('suffix', '')
+    for metric, plotGroup in localPlotGroup.items():
+      self.dumpPlot_raw1d(
+        plotGroup,
+        None if reference is None else referencePlotGroup[metric],
+        '%s%s%s.png' % (filePrefix, metric, fileSuffix)
+      )
+
+  def dump(self, summarizer):
+    """
+    Dump a plot for every metric in the time series
+    """
+    config = self.getRenderedConfig()
+
+    # Validate dimentions
+    if len(self.generalConfig.parameters) == 0:
+      raise ValueError('Requested to dump a plot without having any parameters')
+    if len(self.generalConfig.parameters) > 3:
+      raise ValueError('Requested to dump a plot with more than 3 parameters')
+
+    # Collect reference data if we have them
+    reference = None
+    refConfig = config.get('reference', None)
+    if not refConfig is None:
+      url = refConfig['url']
+      self.logger.info('Fetcing reference data from %s' % url)
+
+      # Make the request and collect data
+      r = requests.get(url, headers=refConfig.get('headers', {}))
+      if r.status_code < 200 or r.status_code >= 300:
+        self.logger.error('Got unexpected HTTP %i response. Disabling reference'
+           % r.status_code)
+      else:
+        reference = r.json()
+
+        # Include metadata and re-evaluate templates of the reference config
+        renderedConfig = self.getRenderedConfig(
+            dict(
+              map(
+                lambda v: ('refmeta:{}'.format(v[0]), v[1]),
+                reference['meta'].items()
+              )
+            )
+          )
+        refConfig = renderedConfig['reference']
+
+    if config.get('raw', False):
+      self.plot_raw(config, summarizer, reference, refConfig)
+    else:
+      self.plot_sum(config, summarizer, reference, refConfig)
+
+
