@@ -147,7 +147,7 @@ class CmdlineChannel(Channel):
         (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr], [],
                                               [])
         if proc.stdout in rlist:
-          block = proc.stdout.read(1024)
+          block = proc.stdout.read(1024 * 1024)
           lines[0] += block.decode('utf-8')
           while '\n' in lines[0]:
             (line, lines[0]) = lines[0].split('\n', 1)
@@ -156,7 +156,7 @@ class CmdlineChannel(Channel):
                     line, sourceName, 'stdin', traceid=self.lastTraceId))
 
         if proc.stderr in rlist:
-          block = proc.stderr.read(1024)
+          block = proc.stderr.read(1024 * 1024)
           lines[1] += block.decode('utf-8')
           while '\n' in lines[1]:
             (line, lines[1]) = lines[1].split('\n', 1)
