@@ -130,7 +130,6 @@ class FSM:
 
       # Call the event handler if we have one
       if hasattr(stateInst, handlerName):
-        self.logger.debug('Handling event {}'.format(event.event))
         getattr(stateInst, handlerName)(event)
         return
 
