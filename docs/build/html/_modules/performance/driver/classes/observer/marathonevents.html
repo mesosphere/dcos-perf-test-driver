@@ -171,78 +171,17 @@
 
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Observer</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.template</span> <span class="k">import</span> <span class="n">TemplateString</span><span class="p">,</span> <span class="n">TemplateDict</span>
-<span class="kn">from</span> <span class="nn">performance.driver.core.events</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">LogLineEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span>
+<span class="kn">from</span> <span class="nn">performance.driver.core.events</span> <span class="k">import</span> <span class="n">LogLineEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.utils.http</span> <span class="k">import</span> <span class="n">is_accessible</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
-<span class="kn">from</span> <span class="nn">performance.driver.classes.channel.http</span> <span class="k">import</span> <span class="n">HTTPRequestStartEvent</span>
+<span class="kn">from</span> <span class="nn">performance.driver.classes.channel.marathon</span> <span class="k">import</span> <span class="n">MarathonDeploymentRequestedEvent</span>
+<span class="kn">from</span> <span class="nn">performance.driver.classes.observer.events.marathon</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">Queue</span>
 
 <span class="c1">################################################################################</span>
-<span class="c1"># MarathonEvent</span>
-<span class="c1">################################################################################</span>
 
-<div class="viewcode-block" id="MarathonEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-  <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="MarathonStartedEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonStartedEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonStartedEvent</span><span class="p">(</span><span class="n">MarathonEvent</span><span class="p">):</span>
-  <span class="k">pass</span></div>
-
-<span class="c1">################################################################################</span>
-<span class="c1"># MarathonEvent -&gt; MarathonAPIEvent</span>
-<span class="c1">################################################################################</span>
-
-<div class="viewcode-block" id="MarathonAPIEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonAPIEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonAPIEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span></div>
-
-<div class="viewcode-block" id="MarathonAPIPostEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonAPIPostEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonAPIPostEvent</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">):</span>
-  <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="MarathonStatusUpdateEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonStatusUpdateEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonStatusUpdateEvent</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">):</span>
-  <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="MarathonFrameworkMessageEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonFrameworkMessageEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonFrameworkMessageEvent</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">):</span>
-  <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="MarathonSubscribeEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonSubscribeEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonSubscribeEvent</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">):</span>
-  <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="MarathonUnsubscribeEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonUnsubscribeEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonUnsubscribeEvent</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">):</span>
-  <span class="k">pass</span></div>
-
-<span class="c1">################################################################################</span>
-<span class="c1"># MarathonEvent -&gt; MarathonAPIEvent -&gt; MarathonDeploymentEvent</span>
-<span class="c1">################################################################################</span>
-
-<div class="viewcode-block" id="MarathonDeploymentEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonDeploymentEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonDeploymentEvent</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">deployment</span> <span class="o">=</span> <span class="n">deployment</span></div>
-
-<div class="viewcode-block" id="MarathonDeploymentSuccessEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonDeploymentSuccessEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonDeploymentSuccessEvent</span><span class="p">(</span><span class="n">MarathonDeploymentEvent</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="MarathonDeploymentFailedEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonDeploymentFailedEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonDeploymentFailedEvent</span><span class="p">(</span><span class="n">MarathonDeploymentEvent</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="MarathonDeploymentStepSuccessEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonDeploymentStepSuccessEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonDeploymentStepSuccessEvent</span><span class="p">(</span><span class="n">MarathonDeploymentEvent</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="MarathonDeploymentStepFailureEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonDeploymentStepFailureEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonDeploymentStepFailureEvent</span><span class="p">(</span><span class="n">MarathonDeploymentEvent</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="MarathonDeploymentInfoEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.observer.marathonevents.MarathonDeploymentInfoEvent">[docs]</a><span class="k">class</span> <span class="nc">MarathonDeploymentInfoEvent</span><span class="p">(</span><span class="n">MarathonDeploymentEvent</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">deployment</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-<span class="c1">################################################################################</span>
-
-<div class="viewcode-block" id="MarathonEventsObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.marathonevents.MarathonEventsObserver">[docs]</a><span class="k">class</span> <span class="nc">MarathonEventsObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+<div class="viewcode-block" id="MarathonEventsObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.MarathonEventsObserver">[docs]</a><span class="k">class</span> <span class="nc">MarathonEventsObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The *Marathon Events Observer* is extracting high-level events by subscribing</span>
 <span class="sd">  to the Server-Side Events endpoint on marathon.</span>
@@ -286,7 +225,7 @@
 
 <span class="sd">  &quot;&quot;&quot;</span>
 
-  <span class="nd">@subscribesToHint</span><span class="p">(</span><span class="n">HTTPRequestStartEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span><span class="p">)</span>
+  <span class="nd">@subscribesToHint</span><span class="p">(</span><span class="n">MarathonDeploymentRequestedEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">StartEvent</span><span class="p">)</span>
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">urlTpl</span> <span class="o">=</span> <span class="n">TemplateString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">))</span>
@@ -295,6 +234,7 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">eventEmitterThread</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">eventQueue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDsLock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">activeSse</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -305,40 +245,25 @@
 
     <span class="c1"># When an HTTP request is initiated, get the application name and use this</span>
     <span class="c1"># as the means of linking the traceids to the source</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleHttpRequest</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">HTTPRequestStartEvent</span><span class="p">,),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleDeploymentRequest</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">MarathonDeploymentRequestedEvent</span><span class="p">,</span> <span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="c1"># Also subscribe to the teardown event in order to cleanly stop the event</span>
     <span class="c1"># handling thread. The order=2 here is ensuring that the `running` flag is</span>
     <span class="c1"># set to `False` before marathon thread is killed.</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,</span> <span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="c1"># Also subscribe to the setup event in order to start the polling loop.</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStartEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStartEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,</span> <span class="p">))</span>
 
-  <span class="k">def</span> <span class="nf">handleHttpRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">handleDeploymentRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Look for an HTTP request that could trigger a deployment, and get the ID</span>
 <span class="sd">    in order to resolve it to a deployment at a later time</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># App deployment or modification</span>
-    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;/v2/apps&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">url</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="s1">&#39;put&#39;</span><span class="p">,</span> <span class="s1">&#39;patch&#39;</span><span class="p">)):</span>
-      <span class="k">try</span><span class="p">:</span>
-        <span class="n">body</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">[</span><span class="n">body</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span>
-      <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-
-    <span class="c1"># Pod deployment or modification</span>
-    <span class="k">elif</span> <span class="p">(</span><span class="s1">&#39;/v2/pods&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">url</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="s1">&#39;put&#39;</span><span class="p">,</span> <span class="s1">&#39;patch&#39;</span><span class="p">)):</span>
-      <span class="c1"># TODO: Implement</span>
-      <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Cannot trace the event ID of pod deployment&#39;</span><span class="p">)</span>
-
-    <span class="c1"># Group deployment or modification</span>
-    <span class="k">elif</span> <span class="p">(</span><span class="s1">&#39;/v2/groups&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">url</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="s1">&#39;put&#39;</span><span class="p">,</span> <span class="s1">&#39;patch&#39;</span><span class="p">)):</span>
-      <span class="c1"># TODO: Implement</span>
-      <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Cannot trace the event ID of group deployment&#39;</span><span class="p">)</span>
-
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDsLock</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">instance</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span>
 
   <span class="c1"># @publishesHint(MarathonStartedEvent)</span>
   <span class="c1"># def handleLogLineEvent(self, event):</span>
@@ -378,38 +303,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Start the event reader thread</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventReceiverThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eventReceiverHandler</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventReceiverThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eventReceiverHandler</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">eventReceiverThread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
     <span class="c1"># Start the event emmiter thread</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventEmitterThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eventEmitterThreadHandler</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventEmitterThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eventEmitterThreadHandler</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">eventEmitterThread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-
-  <span class="c1"># def getAffectedAppIDs(self, data):</span>
-  <span class="c1">#   &quot;&quot;&quot;</span>
-  <span class="c1">#   Walk down the data structure, find all &quot;id&quot; properties and check if for</span>
-  <span class="c1">#   any one of these IDs we have a known trace ID.</span>
-  <span class="c1">#   &quot;&quot;&quot;</span>
-  <span class="c1">#   traceids = set()</span>
-
-  <span class="c1">#   def walk(obj):</span>
-  <span class="c1">#     &quot;&quot;&quot;</span>
-  <span class="c1">#     Recursive walk function that locates &#39;id&#39; keys in any dicts and</span>
-  <span class="c1">#     update the traceids</span>
-  <span class="c1">#     &quot;&quot;&quot;</span>
-  <span class="c1">#     if isinstance(obj, dict):</span>
-  <span class="c1">#       if &#39;id&#39; in obj:</span>
-  <span class="c1">#         if obj[&#39;id&#39;] in self.instanceTraceIDs:</span>
-  <span class="c1">#           traceids.update(self.instanceTraceIDs[obj[&#39;id&#39;]])</span>
-  <span class="c1">#       for k,v in obj.items():</span>
-  <span class="c1">#         walk(v)</span>
-  <span class="c1">#     elif isinstance(obj, list):</span>
-  <span class="c1">#       for v in obj:</span>
-  <span class="c1">#         walk(v)</span>
-
-  <span class="c1">#   # Walk structure and collect trace IDs</span>
-  <span class="c1">#   walk(data)</span>
-  <span class="c1">#   return list(traceids)</span>
 
   <span class="k">def</span> <span class="nf">getTraceIDs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -417,28 +318,26 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">traceids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
-      <span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">:</span>
-        <span class="n">traceids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">[</span><span class="nb">id</span><span class="p">])</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDsLock</span><span class="p">:</span>
+      <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">:</span>
+          <span class="n">traceids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">[</span><span class="nb">id</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">traceids</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">getAffectedIDs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deployment</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">getStepsAffectedIDs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect the IDs affected from this deployment</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;plan&#39;</span> <span class="ow">in</span> <span class="n">deployment</span><span class="p">:</span>
-      <span class="k">return</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;steps&#39;</span> <span class="ow">in</span> <span class="n">deployment</span><span class="p">[</span><span class="s1">&#39;plan&#39;</span><span class="p">]:</span>
-      <span class="k">return</span> <span class="p">[]</span>
-
     <span class="c1"># Collect the apps from the deployment steps</span>
-    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">deployment</span><span class="p">[</span><span class="s1">&#39;plan&#39;</span><span class="p">][</span><span class="s1">&#39;steps&#39;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
       <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;actions&#39;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="s1">&#39;app&#39;</span> <span class="ow">in</span> <span class="n">action</span><span class="p">:</span>
           <span class="n">ids</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">action</span><span class="p">[</span><span class="s1">&#39;app&#39;</span><span class="p">]])</span>
+        <span class="k">elif</span> <span class="s1">&#39;pod&#39;</span> <span class="ow">in</span> <span class="n">action</span><span class="p">:</span>
+          <span class="n">ids</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">action</span><span class="p">[</span><span class="s1">&#39;pod&#39;</span><span class="p">]])</span>
 
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
 
@@ -446,14 +345,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove IDs from the list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
-      <span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">:</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDsLock</span><span class="p">:</span>
+      <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">:</span>
+          <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">instanceTraceIDs</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
 
-  <span class="nd">@publishesHint</span><span class="p">(</span><span class="n">MarathonStartedEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentStepSuccessEvent</span><span class="p">,</span> \
-    <span class="n">MarathonDeploymentStepFailureEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentInfoEvent</span><span class="p">,</span> \
-    <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentFailedEvent</span><span class="p">,</span> \
-    <span class="n">MarathonAPIEvent</span><span class="p">)</span>
+  <span class="nd">@publishesHint</span><span class="p">(</span><span class="n">MarathonStartedEvent</span><span class="p">,</span> <span class="n">MarathonGroupChangeSuccessEvent</span><span class="p">,</span>
+    <span class="n">MarathonGroupChangeFailedEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">,</span>
+    <span class="n">MarathonDeploymentFailedEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentStatusEvent</span><span class="p">,</span>
+    <span class="n">MarathonDeploymentStepSuccessEvent</span><span class="p">,</span> <span class="n">MarathonDeploymentStepFailureEvent</span><span class="p">,</span>
+    <span class="n">MarathonSSEEvent</span><span class="p">)</span>
   <span class="k">def</span> <span class="nf">eventEmitterThreadHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This event is draining the receiver queue and is forwarding the events</span>
@@ -476,57 +377,97 @@
         <span class="k">continue</span>
 
       <span class="c1"># Dispatch raw event</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Received event </span><span class="si">%s</span><span class="s1">: </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">eventName</span><span class="p">,</span> <span class="n">eventData</span><span class="p">))</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonAPIEvent</span><span class="p">(</span><span class="n">eventData</span><span class="p">))</span>
-
-      <span class="c1"># Get the affected IDs</span>
-      <span class="n">affectedIDs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAffectedIDs</span><span class="p">(</span><span class="n">eventData</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Received event </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eventName</span><span class="p">,</span> <span class="n">eventData</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonSSEEvent</span><span class="p">(</span><span class="n">eventName</span><span class="p">,</span> <span class="n">eventData</span><span class="p">))</span>
 
       <span class="c1">#</span>
-      <span class="c1"># deployment_step_success</span>
+      <span class="c1"># group_change_success</span>
       <span class="c1">#</span>
-      <span class="k">if</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_step_success&#39;</span><span class="p">:</span>
-        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;plan&#39;</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonDeploymentStepSuccessEvent</span><span class="p">(</span><span class="n">deploymentId</span><span class="p">,</span> <span class="n">eventData</span><span class="p">,</span>
-          <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)))</span>
+      <span class="k">if</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;group_change_success&#39;</span><span class="p">:</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="p">[</span><span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;groupId&#39;</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonGroupChangeSuccessEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">affectedIds</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span>
+                    <span class="n">affectedIds</span><span class="p">)))</span>
 
       <span class="c1">#</span>
-      <span class="c1"># deployment_step_failure</span>
+      <span class="c1"># group_change_failed</span>
       <span class="c1">#</span>
-      <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_step_failure&#39;</span><span class="p">:</span>
-        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;plan&#39;</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonDeploymentStepFailureEvent</span><span class="p">(</span><span class="n">deploymentId</span><span class="p">,</span> <span class="n">eventData</span><span class="p">,</span>
-          <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)))</span>
-
-      <span class="c1">#</span>
-      <span class="c1"># deployment_info</span>
-      <span class="c1">#</span>
-      <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_info&#39;</span><span class="p">:</span>
-        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;plan&#39;</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonDeploymentInfoEvent</span><span class="p">(</span><span class="n">deploymentId</span><span class="p">,</span> <span class="n">eventData</span><span class="p">,</span>
-          <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)))</span>
+      <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;group_change_failed&#39;</span><span class="p">:</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="p">[</span><span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;groupId&#39;</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonGroupChangeFailedEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">affectedIds</span><span class="p">,</span> <span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;reason&#39;</span><span class="p">],</span>
+                  <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span><span class="n">affectedIds</span><span class="p">)))</span>
 
       <span class="c1">#</span>
       <span class="c1"># deployment_success</span>
       <span class="c1">#</span>
       <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_success&#39;</span><span class="p">:</span>
-        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonDeploymentSuccessEvent</span><span class="p">(</span><span class="n">deploymentId</span><span class="p">,</span> <span class="n">eventData</span><span class="p">,</span>
-          <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">removeIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plan&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStepsAffectedIDs</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">eventData</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span>
+                    <span class="n">affectedIds</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeIDs</span><span class="p">(</span><span class="n">affectedIds</span><span class="p">)</span>
 
       <span class="c1">#</span>
       <span class="c1"># deployment_failed</span>
       <span class="c1">#</span>
       <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_failed&#39;</span><span class="p">:</span>
-        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">eventData</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">MarathonDeploymentFailedEvent</span><span class="p">(</span><span class="n">deploymentId</span><span class="p">,</span> <span class="n">eventData</span><span class="p">,</span>
-          <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">removeIDs</span><span class="p">(</span><span class="n">affectedIDs</span><span class="p">)</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plan&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStepsAffectedIDs</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonDeploymentFailedEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">affectedIds</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span>
+                    <span class="n">affectedIds</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeIDs</span><span class="p">(</span><span class="n">affectedIds</span><span class="p">)</span>
+
+      <span class="c1">#</span>
+      <span class="c1"># deployment_info</span>
+      <span class="c1">#</span>
+      <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_info&#39;</span><span class="p">:</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plan&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStepsAffectedIDs</span><span class="p">([</span><span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;currentStep&#39;</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonDeploymentStatusEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">affectedIds</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span>
+                    <span class="n">affectedIds</span><span class="p">)))</span>
+
+      <span class="c1">#</span>
+      <span class="c1"># deployment_step_success</span>
+      <span class="c1">#</span>
+      <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_step_success&#39;</span><span class="p">:</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plan&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStepsAffectedIDs</span><span class="p">([</span><span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;currentStep&#39;</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonDeploymentStepSuccessEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">affectedIds</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span>
+                    <span class="n">affectedIds</span><span class="p">)))</span>
+
+      <span class="c1">#</span>
+      <span class="c1"># deployment_step_failure</span>
+      <span class="c1">#</span>
+      <span class="k">elif</span> <span class="n">eventName</span> <span class="o">==</span> <span class="s1">&#39;deployment_step_failure&#39;</span><span class="p">:</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plan&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">deploymentId</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">affectedIds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStepsAffectedIDs</span><span class="p">([</span><span class="n">eventData</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;currentStep&#39;</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">MarathonDeploymentStepFailureEvent</span><span class="p">(</span>
+                <span class="n">deploymentId</span><span class="p">,</span> <span class="n">affectedIds</span><span class="p">,</span> <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTraceIDs</span><span class="p">(</span>
+                    <span class="n">affectedIds</span><span class="p">)))</span>
 
       <span class="c1"># Warn unknown events</span>
       <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Unhandled marathon event </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1"> received&#39;</span> <span class="o">%</span> <span class="n">eventName</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">&#39;Unhandled marathon event </span><span class="se">\&#39;</span><span class="si">{}</span><span class="se">\&#39;</span><span class="s1"> received&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eventName</span><span class="p">))</span>
 
       <span class="c1"># Inform queue that the task is done</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">eventQueue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
@@ -555,12 +496,13 @@
       <span class="c1">#</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Authorization&#39;</span> <span class="ow">in</span> <span class="n">headers</span> \
          <span class="ow">and</span> <span class="s1">&#39;dcos_auth_token&#39;</span> <span class="ow">in</span> <span class="n">definitions</span><span class="p">:</span>
-        <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">]</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">])</span>
 
       <span class="c1">#</span>
       <span class="c1"># Poll the endpoint until it responds</span>
       <span class="c1">#</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking if </span><span class="si">%s</span><span class="s1"> is alive&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking if </span><span class="si">{}</span><span class="s1"> is alive&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
       <span class="k">if</span> <span class="n">is_accessible</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">405</span><span class="p">,</span> <span class="mi">400</span><span class="p">]):</span>
         <span class="k">break</span>
 
@@ -614,7 +556,8 @@
               <span class="k">return</span>
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">):</span>
-              <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Unable to connect to the remote host. Retrying in 1s sec.&#39;</span><span class="p">)</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                  <span class="s1">&#39;Unable to connect to the remote host. Retrying in 1s sec.&#39;</span><span class="p">)</span>
               <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
               <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Exception in the marathon events main loop&#39;</span><span class="p">)</span>

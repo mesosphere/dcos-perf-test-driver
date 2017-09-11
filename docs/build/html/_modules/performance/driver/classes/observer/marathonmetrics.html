@@ -173,6 +173,7 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.utils</span> <span class="k">import</span> <span class="n">dictDiff</span>
 
+
 <div class="viewcode-block" id="MarathonMetricsObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.MarathonMetricsObserver">[docs]</a><span class="k">class</span> <span class="nc">MarathonMetricsObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The *Marathon Metrics Observer* is observing for changes in the marathon</span>
@@ -230,9 +231,10 @@
   <span class="nd">@subscribesToHint</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,</span> <span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="n">StartEvent</span><span class="p">)</span>
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleParameterUpdateEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStart</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,</span> <span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleParameterUpdateEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStart</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,</span> <span class="p">))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">previous</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">forceUpdate</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">pollingActive</span> <span class="o">=</span> <span class="kc">False</span>
@@ -245,7 +247,6 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">pollingActive</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">pollingThread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pollingThreadTarget</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">pollingThread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-
 
   <span class="k">def</span> <span class="nf">handleParameterUpdateEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -285,14 +286,16 @@
     <span class="c1"># `dcos_auth_token` definition, allocate an `Authorization` header now</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Authorization&#39;</span> <span class="ow">in</span> <span class="n">headers</span> \
        <span class="ow">and</span> <span class="s1">&#39;dcos_auth_token&#39;</span> <span class="ow">in</span> <span class="n">definitions</span><span class="p">:</span>
-      <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">]</span>
+      <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">])</span>
 
     <span class="c1"># Fetch metrics</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
       <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Metrics marathon endpoint not accessible &#39;</span>
-          <span class="s1">&#39;(Received </span><span class="si">%i</span><span class="s1"> HTTP status code)&#39;</span> <span class="o">%</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">&#39;Metrics marathon endpoint not accessible (Received </span><span class="si">{}</span><span class="s1"> HTTP status code)&#39;</span><span class="o">.</span>
+            <span class="nb">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
         <span class="k">return</span>
 
       <span class="c1"># Get previous value and reset previous if we have a force update</span>

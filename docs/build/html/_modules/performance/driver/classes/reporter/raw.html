@@ -166,6 +166,7 @@
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Reporter</span>
 
+
 <div class="viewcode-block" id="RawReporter"><a class="viewcode-back" href="../../../../../classes/Reporters.html#performance.driver.classes.reporter.RawReporter">[docs]</a><span class="k">class</span> <span class="nc">RawReporter</span><span class="p">(</span><span class="n">Reporter</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The **Raw Reporter** is creating a raw dump of the results in the results</span>
@@ -288,17 +289,21 @@
 
     <span class="c1"># Dump the raw timeseries</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-      <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
-          <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStarted</span><span class="p">,</span>
-            <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-          <span class="p">},</span>
-          <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRootConfig</span><span class="p">()</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
-          <span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">raw</span><span class="p">(),</span>
-          <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
-          <span class="s1">&#39;indicators&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">indicators</span><span class="p">(),</span>
-          <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">()</span>
-        <span class="p">},</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span></div>
+      <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+          <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+              <span class="p">{</span>
+                  <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="p">{</span>
+                      <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStarted</span><span class="p">,</span>
+                      <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                  <span class="p">},</span>
+                  <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRootConfig</span><span class="p">()</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                  <span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">raw</span><span class="p">(),</span>
+                  <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                  <span class="s1">&#39;indicators&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">indicators</span><span class="p">(),</span>
+                  <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">()</span>
+              <span class="p">},</span>
+              <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

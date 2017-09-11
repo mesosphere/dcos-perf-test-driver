@@ -173,6 +173,7 @@
 <span class="c1"># Disable SSL warnings</span>
 <span class="n">requests</span><span class="o">.</span><span class="n">packages</span><span class="o">.</span><span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">()</span>
 
+
 <div class="viewcode-block" id="AuthEE"><a class="viewcode-back" href="../../../../../classes/Tasks.html#performance.driver.classes.tasks.auth.AuthEE">[docs]</a><span class="k">class</span> <span class="nc">AuthEE</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  Authenticate against an Enterprise-Edition cluster</span>
@@ -203,10 +204,7 @@
 
   <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
-    <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">],</span>
-      <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span>
-    <span class="p">}</span>
+    <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">],</span> <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]}</span>
 
     <span class="c1"># Get cluster</span>
     <span class="k">if</span> <span class="s1">&#39;cluster_url&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
@@ -218,13 +216,18 @@
 
     <span class="c1"># Try to login</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Authenticating to cluster&#39;</span><span class="p">)</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/acs/api/v1/auth/login&#39;</span> <span class="o">%</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">credentials</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/acs/api/v1/auth/login&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cluster</span><span class="p">),</span>
+        <span class="n">json</span><span class="o">=</span><span class="n">credentials</span><span class="p">,</span>
+        <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to authenticate on the cluster with the given credentials&#39;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">&#39;Unable to authenticate on the cluster with the given credentials&#39;</span><span class="p">)</span>
 
     <span class="c1"># Get token</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">setDefinition</span><span class="p">(</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;token&#39;</span><span class="p">])</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Authenticated as `</span><span class="si">%s</span><span class="s1">`&#39;</span> <span class="o">%</span> <span class="n">credentials</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">])</span></div>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Authenticated as `</span><span class="si">{}</span><span class="s1">`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">credentials</span><span class="p">[</span><span class="s1">&#39;uid&#39;</span><span class="p">]))</span></div>
+
 
 <div class="viewcode-block" id="AuthOpen"><a class="viewcode-back" href="../../../../../classes/Tasks.html#performance.driver.classes.tasks.auth.AuthOpen">[docs]</a><span class="k">class</span> <span class="nc">AuthOpen</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -253,9 +256,7 @@
 
   <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
-    <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]</span>
-    <span class="p">}</span>
+    <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]}</span>
 
     <span class="c1"># Get cluster</span>
     <span class="k">if</span> <span class="s1">&#39;cluster_url&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
@@ -267,9 +268,13 @@
 
     <span class="c1"># Try to login</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Authenticating to cluster&#39;</span><span class="p">)</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/acs/api/v1/auth/login&#39;</span> <span class="o">%</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">credentials</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/acs/api/v1/auth/login&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cluster</span><span class="p">),</span>
+        <span class="n">json</span><span class="o">=</span><span class="n">credentials</span><span class="p">,</span>
+        <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to authenticate on the cluster with the given credentials&#39;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">&#39;Unable to authenticate on the cluster with the given credentials&#39;</span><span class="p">)</span>
 
     <span class="c1"># Get token</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">setDefinition</span><span class="p">(</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;token&#39;</span><span class="p">])</span>

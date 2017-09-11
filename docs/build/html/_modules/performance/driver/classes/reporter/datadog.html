@@ -175,7 +175,8 @@
 <span class="k">except</span> <span class="n">ModuleNotFoundError</span><span class="p">:</span>
   <span class="kn">import</span> <span class="nn">logging</span>
   <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;One or more libraries required by DataDogReporter were not&#39;</span>
-    <span class="s1">&#39;installed. The reporter will not work.&#39;</span><span class="p">)</span>
+                <span class="s1">&#39;installed. The reporter will not work.&#39;</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="DataDogReporter"><a class="viewcode-back" href="../../../../../classes/Reporters.html#performance.driver.classes.reporter.DataDogReporter">[docs]</a><span class="k">class</span> <span class="nc">DataDogReporter</span><span class="p">(</span><span class="n">Reporter</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -224,10 +225,9 @@
 
     <span class="c1"># Initialize DataDog API</span>
     <span class="n">initialize</span><span class="p">(</span>
-      <span class="n">api_key</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;api_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-      <span class="n">app_key</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;app_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-      <span class="n">hostname</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hostname&#39;</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">())</span>
-    <span class="p">)</span>
+        <span class="n">api_key</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;api_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">app_key</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;app_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">hostname</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hostname&#39;</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()))</span>
 
     <span class="c1"># Get some configuration options</span>
     <span class="n">prefix</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;prefix&#39;</span><span class="p">,</span> <span class="s1">&#39;dcos.perf.&#39;</span><span class="p">)</span>
@@ -242,23 +242,23 @@
 
       <span class="c1"># Make sure we have this summarizer</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="n">point</span><span class="p">[</span><span class="s1">&#39;indicator&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">indicatorValues</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown indicator `</span><span class="si">%s</span><span class="s1">` in datadog summarizer&#39;</span> <span class="o">%</span> \
-          <span class="n">point</span><span class="p">[</span><span class="s1">&#39;indicator&#39;</span><span class="p">])</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown indicator `</span><span class="si">{}</span><span class="s1">` in datadog summarizer&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">point</span><span class="p">[</span><span class="s1">&#39;indicator&#39;</span><span class="p">]))</span>
 
       <span class="c1"># Submit metrics and add all metadata as tags</span>
       <span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-          <span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%s%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]),</span>
-          <span class="s2">&quot;points&quot;</span><span class="p">:</span> <span class="n">indicatorValues</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="s1">&#39;indicator&#39;</span><span class="p">]],</span>
-          <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="nb">map</span><span class="p">(</span>
-              <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
-              <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">)</span>
-          <span class="p">)</span>
-        <span class="p">})</span>
+          <span class="s2">&quot;metric&quot;</span><span class="p">:</span>
+          <span class="s1">&#39;</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]),</span>
+          <span class="s2">&quot;points&quot;</span><span class="p">:</span>
+          <span class="n">indicatorValues</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="s1">&#39;indicator&#39;</span><span class="p">]],</span>
+          <span class="s2">&quot;tags&quot;</span><span class="p">:</span>
+          <span class="nb">list</span><span class="p">(</span>
+              <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+      <span class="p">})</span>
 
     <span class="c1"># Send all series in one batch</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Submitting series to datadog: </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">series</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Submitting series to datadog: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">series</span><span class="p">))</span>
     <span class="n">api</span><span class="o">.</span><span class="n">Metric</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">series</span><span class="p">)</span></div>
 </pre></div>
 

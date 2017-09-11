@@ -177,6 +177,7 @@
 <span class="c1"># Disable SSL warnings</span>
 <span class="n">requests</span><span class="o">.</span><span class="n">packages</span><span class="o">.</span><span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">()</span>
 
+
 <span class="k">class</span> <span class="nc">MarathonDeploymentMonitorTask</span><span class="p">(</span><span class="n">Task</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  Base class that subscribes to the event bus and waits for a success event</span>
@@ -205,9 +206,7 @@
     <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})</span>
     <span class="n">dcos_auth_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDefinition</span><span class="p">(</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dcos_auth_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s1">&#39;token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">dcos_auth_token</span>
-      <span class="p">}</span>
+      <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s1">&#39;token=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dcos_auth_token</span><span class="p">)}</span>
 
     <span class="k">return</span> <span class="n">headers</span>
 
@@ -229,6 +228,7 @@
     <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">:</span>
       <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
 
 <div class="viewcode-block" id="RemoveAllApps"><a class="viewcode-back" href="../../../../../classes/Tasks.html#performance.driver.classes.tasks.marathon.RemoveAllApps">[docs]</a><span class="k">class</span> <span class="nc">RemoveAllApps</span><span class="p">(</span><span class="n">MarathonDeploymentMonitorTask</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -261,7 +261,11 @@
 
     <span class="c1"># Request list of apps</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Enumerating all apps&#39;</span><span class="p">)</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/groups?embed=group.groups&amp;embed=group.apps&amp;embed=group.pods&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/v2/groups?embed=group.groups&amp;embed=group.apps&amp;embed=group.pods&#39;</span><span class="o">.</span>
+        <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">),</span>
+        <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
       <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to enumerate running apps&#39;</span><span class="p">)</span>
 
@@ -270,19 +274,26 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="k">for</span> <span class="n">app</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;apps&#39;</span><span class="p">]:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing app </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/apps/</span><span class="si">%s</span><span class="s1">?force=true&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]),</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing app </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/v2/apps/</span><span class="si">{}</span><span class="s1">?force=true&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]),</span>
+            <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app </span><span class="si">%s</span><span class="s1"> (HTTP response </span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app </span><span class="si">{}</span><span class="s1"> (HTTP response </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
           <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
           <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span>
+            <span class="p">)</span>
             <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app (</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 
     <span class="c1"># Wait for deployments to complete</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">waitDeployments</span><span class="p">()</span>
@@ -291,6 +302,7 @@
     <span class="k">if</span> <span class="n">preemptiveDelay</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Waiting for 30 seconds for deployments to complete&#39;</span><span class="p">)</span>
       <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="RemoveMatchingApps"><a class="viewcode-back" href="../../../../../classes/Tasks.html#performance.driver.classes.tasks.marathon.RemoveMatchingApps">[docs]</a><span class="k">class</span> <span class="nc">RemoveMatchingApps</span><span class="p">(</span><span class="n">MarathonDeploymentMonitorTask</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -326,11 +338,16 @@
     <span class="c1"># Compile matching regular expression from match directive</span>
     <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRenderedConfig</span><span class="p">()</span>
     <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;match&#39;</span><span class="p">])</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing apps matching `</span><span class="si">%s</span><span class="s1">` from marathon&#39;</span> <span class="o">%</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;match&#39;</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s1">&#39;Removing apps matching `</span><span class="si">{}</span><span class="s1">` from marathon&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;match&#39;</span><span class="p">]))</span>
 
     <span class="c1"># Request list of apps</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Enumerating all apps&#39;</span><span class="p">)</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/groups?embed=group.groups&amp;embed=group.apps&amp;embed=group.pods&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/v2/groups?embed=group.groups&amp;embed=group.apps&amp;embed=group.pods&#39;</span><span class="o">.</span>
+        <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">),</span>
+        <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
       <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to enumerate running apps&#39;</span><span class="p">)</span>
 
@@ -341,15 +358,22 @@
       <span class="k">for</span> <span class="n">app</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;apps&#39;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]):</span>
           <span class="k">continue</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing app </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/apps/</span><span class="si">%s</span><span class="s1">?force=true&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]),</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing app </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/v2/apps/</span><span class="si">{}</span><span class="s1">?force=true&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]),</span>
+            <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app </span><span class="si">%s</span><span class="s1"> (HTTP response </span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app </span><span class="si">{}</span><span class="s1"> (HTTP response </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">app</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
           <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
           <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span>
+            <span class="p">)</span>
             <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">True</span>
 
       <span class="c1"># Wait for deployments to complete</span>
@@ -361,7 +385,8 @@
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app (</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span></div>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove app (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="RemoveGroup"><a class="viewcode-back" href="../../../../../classes/Tasks.html#performance.driver.classes.tasks.marathon.RemoveGroup">[docs]</a><span class="k">class</span> <span class="nc">RemoveGroup</span><span class="p">(</span><span class="n">MarathonDeploymentMonitorTask</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -393,20 +418,27 @@
 
   <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">group_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;group&#39;</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing group </span><span class="si">%s</span><span class="s1"> from marathon&#39;</span> <span class="o">%</span> <span class="n">group_name</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing group </span><span class="si">{}</span><span class="s1"> from marathon&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">group_name</span><span class="p">))</span>
 
     <span class="c1"># Destroy group</span>
     <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
-      <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/groups/</span><span class="si">%s</span><span class="s1">/?force=true&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">group_name</span><span class="p">),</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
+      <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+          <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/v2/groups/</span><span class="si">{}</span><span class="s1">/?force=true&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">group_name</span><span class="p">),</span>
+          <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+          <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getHeaders</span><span class="p">())</span>
       <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove group </span><span class="si">%s</span><span class="s1"> (HTTP response </span><span class="si">%i</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove group </span><span class="si">{}</span><span class="s1"> (HTTP response </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">group_name</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
       <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">trackDeployments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+              <span class="s1">&#39;Did not find &quot;Marathon-Deployment-Id&quot; response header. Using delay of 30 seconds as a failover&#39;</span>
+          <span class="p">)</span>
           <span class="n">preemptiveDelay</span> <span class="o">=</span> <span class="kc">True</span>
 
       <span class="c1"># Wait for deployments to complete</span>
@@ -418,8 +450,7 @@
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove group </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div>
-
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to remove group </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

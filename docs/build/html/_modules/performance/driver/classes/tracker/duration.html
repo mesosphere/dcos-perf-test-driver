@@ -170,6 +170,7 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.eventfilters</span> <span class="k">import</span> <span class="n">EventFilter</span>
 <span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">Empty</span>
 
+
 <span class="k">class</span> <span class="nc">DurationTrackerSession</span><span class="p">:</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  A tracking session</span>
@@ -196,11 +197,8 @@
       <span class="k">return</span>
 
     <span class="c1"># Track metric</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">trackMetric</span><span class="p">(</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
-      <span class="n">event</span><span class="o">.</span><span class="n">ts</span> <span class="o">-</span> <span class="n">start_event</span><span class="o">.</span><span class="n">ts</span><span class="p">,</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">traceids</span>
-    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">trackMetric</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">ts</span> <span class="o">-</span> <span class="n">start_event</span><span class="o">.</span><span class="n">ts</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>
 
   <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">startFilter</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
@@ -211,7 +209,9 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">endFilter</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Incomplete traces were present for metric </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Incomplete traces were present for metric </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">tracker</span><span class="o">.</span><span class="n">metric</span><span class="p">))</span>
+
 
 <div class="viewcode-block" id="DurationTracker"><a class="viewcode-back" href="../../../../../classes/Trackers.html#performance.driver.classes.tracker.DurationTracker">[docs]</a><span class="k">class</span> <span class="nc">DurationTracker</span><span class="p">(</span><span class="n">Tracker</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
@@ -267,18 +267,15 @@
 
     <span class="c1"># A terminal events terminates an active trace</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">RestartEvent</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">):</span>
-      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+      <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">traces</span><span class="p">:</span>
+        <span class="n">trace</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
 
+      <span class="bp">self</span><span class="o">.</span><span class="n">traces</span> <span class="o">=</span> <span class="p">[]</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span> <span class="o">=</span> <span class="kc">None</span>
       <span class="k">return</span>
 
     <span class="c1"># Each parameter update initiates a trace of interest</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ParameterUpdateEvent</span><span class="p">):</span>
-
-      <span class="c1"># Finalize active trace</span>
-      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
 
       <span class="c1"># Start a new session tracker</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span> <span class="o">=</span> <span class="n">DurationTrackerSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>

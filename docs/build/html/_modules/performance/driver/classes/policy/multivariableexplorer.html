@@ -169,6 +169,7 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">PolicyFSM</span><span class="p">,</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.reflection</span> <span class="k">import</span> <span class="n">subscribesToHint</span><span class="p">,</span> <span class="n">publishesHint</span>
 
+
 <div class="viewcode-block" id="MultivariableExplorerPolicy"><a class="viewcode-back" href="../../../../../classes/Policies.html#performance.driver.classes.policy.MultivariableExplorerPolicy">[docs]</a><span class="k">class</span> <span class="nc">MultivariableExplorerPolicy</span><span class="p">(</span><span class="n">PolicyFSM</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The **Multi-Variable Exploration Policy** is running one scale test for every</span>
@@ -197,6 +198,13 @@
 <span class="sd">            max: 1 # Default</span>
 <span class="sd">            step: 1 # Default</span>
 <span class="sd">            samples: 10 # Default</span>
+
+<span class="sd">          # A &quot;range&quot; parameter takes all the values within the given range</span>
+<span class="sd">          instances:</span>
+<span class="sd">            type: range</span>
+<span class="sd">            min: 0</span>
+<span class="sd">            max: 1</span>
+<span class="sd">            step: 1</span>
 
 <span class="sd">        # The event binding configuration</span>
 <span class="sd">        events:</span>
@@ -288,20 +296,26 @@
           <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
           <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_samples</span><span class="p">):</span>
             <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-              <span class="nb">round</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">v_min</span><span class="p">,</span> <span class="n">v_max</span><span class="p">)</span> <span class="o">/</span> <span class="n">v_step</span><span class="p">)</span> <span class="o">*</span> <span class="n">v_step</span>
-            <span class="p">)</span>
+                <span class="nb">round</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">v_min</span><span class="p">,</span> <span class="n">v_max</span><span class="p">)</span> <span class="o">/</span> <span class="n">v_step</span><span class="p">)</span> <span class="o">*</span> <span class="n">v_step</span><span class="p">)</span>
 
+          <span class="bp">self</span><span class="o">.</span><span class="n">parameterOptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1"># Range values</span>
+        <span class="k">if</span> <span class="n">v_type</span> <span class="o">==</span> <span class="s1">&#39;range&#39;</span><span class="p">:</span>
+          <span class="n">v_step</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+          <span class="n">v_min</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+          <span class="n">v_max</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+          <span class="n">values</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_min</span><span class="p">,</span> <span class="n">v_max</span><span class="o">+</span><span class="n">v_step</span><span class="p">,</span> <span class="n">v_step</span><span class="p">)</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">parameterOptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
         <span class="c1"># Discreet values</span>
         <span class="k">elif</span> <span class="n">v_type</span> <span class="o">==</span> <span class="s1">&#39;discrete&#39;</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">parameterOptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span>
-          <span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">parameterOptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">])</span>
 
         <span class="c1"># Invalid values</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown matrix value type &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">v_type</span><span class="p">)</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown matrix value type &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_type</span><span class="p">))</span>
 
       <span class="c1"># Process the events configuration</span>
       <span class="n">eventsConfig</span> <span class="o">=</span> <span class="n">renderdConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">,</span> <span class="p">{})</span>
@@ -310,7 +324,8 @@
       <span class="bp">self</span><span class="o">.</span><span class="n">signalEvents</span> <span class="o">=</span> <span class="p">{}</span>
       <span class="n">signalEventConfig</span> <span class="o">=</span> <span class="n">eventsConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="p">{})</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="n">signalEventConfig</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`events.signal` configuration must have at least 1 event defined&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`events.signal` configuration must have at least 1 event defined&#39;</span><span class="p">)</span>
       <span class="k">for</span> <span class="n">status</span><span class="p">,</span> <span class="n">eventName</span> <span class="ow">in</span> <span class="n">signalEventConfig</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">eventName</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
           <span class="n">eventName</span> <span class="o">=</span> <span class="p">[</span><span class="n">eventName</span><span class="p">]</span>
@@ -360,8 +375,8 @@
       <span class="bp">self</span><span class="o">.</span><span class="n">progressTotal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameterValues</span><span class="p">)</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">progressCurrent</span> <span class="o">=</span> <span class="mi">0</span>
 
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Exploring </span><span class="si">%i</span><span class="s1"> variables with </span><span class="si">%i</span><span class="s1"> permutations&#39;</span> <span class="o">%</span> \
-        <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameterNames</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">progressTotal</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Exploring </span><span class="si">{}</span><span class="s1"> variables with </span><span class="si">{}</span><span class="s1"> permutations&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameterNames</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">progressTotal</span><span class="p">))</span>
 
       <span class="bp">self</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">MultivariableExplorerPolicy</span><span class="o">.</span><span class="n">Deploy</span><span class="p">)</span>
 
@@ -392,7 +407,8 @@
       <span class="k">try</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signalEventCount</span><span class="p">),</span> <span class="p">{},</span> <span class="n">evalVars</span><span class="p">)</span>
       <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error while parsing the `signalEventcount` expression&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">&#39;Error while parsing the `signalEventcount` expression&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">e</span>
 
       <span class="c1"># Dispatch the request to update the test parameter. All such updates</span>
@@ -427,7 +443,7 @@
       <span class="k">for</span> <span class="n">ev</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">signalEvents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">isEventMatching</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
           <span class="n">isHandled</span> <span class="o">=</span> <span class="kc">True</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Run completed with status: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">status</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Run completed with status: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">setStatus</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
           <span class="k">break</span>
 
@@ -438,7 +454,8 @@
       <span class="c1"># Check if we ran out of events that we are waiting for</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span> <span class="o">-=</span> <span class="mi">1</span>
       <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Waiting for </span><span class="si">%i</span><span class="s1"> more events&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;Waiting for </span><span class="si">{}</span><span class="s1"> more events&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eventsRemaining</span><span class="p">))</span>
         <span class="k">return</span>
 
       <span class="c1"># Run the inter-test tasks. Upon completion the</span>
@@ -452,10 +469,12 @@
 <span class="sd">      stale and it should be reaped cleanly. This handler will mark the status</span>
 <span class="sd">      as &quot;Stalled&quot; and go to next test.</span>
 <span class="sd">      &quot;&quot;&quot;</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No activity while waiting for a marathon deployment to succeed&#39;</span><span class="p">)</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;This means that either marathon failed to deploy the request &#39;</span>
-        <span class="s1">&#39;on time, or that you haven</span><span class="se">\&#39;</span><span class="s1">t registered an observer that emmits a &#39;</span>
-        <span class="s1">&#39;`MarathonDeploymentSuccessEvent`.&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+          <span class="s1">&#39;No activity while waiting for a marathon deployment to succeed&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">&#39;This means that either marathon failed to deploy the request &#39;</span>
+          <span class="s1">&#39;on time, or that you haven</span><span class="se">\&#39;</span><span class="s1">t registered an observer that emmits a &#39;</span>
+          <span class="s1">&#39;`MarathonDeploymentSuccessEvent`.&#39;</span><span class="p">)</span>
 
       <span class="c1"># Set error status</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">setStatus</span><span class="p">(</span><span class="s1">&#39;stalled&#39;</span><span class="p">)</span>
@@ -477,7 +496,6 @@
 
       <span class="c1"># Schedule next deployment</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">MultivariableExplorerPolicy</span><span class="o">.</span><span class="n">Deploy</span><span class="p">)</span>
-
 
   <span class="k">class</span> <span class="nc">End</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>

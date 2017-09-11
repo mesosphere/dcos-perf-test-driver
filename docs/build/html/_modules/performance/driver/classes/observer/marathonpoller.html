@@ -176,6 +176,7 @@
 
 <span class="kn">from</span> <span class="nn">performance.driver.classes.channel.http</span> <span class="k">import</span> <span class="n">HTTPResponseEndEvent</span>
 
+
 <div class="viewcode-block" id="MarathonPollerObserver"><a class="viewcode-back" href="../../../../../classes/Observers.html#performance.driver.classes.observer.MarathonPollerObserver">[docs]</a><span class="k">class</span> <span class="nc">MarathonPollerObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The *Marathon Poller Observer* is a polling-based fallback observer that can</span>
@@ -229,13 +230,14 @@
     <span class="c1"># When an HTTP request is completed and a marathon deployment is started,</span>
     <span class="c1"># we have to keep track of the traceids of the event that initiated the</span>
     <span class="c1"># request in order to trace it back to the source event.</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleHttpResponse</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">,),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleHttpResponse</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">HTTPResponseEndEvent</span><span class="p">,</span> <span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="c1"># Stop thread at teardown</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleTeardownEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">TeardownEvent</span><span class="p">,</span> <span class="p">))</span>
 
     <span class="c1"># Start polling thread at start</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStart</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleStart</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">StartEvent</span><span class="p">,</span> <span class="p">))</span>
 
   <span class="k">def</span> <span class="nf">handleStartEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -277,14 +279,17 @@
     <span class="c1"># `dcos_auth_token` definition, allocate an `Authorization` header now</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Authorization&#39;</span> <span class="ow">in</span> <span class="n">headers</span> \
        <span class="ow">and</span> <span class="s1">&#39;dcos_auth_token&#39;</span> <span class="ow">in</span> <span class="n">definitions</span><span class="p">:</span>
-      <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">]</span>
+      <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Authorization&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;token=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">definitions</span><span class="p">[</span><span class="s1">&#39;dcos_auth_token&#39;</span><span class="p">])</span>
 
     <span class="c1"># Fetch metrics</span>
     <span class="k">try</span><span class="p">:</span>
-      <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/v2/deployments&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+      <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/v2/deployments&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
       <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Deployments marathon endpoint not accessible &#39;</span>
-          <span class="s1">&#39;(Received </span><span class="si">%i</span><span class="s1"> HTTP status code)&#39;</span> <span class="o">%</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">&#39;Deployments marathon endpoint not accessible (Received </span><span class="si">{}</span><span class="s1"> HTTP status code)&#39;</span><span class="o">.</span>
+            <span class="nb">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
         <span class="k">return</span>
 
       <span class="c1"># Emit MarathonStartedEvent if marathon was not running yet</span>
@@ -300,12 +305,9 @@
         <span class="k">pass</span>
       <span class="k">for</span> <span class="n">removedId</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prevDeployments</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">deploymentIds</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
-          <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">(</span>
-            <span class="n">removedId</span><span class="p">,</span>
-            <span class="p">{},</span>
-            <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">removedId</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-          <span class="p">)</span>
-        <span class="p">)</span>
+            <span class="n">MarathonDeploymentSuccessEvent</span><span class="p">(</span>
+                <span class="n">removedId</span><span class="p">,</span> <span class="p">{},</span>
+                <span class="n">traceid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">removedId</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">prevDeployments</span> <span class="o">=</span> <span class="n">deploymentIds</span>
 
     <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -318,7 +320,8 @@
 <span class="sd">    attach it on further marathon events related to the given deployment</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;Marathon-Deployment-Id&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span></div>
+      <span class="bp">self</span><span class="o">.</span><span class="n">deploymentTraceIDs</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span>
+          <span class="s1">&#39;Marathon-Deployment-Id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span></div>
 </pre></div>
 
            </div>

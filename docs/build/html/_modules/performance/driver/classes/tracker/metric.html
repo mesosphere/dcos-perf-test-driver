@@ -167,6 +167,7 @@
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Tracker</span>
 <span class="kn">from</span> <span class="nn">performance.driver.core.events</span> <span class="k">import</span> <span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="n">MetricUpdateEvent</span>
 
+
 <div class="viewcode-block" id="DumpMetricTracker"><a class="viewcode-back" href="../../../../../classes/Trackers.html#performance.driver.classes.tracker.DumpMetricTracker">[docs]</a><span class="k">class</span> <span class="nc">DumpMetricTracker</span><span class="p">(</span><span class="n">Tracker</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The *Dump Metric Tracker* is dumping metrics collected by observers into</span>
@@ -195,8 +196,10 @@
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">activeTraceids</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleParameterUpdateEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handleMetricUpdateEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">MetricUpdateEvent</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleParameterUpdateEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">ParameterUpdateEvent</span><span class="p">,</span> <span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleMetricUpdateEvent</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="n">MetricUpdateEvent</span><span class="p">,</span> <span class="p">))</span>
 
   <span class="k">def</span> <span class="nf">handleParameterUpdateEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -215,15 +218,11 @@
 
     <span class="c1"># Don&#39;t track anything until we have a parameter update first</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTraceids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span>
+      <span class="k">return</span>
 
     <span class="c1"># Map parameter to value</span>
     <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">trackMetric</span><span class="p">(</span>
-        <span class="n">mapping</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
-        <span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">activeTraceids</span>
-      <span class="p">)</span></div>
+      <span class="bp">self</span><span class="o">.</span><span class="n">trackMetric</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">activeTraceids</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
