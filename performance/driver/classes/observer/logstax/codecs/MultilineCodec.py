@@ -94,7 +94,7 @@ class MultilineCodec(SingleLineCodec):
     # Collected lines
     self.lines = []
     self.acceptIncomplete = config.get('acceptIncomplete', False)
-    self.newlineChar = config.get('newline', '')
+    self.newlineChar = config.get('newline', '\n')
 
     # The `handle` function is going to be called in a multithreaded
     # context.
