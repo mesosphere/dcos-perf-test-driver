@@ -163,7 +163,7 @@ class EventBus:
 
           delta = time.time() - start_ts
           if delta > 0.25:
-            self.logger.warn('Slow handler ({:.2f}s) {} for event {}'.format(
+            self.logger.warn('Slow consumer ({:.2f}s) {} for event {}'.format(
                 delta, sub, type(event).__name__))
 
         except Exception as e:
