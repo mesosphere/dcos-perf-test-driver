@@ -89,7 +89,8 @@ class MarathonLogsObserver(LogStaxObserver):
           'match': r'^(\[\w+\]\s+)[^\[].*$',
           'optional': True,
           'repeat': True
-        }]
+        }],
+        'newline': ' '
       }]
     }
 
