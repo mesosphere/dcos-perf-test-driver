@@ -103,18 +103,15 @@ class DurationTracker(Tracker):
 
     # A terminal events terminates an active trace
     if isinstance(event, RestartEvent) or isinstance(event, TeardownEvent):
-      if self.activeTrace:
-        self.activeTrace.finalize()
+      for trace in self.traces:
+        trace.finalize()
 
+      self.traces = []
       self.activeTrace = None
       return
 
     # Each parameter update initiates a trace of interest
     if isinstance(event, ParameterUpdateEvent):
-
-      # Finalize active trace
-      if self.activeTrace:
-        self.activeTrace.finalize()
 
       # Start a new session tracker
       self.activeTrace = DurationTrackerSession(self, event.traceids)
