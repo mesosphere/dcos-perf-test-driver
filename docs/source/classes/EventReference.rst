@@ -140,85 +140,49 @@ their available attributes.
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonAPIEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonUpgradeEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonAPIPostEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentFailedEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonDeploymentEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentStatusEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonDeploymentFailedEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentStepFailureEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonDeploymentInfoEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentStepSuccessEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonDeploymentStepFailureEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentSuccessEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonDeploymentStepSuccessEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonSSEEvent
    :members:
    :inherited-members:
    :show-inheritance:
    :exclude-members: hasTrace, hasTraces
 
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonDeploymentSuccessEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonFrameworkMessageEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonStartedEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonStatusUpdateEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonSubscribeEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.marathonevents.MarathonUnsubscribeEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonStartedEvent
    :members:
    :inherited-members:
    :show-inheritance:
