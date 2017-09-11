@@ -1,12 +1,167 @@
 import re
+import json
 import random
 import requests
 
-from performance.driver.core.events import ParameterUpdateEvent
+from performance.driver.core.events import ParameterUpdateEvent, Event
 from performance.driver.core.classes import Channel
 from performance.driver.core.template import TemplateString, TemplateDict
-from performance.driver.core.reflection import subscribesToHint
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 from threading import Thread
+
+# NOTE: We are not using the deployment ID as the means of tracking the
+#       deployment since it's not possible to relate earlier events without
+#       a deployment ID (such as `MarathonDeploymentRequestedEvent`)
+
+class MarathonDeploymentRequestedEvent(Event):
+  def __init__(self, instance, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.instance = instance
+
+class MarathonDeploymentStartedEvent(Event):
+  def __init__(self, instance, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.instance = instance
+
+class MarathonDeploymentRequestFailedEvent(Event):
+  def __init__(self, instance, status_code, respose, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.instance = instance
+    self.respose = respose
+    self.status_code = status_code
+
+
+class MarathonDeployChannel(Channel):
+  """
+  The *Marathon Deploy Channel* is performing one or more deployment on marathon
+  based on the given rules.
+
+  ::
+
+    channels:
+      - class: channel.MarathonUpdateChannel
+
+        # The base url to marathon
+        url: "{{marathon_url}}"
+
+        # One or more deployments to perform
+        deploy:
+
+          # The type of the deployment
+          - type: app
+
+            # The app/pod/group spec of the deployment
+            spec: |
+              {
+                "id": "deployment"
+              }
+
+            # [Optional] Repeat this deployment for the given number of times
+            # (This can be a python expression)
+            repeat "instances * 2"
+
+  """
+
+  def getHeaders(self):
+    """
+    Compile and return headers
+    """
+
+    # Add auth headers if we have an dcos_auth_token defined
+    headers = self.getConfig('headers', {})
+    dcos_auth_token = self.getDefinition('dcos_auth_token', None)
+    if not dcos_auth_token is None:
+      headers = {'Authorization': 'token={}'.format(dcos_auth_token)}
+
+    return headers
+
+  @publishesHint(MarathonDeploymentRequestedEvent)
+  def handleDeployment(self, deployment, parameters, url, traceids):
+    """
+    Handle deployment
+    """
+
+    # Compose url based on type
+    deploymentType = deployment.get('type', 'app')
+    if deploymentType == 'app':
+      url += '/v2/apps'
+    elif deploymentType == 'pod':
+      url += '/v2/pods'
+    elif deploymentType == 'group':
+      url += '/v2/groups'
+    else:
+      self.logger.error('Unknown deployment type {}'.format(deploymentType))
+      return
+
+    # Evaluate repeat
+    evalDict = dict(self.getDefinitions())
+    evalDict.update(parameters)
+    evalExpr = str(deployment.get('repeat', '1'))
+    try:
+      repeat = eval(evalExpr, evalDict)
+    except Exception as e:
+      self.logger.error('Error evaluating "{}": {}'.format(evalExpr, e))
+      return
+
+    # Create template with the body
+    bodyTpl = TemplateString(deployment['spec'])
+
+    # Repeat as many times as needed
+    for i in range(0, repeat):
+      try:
+
+        # Render the body
+        evalDict['_i'] = i
+        body = json.loads(bodyTpl.apply(evalDict))
+
+        # Start deployment
+        if not 'id' in body:
+          self.logger.error('Deployment body is expected to have an "id" field')
+          break
+
+        # Notify deployment
+        inst_id = body['id']
+        self.eventbus.publish(MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
+
+        # Callback to acknowledge request
+        def ack_response(request, *args, **kwargs):
+          self.eventbus.publish(MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
+
+        # Create a request
+        response = requests.post(url, json=body, verify=False, headers=self.getHeaders(), hooks=dict(response=ack_response))
+        if response.status_code < 200 or response.status_code >= 300:
+          self.logger.error('Unable to deploy {} "{}" (HTTP response {})'.
+                            format(deploymentType, inst_id, response.status_code))
+          self.eventbus.publish(MarathonDeploymentRequestFailedEvent(inst_id, response.status_code, response.text, traceid=traceids))
+
+      except json.decoder.JSONDecodeError as e:
+        self.logger.error('Invalid JSON syntax in deployment body ({})'.format(e))
+
+      except requests.exceptions.ConnectionError as e:
+        self.logger.error('Unable to start a deployment ({})'.format(e))
+
+
+  def handleParameterUpdate(self, event):
+    """
+    Handle a property update
+    """
+    config = self.getRenderedConfig()
+    definitions = self.getDefinitions()
+    url = config['url']
+
+    # Handle the deployments
+    actions = self.getConfig('deploy', [])
+
+    # Handle every deployment asynchronously
+    for action in actions:
+      Thread(
+          target=self.handleDeployment,
+          daemon=True,
+          args=(
+              action,
+              event.parameters,
+              url,
+              event.traceids)).start()
 
 
 class MarathonUpdateChannel(Channel):
@@ -53,14 +208,6 @@ class MarathonUpdateChannel(Channel):
 
   """
 
-  @subscribesToHint(ParameterUpdateEvent)
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-
-    # Receive parameter updates and clean-up on teardown
-    self.eventbus.subscribe(
-        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
-
   def getHeaders(self):
     """
     Compile and return headers
@@ -74,7 +221,7 @@ class MarathonUpdateChannel(Channel):
 
     return headers
 
-  def handleUpdate_PatchApp(self, action, parameters):
+  def handleUpdate_PatchApp(self, action, parameters, traceids):
     """
     Handle a `patch_app` action
     """
@@ -96,7 +243,7 @@ class MarathonUpdateChannel(Channel):
       # Query all items
       response = requests.get(
           '{}/v2/apps'.format(url), verify=False, headers=self.getHeaders())
-      if response.status_code != 200:
+      if response.status_code < 200 or response.status_code >= 300:
         self.logger.error('Unable to query marathon apps (HTTP response {})'.
                           format(response.status_code))
         return
@@ -141,18 +288,27 @@ class MarathonUpdateChannel(Channel):
         if 'version' in app:
           del app['version']
 
+        # Notify deployment
+        self.eventbus.publish(MarathonDeploymentRequestedEvent(app['id'], traceid=traceids))
+
+        # Callback to acknowledge request
+        def ack_response(request, *args, **kwargs):
+          self.eventbus.publish(MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
+
         # Update the specified application
         self.logger.debug('Executing update with body {}'.format(app))
         response = requests.put(
             '{}/v2/apps{}'.format(url, app['id']),
             json=app,
             verify=False,
-            headers=self.getHeaders())
+            headers=self.getHeaders(),
+            hooks=dict(response=ack_response))
         if response.status_code < 200 or response.status_code >= 300:
           self.logger.debug("Server responded with: {}".format(response.text))
           self.logger.error(
               'Unable to update app {} (HTTP response {}: {})'.format((app[
                   'id'], response.status_code, response.text)))
+          self.eventbus.publish(MarathonDeploymentRequestFailedEvent(app['id'], response.status_code, traceid=traceids))
           continue
 
         self.logger.debug('App updated successfully')
@@ -179,7 +335,8 @@ class MarathonUpdateChannel(Channel):
             daemon=True,
             args=(
                 action,
-                event.parameters, )).start()
+                event.parameters,
+                event.traceids)).start()
 
       # Unknown action
       else:
