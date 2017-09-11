@@ -35,6 +35,13 @@ class MultivariableExplorerPolicy(PolicyFSM):
             step: 1 # Default
             samples: 10 # Default
 
+          # A "range" parameter takes all the values within the given range
+          instances:
+            type: range
+            min: 0
+            max: 1
+            step: 1
+
         # The event binding configuration
         events:
 
@@ -127,6 +134,15 @@ class MultivariableExplorerPolicy(PolicyFSM):
             values.append(
                 round(random.uniform(v_min, v_max) / v_step) * v_step)
 
+          self.parameterOptions.append(values)
+
+        # Range values
+        if v_type == 'range':
+          v_step = config.get('step', 1)
+          v_min = config.get('min', 0.0)
+          v_max = config.get('max', 1.0)
+
+          values = range(v_min, v_max+v_step, v_step)
           self.parameterOptions.append(values)
 
         # Discreet values
@@ -275,7 +291,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
       self.eventsRemaining -= 1
       if self.eventsRemaining > 0:
         self.logger.info(
-            'Waiting for {} more events'.formt(self.eventsRemaining))
+            'Waiting for {} more events'.format(self.eventsRemaining))
         return
 
       # Run the inter-test tasks. Upon completion the
