@@ -1,10 +1,9 @@
 import re
 from performance.driver.core.events import isEventMatching
 
-DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w]*))?')
+DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\)]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
 DSL_FLAGS = re.compile(r'\:([^\:]+)')
-
 
 class EventFilterSession:
   """
@@ -17,12 +16,13 @@ class EventFilterSession:
     self.filter = filter
     self.traceids = traceids
     self.callback = callback
+    self.counter = 0
 
   def handle(self, event):
     """
     Handle the incoming event
     """
-    for (eventSpec, attribChecks, flags) in self.filter.events:
+    for (eventSpec, attribChecks, flags, flagParameters) in self.filter.events:
 
       # Handle all events or matching events
       if eventSpec != "*" and not isEventMatching(event, eventSpec):
@@ -38,8 +38,11 @@ class EventFilterSession:
         continue
 
       # Handle trace ID
-      if not event.hasTraces(self.traceids):
+      if not self.traceids is None and not event.hasTraces(self.traceids):
         continue
+
+      # Increment counter
+      self.counter += 1
 
       # Handle order
       if 'first' in flags:
@@ -50,6 +53,12 @@ class EventFilterSession:
       if 'last' in flags:
         self.foundEvent = event
         self.triggerAtExit = True
+        break
+      if 'nth' in flags:
+        nth = int(flagParameters['nth'])
+        if nth == self.counter:
+          self.foundEvent = event
+          self.callback(event)
         break
 
       # Fire callback
@@ -124,6 +133,8 @@ class EventFilter:
       +-----------------+----------------------------------------------------+
       | ``:last``       | Match the last event in the tracking session       |
       +-----------------+----------------------------------------------------+
+      | ``:nth(n)``     | Match the n-th event in the tracking session       |
+      +-----------------+----------------------------------------------------+
 
   For example, to match every ``HTTPRequestEvent``:
 
@@ -174,6 +185,17 @@ class EventFilter:
       # Process sub-tokens
       flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
 
+      # Flag parameters
+      flagParameters = {}
+      for i in range(0, len(flags)):
+        flag = flags[i]
+        if '(' in flag:
+          (flag, params) = flag.split('(')
+          if not params.endswith(')'):
+            raise ValueError('Mismatched closing parenthesis in flag {}'.format(flags[i]))
+          flags[i] = flag
+          flagParameters[flag] = params[:-1]
+
       # Compile attribute selectors
       attrib = []
       if exprAttrib:
@@ -207,12 +229,17 @@ class EventFilter:
                 eval('lambda event: event.{} {} {}'.format(left, op, right)))
 
       # Collect flags
-      self.events.append((event, attrib, flags))
+      self.events.append((event, attrib, flags, flagParameters))
 
   def start(self, traceids, callback):
     """
     Start a tracking session with the given trace ID
     """
+
+    # Make sure trace IDs is always a list
+    if type(traceids) is str:
+      traceids = [traceids]
+
     return EventFilterSession(self, traceids, callback)
 
   def __str__(self):

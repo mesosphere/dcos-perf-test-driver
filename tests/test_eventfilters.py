@@ -242,6 +242,51 @@ class TestEventBus(unittest.TestCase):
         call(fooEvent2),
       ])
 
+  def test_flag_nth(self):
+    """
+    Test if the ":last" flag is working
+    """
+
+    eventFilter = EventFilter("FooEvent:nth(2)")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The second FooEvent should be handled
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The third FooEvent should not be handled
+    fooEvent3 = FooEvent(traceid=traceids)
+    session.handle(fooEvent3)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The BarEvent should not be handled
+    barEvent = BarEvent(traceid=traceids)
+    session.handle(barEvent)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # When the session is finalized, nothing should be changed
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
   def test_attrib_loose_regex(self):
     """
     Test if the regex "~=" attribute matcher is working
