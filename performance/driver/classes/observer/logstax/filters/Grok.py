@@ -37,7 +37,7 @@ class GrokFilter(BasicFilter):
         # Process fields
         for field, value in m.items():
           if not field in message.fields or field in self.overwrite:
-            message.setField(field, value)
+            message.addField(field, value)
 
     # Apply basic filters if we matched
     if matches:

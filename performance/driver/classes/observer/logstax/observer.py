@@ -126,7 +126,7 @@ class LogStaxObserver(Observer):
         'field': 'line'
     }]):
       self.events.append(
-        lambda e: None if isEventMatching(e, event['name']) else getattr(e, event['field'])
+        lambda e: getattr(e, event['field']) if isEventMatching(e, event['name']) else None
       )
 
     # Stop thread at teardown
@@ -138,28 +138,36 @@ class LogStaxObserver(Observer):
     """
 
     # Process the given line through the codecs in best-effort order
-    message = None
+    messages = []
     for codec in self.codecs:
       msg = codec.handle(line)
-      if not msg is None:
-        message = msg
+      if len(msg) > 0:
+        messages = msg
         break
 
     # Check if no codec could process the given line
-    if message is None:
+    if len(messages) == 0:
       return
 
-    # Filter message
-    handled = False
-    for inst in self.filters:
-      res = inst.filter(message)
-      if not res is None:
-        handled = True
-        message = res
+    # Filter messages
+    for message in messages:
+      handled = (len(self.filters) == 0)
+      for inst in self.filters:
+        res = inst.filter(message)
+        if not res is None:
+          handled = True
+          message = res
 
-    # Broadcast event if it's handled
-    if handled:
-      self.publish(LogStaxMessageEvent(message))
+      # Broadcast event if it's handled
+      if handled:
+        self.handleMessage(message)
+
+  def handleMessage(self, message):
+    """
+    Handle a completed message
+    """
+    print(message['message'])
+    self.publish(LogStaxMessageEvent(message))
 
   def handleAnyEvent(self, event):
     """

@@ -10,4 +10,4 @@ class SingleLineCodec:
     self.config = config
 
   def handle(self, line):
-    return Message().addField('message', line)
+    return [Message().addField('message', line)]

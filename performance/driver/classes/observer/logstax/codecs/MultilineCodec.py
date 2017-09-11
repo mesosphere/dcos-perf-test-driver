@@ -76,6 +76,9 @@ class MultilineCodec(SingleLineCodec):
               # [Optional] Set to `yes` to accept incomplete multiline matches
               acceptIncomplete: no
 
+              # [Optional] Set to the new-line character you want to use when joining
+              newline: ";""
+
   """
 
   def __init__(self, config):
@@ -91,6 +94,7 @@ class MultilineCodec(SingleLineCodec):
     # Collected lines
     self.lines = []
     self.acceptIncomplete = config.get('acceptIncomplete', False)
+    self.newlineChar = config.get('newline', '')
 
     # The `handle` function is going to be called in a multithreaded
     # context.
@@ -106,75 +110,87 @@ class MultilineCodec(SingleLineCodec):
     lines = self.lines
     self.lines = []
     if len(lines) == 0:
-      return None
+      return []
 
     if completed or self.acceptIncomplete:
       msg = Message()
       msg.addField('codec', 'multiline')
-      msg.addField('message', '\n'.join(lines))
+      msg.addField('message', self.newlineChar.join(lines))
 
       # Extract each line as `line-num` fields
       for i in range(0, len(lines)):
         msg.addField('line-' + str(i + 1), lines[i])
 
-      return msg
+      return [msg]
 
-    return None
+    return []
 
-  def handle(self, line):
+  def handle(self, line, withLock = True):
     """
     Handle the incoming line
     """
-    with self.mutex:
-      while True:
-        rule = self.rules[self.currentRule]
+    if withLock:
+      self.mutex.acquire()
 
-        # Check if line matches
-        if rule.matches(line):
+    while True:
+      rule = self.rules[self.currentRule]
 
-          # Collect line
-          self.lines.append(line)
+      # Check if line matches
+      if rule.matches(line):
 
-          # Handle repeats
-          if rule.repeat:
-            self.currentRepeat += 1
-            if type(rule.repeat) is int:
-              if self.currentRepeat >= rule.repeat:
-                self.currentRepeat = 0
-                self.currentRule += 1
-          else:
-            self.currentRule += 1
+        # Collect line
+        self.lines.append(line)
 
+        # Handle repeats
+        if rule.repeat:
+          self.currentRepeat += 1
+          if type(rule.repeat) is int:
+            if self.currentRepeat >= rule.repeat:
+              self.currentRepeat = 0
+              self.currentRule += 1
         else:
+          self.currentRule += 1
 
-          # If we had a repetetion running re-try with the next rule in the list
-          if self.currentRepeat > 0:
-            self.currentRepeat = 0
-            self.currentRule += 1
+      else:
 
-            # Check if we ran out of rules
-            if self.currentRule >= len(self.rules):
-              return self.finalize(True)
-            else:
-              continue
+        # If we had a repetetion running re-try with the next rule in the list
+        if self.currentRepeat > 0:
+          self.currentRepeat = 0
+          self.currentRule += 1
 
-          # Handle optional rules in case of mismatch
-          if rule.optional:
-            self.currentRule += 1
-
-            # Check if we ran out of rules
-            if self.currentRule >= len(self.rules):
-              return self.finalize(True)
-            else:
-              continue
-
-          # Interrupt match
+          # Check if we ran out of rules
+          if self.currentRule >= len(self.rules):
+            if withLock:
+              self.mutex.release()
+            return self.finalize(True) + self.handle(line, False)
           else:
-            return self.finalize(False)
+            continue
 
-        # Check if we ran out of rules
-        if self.currentRule >= len(self.rules):
-          return self.finalize(True)
+        # Handle optional rules in case of mismatch
+        if rule.optional:
+          self.currentRule += 1
 
-        # Incomplete match
-        return None
+          # Check if we ran out of rules
+          if self.currentRule >= len(self.rules):
+            if withLock:
+              self.mutex.release()
+            return self.finalize(True) + self.handle(line, False)
+          else:
+            continue
+
+        # Interrupt match
+        else:
+          if withLock:
+            self.mutex.release()
+          return self.finalize(False)
+
+      # Check if we ran out of rules
+      if self.currentRule >= len(self.rules):
+        if withLock:
+          self.mutex.release()
+        return self.finalize(True) + self.handle(line, False)
+
+      # Incomplete match
+      if withLock:
+        self.mutex.release()
+      return []

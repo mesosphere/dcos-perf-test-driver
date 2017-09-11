@@ -4,15 +4,15 @@ class Message:
   """
 
   def __init__(self):
-    self.tokens = set()
+    self.tags = set()
     self.fields = {}
 
-  def addToken(self, token):
-    self.tokens.add(token)
+  def addTag(self, tag):
+    self.tags.add(tag)
     return self
 
-  def removeToken(self, token):
-    self.tokens.remove(token)
+  def removeTag(self, tag):
+    self.tags.remove(tag)
     return self
 
   def addField(self, field, value):
