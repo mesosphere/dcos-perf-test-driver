@@ -1,98 +1,160 @@
-import json
 import re
-import requests
 import threading
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event, LogLineEvent
-from performance.driver.classes.channel.http import HTTPRequestStartEvent
+from performance.driver.core.reflection import subscribesToHint, publishesHint
+from performance.driver.classes.observer.logstax import LogStaxObserver
+from performance.driver.classes.channel.marathon import MarathonDeploymentRequestedEvent
+from performance.driver.classes.observer.events.marathon import *
 
-from .marathonevents import MarathonDeploymentSuccessEvent, MarathonStartedEvent
+# Matches the instance ID in an app in deployment
+RE_INSTANCEINDEPLOYMENT = re.compile(r'App\((.*?),')
 
-MARATHON_STARTED_EVENT = re.compile(r'^.+Started.*:8080.*$')
-MARATHON_SUCCESS_EVENT = re.compile(
-    r'^.+Successfully started.*?[1-9][0-9]*.*?(\/[^ ]+).*$')
-MARATHON_DEPLOYMENT_COMPLETE = re.compile(
-    r'^.*Removing ([-\w]+) from list of running deployments.*$')
+class MarathonDeploymentState:
+  def __init__(self, id):
+    self.id = id
+    self.instances = []
 
-
-class MarathonLogsObserver(Observer):
+class MarathonLogsObserver(LogStaxObserver):
   """
-  This observer keeps polling the given URL until it properly responds on an
-  HTTP request. When done, it emmits the `HTTPEndpointAliveEvent` and it stops.
+  This observer is based on the `LogStaxObserver` functionality in order to
+  find and filter-out the marathon lines.
   """
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
+
+    self.deploymentLookup = {}
+    self.instanceLookup = {}
+    self.lookupLock = threading.Lock()
+
     self.instanceTraceIDs = {}
+    self.instanceTraceIDsLock = threading.Lock()
 
-    self.eventbus.subscribe(self.handleLogLine, events=(LogLineEvent, ))
+    # When an HTTP request is initiated, get the application name and use this
+    # as the means of linking the traceids to the source
     self.eventbus.subscribe(
-        self.handleHTTPRequestStart, events=(HTTPRequestStartEvent, ))
+        self.handleDeploymentRequest, events=(MarathonDeploymentRequestedEvent, ), order=2)
 
-  def handleLogLine(self, event):
-    """
-    Handle log line
-    """
-
-    # Marathon webserver started
-    if MARATHON_STARTED_EVENT.match(event.line):
-      self.eventbus.publish(MarathonStartedEvent())
-      return
-
-    # We are publishing a MarathonDeploymentSuccessEvent for every instance
-    # that is reported to be completed. In this case, the deployment ID is
-    # empty. The usage of this event is to termiate counters that are linked
-    # to the initial HTTP request.
-    match = MARATHON_SUCCESS_EVENT.match(event.line)
-    if match:
-      instance = match.group(1)
-      if instance in self.instanceTraceIDs:
-        self.eventbus.publish(
-            MarathonDeploymentSuccessEvent(
-                '', {}, traceid=self.instanceTraceIDs[instance]))
-      else:
-        self.logger.warn(
-            'Found a deployment success event without an http request')
-      return
-
-    # We also need to publish MarathonDeploymentSuccessEvent that contains
-    # the correct deployment ID for the ones waiting for it
-    match = MARATHON_DEPLOYMENT_COMPLETE.match(event.line)
-    if match:
-      deployment = match.group(1)
-      self.eventbus.publish(MarathonDeploymentSuccessEvent(deployment, {}))
-
-    # TODO: Ideally we would need to parse the marathon logs and find the
-    # deployments and the apps affected. However since we are using
-    # a multi-threading processing it's possible to receive log lines
-    # out-of-order and we will need some complicated logic in order to
-    # align it and process it.
-
-  def handleHTTPRequestStart(self, event):
+  def handleDeploymentRequest(self, event):
     """
     Look for an HTTP request that could trigger a deployment, and get the ID
     in order to resolve it to a deployment at a later time
     """
+    with self.instanceTraceIDsLock:
+      self.instanceTraceIDs[event.instance] = event.traceids
 
-    # App deployment or modification
-    if ('/v2/apps' in event.url) and (event.verb in ('delete', 'post', 'put',
-                                                     'patch')):
-      try:
-        body = json.loads(event.body)
-        self.instanceTraceIDs[body['id']] = event.traceids
-      except json.JSONDecodeError as e:
-        self.logger.exception(e)
+  def getTraceIDs(self, ids):
+    """
+    Collect the unique trace IDs for the given app ids
+    """
+    traceids = set()
 
-    # Pod deployment or modification
-    elif ('/v2/pods' in event.url) and (event.verb in ('delete', 'post', 'put',
-                                                       'patch')):
-      # TODO: Implement
-      raise NotImplementedError('Cannot trace the event ID of pod deployment')
+    with self.instanceTraceIDsLock:
+      for id in ids:
+        if id in self.instanceTraceIDs:
+          traceids.update(self.instanceTraceIDs[id])
 
-    # Group deployment or modification
-    elif ('/v2/groups' in event.url) and (event.verb in ('delete', 'post',
-                                                         'put', 'patch')):
-      # TODO: Implement
-      raise NotImplementedError(
-          'Cannot trace the event ID of group deployment')
+    return list(traceids)
+
+  def getRenderedConfig(self, macros={}):
+    """
+    Override LogStaxObserver config in order to inject the marathon-specific
+    configuration parameters
+    """
+    config = super().getRenderedConfig(macros)
+
+    # Compose the grok rules
+    return {
+      'filters': [{
+        'type': 'grok',
+        'match': { 'message': 'Started ServerConnector@.+{%{IP:boundIP}:%{INT:boundPort}' },
+        'add_tag': ['started']
+      }, {
+        'type': 'grok',
+        'match': { 'message': 'Computed new deployment plan.+DeploymentPlan id=%{UUID:planId}' },
+        'add_tag': ['deployment_computed']
+      }, {
+        'type': 'grok',
+        'match': { 'message': 'Deployment %{UUID:planId}:%{TIMESTAMP_ISO8601:version} of (?<pathId>\S+) (?<status>\S+)' },
+        'add_tag': ['deployment_end']
+      }],
+      'codecs': [{
+        'type':
+        'multiline',
+        'lines': [{
+          'match': r'^(\[\w+\]\s+)\[.*$'
+        }, {
+          'match': r'^(\[\w+\]\s+)[^\[].*$',
+          'optional': True,
+          'repeat': True
+        }]
+      }]
+    }
+
+  @publishesHint(MarathonStartedEvent)
+  def handleMessage_started(self, message):
+    """
+    Handle "marathon started" event
+    """
+    self.eventbus.publish(MarathonStartedEvent())
+
+  def handleMessage_computed(self, message):
+    """
+    Handle "computed deployment" message
+    """
+    with self.lookupLock:
+
+      # Start deployment
+      planId = message.fields['planId']
+      state = MarathonDeploymentState(planId)
+      self.deploymentLookup[planId] = state
+
+      # Collect affected instances
+      for app in RE_INSTANCEINDEPLOYMENT.finditer(message.fields['message']):
+        inst = app.group(1)
+        state.instances.append(inst)
+        self.instanceLookup[inst] = state
+
+  @publishesHint(MarathonDeploymentSuccessEvent, MarathonDeploymentFailedEvent)
+  def handleMessage_end(self, message):
+    """
+    Handle "completed deployment" message
+    """
+
+    # Start deployment
+    planId = message.fields['planId']
+    with self.lookupLock:
+      state = self.deploymentLookup.get(planId, None)
+    if state is None:
+      self.logger.warn('Got completion for a plan {} that hasn\'t been computed yet'.format(planId))
+      return
+
+    # Extract the affected ids
+    affectedIds = state.instances
+
+    # Dispatch event according to status
+    if message.fields['status'] == 'finished':
+      self.eventbus.publish(MarathonDeploymentSuccessEvent(
+          planId, affectedIds, traceid=self.getTraceIDs(affectedIds)
+        ))
+
+    elif message.fields['status'] == 'failed':
+      self.eventbus.publish(MarathonDeploymentFailedEvent(
+          planId, affectedIds, traceid=self.getTraceIDs(affectedIds)
+        ))
+
+  def handleMessage(self, message):
+    """
+    Handle a completed message
+    """
+
+    if 'started' in message.tags:
+      self.handleMessage_started(message)
+
+    elif 'deployment_computed' in message.tags:
+      self.handleMessage_computed(message)
+
+    elif 'deployment_end' in message.tags:
+      self.handleMessage_end(message)

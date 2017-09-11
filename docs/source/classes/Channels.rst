@@ -35,3 +35,10 @@ MarathonUpdateChannel
 ---------------------
 
 .. autoclass:: performance.driver.classes.channel.MarathonUpdateChannel
+
+.. _classref-channel-MarathonDeployChannel:
+
+MarathonDeployChannel
+---------------------
+
+.. autoclass:: performance.driver.classes.channel.MarathonDeployChannel
