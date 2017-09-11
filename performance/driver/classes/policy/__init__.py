@@ -1,4 +1,3 @@
-from .burst import BurstPolicy
 from .chaineddeployment import ChainedDeploymentPolicy
 from .multivariableexplorer import MultivariableExplorerPolicy
 from .singledeployment import SingleDeploymentPolicy
