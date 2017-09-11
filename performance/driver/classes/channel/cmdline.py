@@ -72,7 +72,7 @@ class CmdlineChannel(Channel):
 
         # [Optional] If set to `yes` (default) the app will be re-launched
         # if it exits on it's own.
-        relaunch: yes
+        restart: yes
 
   When a parameter is changed, the channel will kill the process and re-launch
   it with the new command-line.
@@ -83,10 +83,10 @@ class CmdlineChannel(Channel):
   When the application launched through this channel exits the channel can take
   two actions depending on it's configuration:
 
-  * If ``relaunch: yes`` is specitied (default), the channel will re-launch the
+  * If ``restart: yes`` is specitied (default), the channel will re-launch the
     application in oder to always keep it running.
 
-  * If ``relaunch: no`` is specified, the channel will give up and publish a
+  * If ``restart: no`` is specified, the channel will give up and publish a
     ``CmdlineExitZeroEvent`` or a ``CmdlineExitNonzeroEvent`` according to the
     exit code of the application.
 
@@ -109,8 +109,6 @@ class CmdlineChannel(Channel):
     self.lastTraceId = None
 
     # Receive parameter updates and clean-up on teardown
-    self.eventbus.subscribe(
-        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
     self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent, ))
     self.eventbus.subscribe(self.handleStart, events=(StartEvent, ))
 
@@ -204,8 +202,8 @@ class CmdlineChannel(Channel):
         self.eventbus.publish(
             CmdlineExitNonzeroEvent(proc.returncode, traceid=self.lastTraceId))
 
-      # Relaunch if configured
-      if self.getConfig('relaunch', True):
+      # Restart if configured
+      if self.getConfig('restart', True):
         self.logger.warn('Process exited prematurely')
         self.launch(self.activeParameters)
       else:
@@ -239,14 +237,17 @@ class CmdlineChannel(Channel):
 
     # Compose the arguments for the execution
     cwd = self.getConfig('cwd', required=False)
-    cwd = self.getConfig('cwd', required=False)
+    shell = self.getConfig('shell', False)
 
     # Combine parameters with the definitions
     macroValues = self.getDefinitions().fork(parameters)
 
     # Compile arguments
     cmdline = self.cmdlineTpl.apply(macroValues)
-    args = shlex.split(cmdline)
+    if not shell:
+      args = shlex.split(cmdline)
+    else:
+      args = cmdline
     stdin = self.stdinTpl.apply(macroValues)
     env = self.envTpl.apply(macroValues)
     cwd = self.cwdTpl.apply(macroValues)
@@ -260,7 +261,7 @@ class CmdlineChannel(Channel):
       env = None
 
     # Launch
-    self.logger.debug('Starting process: \'{}\''.format(' '.join(args)))
+    self.logger.debug('Starting process: \'{}\''.format(args if type(args) is str else ' '.join(args)))
     self.activeParameters = parameters
     proc = Popen(
         args,
@@ -269,6 +270,7 @@ class CmdlineChannel(Channel):
         stderr=PIPE,
         env=env,
         cwd=cwd,
+        shell=shell,
         preexec_fn=os.setsid)
 
     # Launch a thread to monitor it's output
@@ -305,14 +307,6 @@ class CmdlineChannel(Channel):
     # the received properties are actually updating one or more parameters
     # in our template
     if self.activeTask:
-      hasChanges = False
-      for key, value in event.changes.items():
-        if key in self.cmdlineTpl.macros() or key in self.stdinTpl.macros() or\
-           key in self.envTpl.macros() or key in self.cwdTpl.macros():
-          hasChanges = True
-          break
-      if not hasChanges:
-        return
 
       # We have a parameter change, kill the process
       # and schedule a new execution later
