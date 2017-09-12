@@ -8,21 +8,21 @@ try:
   import numpy as np
 except ModuleNotFoundError:
   import logging
-  logging.error('One or more libraries required by StepPolicy were not'
+  logging.error('One or more libraries required by MultiStepPolicy were not'
                 'installed. The policy will not work.')
 
 from performance.driver.core.events import isEventMatching, RunTaskEvent
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.eventfilters import EventFilter
 
-class StepPolicy(PolicyFSM):
+class MultiStepPolicy(PolicyFSM):
   """
   The **Step Policy** evolves various parameters through various steps.
 
   ::
 
     policy:
-      - class: policy.StepPolicy
+      - class: policy.MultiStepPolicy
 
         # Configure the policy steps
         steps:
@@ -131,14 +131,14 @@ class StepPolicy(PolicyFSM):
       self.steps = list(self.configuredSteps)
 
       # Run first step
-      self.goto(StepPolicy.StartStep)
+      self.goto(MultiStepPolicy.StartStep)
 
     def onRestartEvent(self, event):
       """
       Restart
       """
       self.steps = list(self.configuredSteps)
-      self.goto(StepPolicy.StartStep)
+      self.goto(MultiStepPolicy.StartStep)
 
   class StartStep(State):
     """
@@ -153,7 +153,7 @@ class StepPolicy(PolicyFSM):
       # If we ran out of steps, exit
       if len(self.steps) == 0:
         self.logger.info('All steps completed')
-        self.goto(StepPolicy.End)
+        self.goto(MultiStepPolicy.End)
         return
 
       # Collect step
@@ -163,7 +163,7 @@ class StepPolicy(PolicyFSM):
       # Check if we have to wait for an event before
       # starting the event
       if self.step.startEvent is None:
-        self.goto(StepPolicy.RunStep)
+        self.goto(MultiStepPolicy.RunStep)
         return
 
       # Setup an event session
@@ -174,7 +174,7 @@ class StepPolicy(PolicyFSM):
       """
       Called when the start event is received
       """
-      self.goto(StepPolicy.RunStep)
+      self.goto(MultiStepPolicy.RunStep)
 
     def onEvent(self, event):
       """
@@ -213,7 +213,7 @@ class StepPolicy(PolicyFSM):
         self.step.failEventSession = self.step.failEvent.start([], self.handleFailEvent)
 
       # Otherwise stat consuming values
-      self.goto(StepPolicy.NextStepValue)
+      self.goto(MultiStepPolicy.NextStepValue)
 
     def handleEndEvent(self, event):
       """
@@ -225,7 +225,7 @@ class StepPolicy(PolicyFSM):
       # Wait for max events
       self.step.completeEventsRemaining -= 1
       if self.step.completeEventsRemaining == 0:
-        self.goto(StepPolicy.CompleteStep)
+        self.goto(MultiStepPolicy.CompleteStep)
       else:
         self.logger.info('Waiting for {} more events before completion'
           .format(self.step.completeEventsRemaining))
@@ -240,7 +240,7 @@ class StepPolicy(PolicyFSM):
       # Wait for max events
       self.step.completeEventsRemaining -= 1
       if self.step.completeEventsRemaining == 0:
-        self.goto(StepPolicy.CompleteStep)
+        self.goto(MultiStepPolicy.CompleteStep)
       else:
         self.logger.info('Waiting for {} more events before completion'
           .format(self.step.completeEventsRemaining))
@@ -264,7 +264,7 @@ class StepPolicy(PolicyFSM):
 
       # Start consuming values
       self.logger.debug('Task {} completed'.format(self.step.startTask))
-      self.goto(StepPolicy.NextStepValue)
+      self.goto(MultiStepPolicy.NextStepValue)
 
 
   class NextStepValue(State):
@@ -289,7 +289,7 @@ class StepPolicy(PolicyFSM):
           self.logger.info('Waiting for custom end condition')
           return
 
-        self.goto(StepPolicy.CompleteStep)
+        self.goto(MultiStepPolicy.CompleteStep)
         return
 
       # If we have a pre-value task, run it now
@@ -299,7 +299,7 @@ class StepPolicy(PolicyFSM):
         return
 
       # Otherwise send values now
-      self.goto(StepPolicy.SendStepParameters)
+      self.goto(MultiStepPolicy.SendStepParameters)
 
     def onEvent(self, event):
       """
@@ -320,7 +320,7 @@ class StepPolicy(PolicyFSM):
 
       # Send values now
       self.logger.debug('Task {} completed'.format(self.step.preValueTask))
-      self.goto(StepPolicy.SendStepParameters)
+      self.goto(MultiStepPolicy.SendStepParameters)
 
 
   class SendStepParameters(State):
@@ -389,7 +389,7 @@ class StepPolicy(PolicyFSM):
         return
 
       # If everything is done, advance to next value
-      self.goto(StepPolicy.NextStepValue)
+      self.goto(MultiStepPolicy.NextStepValue)
 
     def onTickEvent(self, event):
       """
@@ -450,7 +450,7 @@ class StepPolicy(PolicyFSM):
 
       # Otherwise we are good to continue
       else:
-        self.goto(StepPolicy.StartStep)
+        self.goto(MultiStepPolicy.StartStep)
 
     def onRunTaskCompletedEvent(self, event):
       """
@@ -461,7 +461,7 @@ class StepPolicy(PolicyFSM):
         return
 
       # One thing has completed
-      self.goto(StepPolicy.StartStep)
+      self.goto(MultiStepPolicy.StartStep)
 
 
   class End(State):
