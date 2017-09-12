@@ -17,11 +17,11 @@ def mergeConfig(source, destination):
   for key, value in source.items():
     if not key in destination:
       destination[key] = value
-    elif isinstance(value, dict):
+    elif type(value) is dict:
       # get node or create one
       node = destination.setdefault(key, {})
       mergeConfig(value, node)
-    elif isinstance(value, list):
+    elif type(value) in (list, tuple):
       destination[key] += value
     else:
       destination[key] = value

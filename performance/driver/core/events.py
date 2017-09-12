@@ -5,6 +5,8 @@ import uuid
 # Regex to strip ANSI sequences from the log lines
 ANSI_SEQUENCE = re.compile(r'\x1b[^m]*m')
 
+# Event matching cache for speed-up
+MATCHER_CACHE = {}
 
 def isEventClassMatchingName(eventClass, className):
   """
@@ -17,16 +19,30 @@ def isEventClassMatchingName(eventClass, className):
       map(lambda c: isEventClassMatchingName(c, className),
           eventClass.__bases__))
 
-
 def isEventMatching(eventInstance, eventCheck):
   """
   Check if the `eventCheck` is validating the `eventInstance`
   """
-  if type(eventCheck) is str:
-    return isEventClassMatchingName(type(eventInstance), eventCheck)
-  else:
-    return isinstance(eventInstance, eventCheck)
+  global MATCHER_CACHE
 
+  # Check cache
+  eventType = type(eventInstance)
+  if eventType in MATCHER_CACHE:
+    if eventCheck in MATCHER_CACHE[eventType]:
+      return MATCHER_CACHE[eventType][eventCheck]
+
+  # Apply checks
+  if type(eventCheck) is str:
+    ans = isEventClassMatchingName(eventType, eventCheck)
+  else:
+    ans = isinstance(eventInstance, eventCheck)
+
+  # Cache response
+  if not eventType in MATCHER_CACHE:
+    MATCHER_CACHE[eventType] = {}
+  MATCHER_CACHE[eventType][eventCheck] = ans
+
+  return ans
 
 class Event:
   """
@@ -37,6 +53,7 @@ class Event:
   """
 
   def __init__(self, traceid=None):
+    self._cachedMatchers = {}
     self.event = type(self).__name__
     self.ts = time.time()
 

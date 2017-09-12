@@ -49,10 +49,6 @@ class TestEventBus(unittest.TestCase):
     pubEvent = Event()
     eventbus.publish(pubEvent)
 
-    # Do not accept non-events as arguments
-    with self.assertRaises(TypeError) as context:
-      eventbus.publish("String")
-
     # Pop the event from the queue, since the event loop is not running
     (event, cond) = eventbus.queue.get()
     self.assertEqual(event, pubEvent)

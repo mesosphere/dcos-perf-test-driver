@@ -59,8 +59,6 @@ class EventBus:
     """
     Publish an event to all subscribers
     """
-    if not isinstance(event, Event):
-      raise TypeError('You can only publish `Event` instances in the bus')
 
     # If we are requested to perform a synchronous broadcast, we need to
     # wait until the event is consumed. So create a condition variable
@@ -162,7 +160,7 @@ class EventBus:
             sub(event, *args, **kwargs)
 
           delta = time.time() - start_ts
-          if delta > 0.25:
+          if delta > 0.1:
             self.logger.warn('Slow consumer ({:.2f}s) {} for event {}'.format(
                 delta, sub, type(event).__name__))
 

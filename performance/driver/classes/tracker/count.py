@@ -79,7 +79,8 @@ class CountTracker(Tracker):
     """
 
     # A terminal events terminates an active trace
-    if isinstance(event, RestartEvent) or isinstance(event, TeardownEvent):
+    eventType = type(event)
+    if eventType in (RestartEvent, TeardownEvent):
       for trace in self.traces:
         trace.finalize()
 
@@ -88,7 +89,7 @@ class CountTracker(Tracker):
       return
 
     # Each parameter update initiates a trace of interest
-    if isinstance(event, ParameterUpdateEvent):
+    if type(event) is ParameterUpdateEvent:
 
       # Start a new session tracker
       self.activeTrace = CountTrackerSession(self, event.traceids)
