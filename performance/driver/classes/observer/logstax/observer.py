@@ -162,6 +162,7 @@ class LogStaxObserver(Observer):
       if handled:
         self.handleMessage(message)
 
+  @publishesHint(LogStaxMessageEvent)
   def handleMessage(self, message):
     """
     Handle a completed message
