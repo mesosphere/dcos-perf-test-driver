@@ -1,1 +1,1 @@
-from .observer import LogStaxObserver
+from .observer import LogStaxObserver, LogStaxMessageEvent

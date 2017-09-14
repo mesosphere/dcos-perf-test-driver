@@ -40,6 +40,17 @@ class CmdlineExitNonzeroEvent(CmdlineExitEvent):
   """
 
 
+class CmdlineStartedEvent(Event):
+  """
+  This event is published when the process has started. It contains the process
+  ID so the observers can attach to the process and extract useful data.
+  """
+
+  def __init__(self, pid, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.pid = pid
+
+
 class CmdlineChannel(Channel):
   """
   The *Command-line Channel* launches an application, passes the test parameters
@@ -272,6 +283,9 @@ class CmdlineChannel(Channel):
         cwd=cwd,
         shell=shell,
         preexec_fn=os.setsid)
+
+    # Dispatch start event
+    self.eventbus.publish(CmdlineStartedEvent(proc.pid))
 
     # Launch a thread to monitor it's output
     thread = threading.Thread(target=self.monitor, args=(args[0], proc, stdin))
