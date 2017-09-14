@@ -23,6 +23,7 @@ class JMXMeasurement(Event):
     super().__init__(*args, **kwargs)
     self.fields = fields
 
+
 class JMXObserver(Observer):
   """
   The *JMX Observer* connects to the java management console of a running java
@@ -112,8 +113,10 @@ class JMXObserver(Observer):
     startEvent = eventsConfig.get('activate', 'CmdlineStartedEvent')
     activateFilter = EventFilter(startEvent)
     self.activateFilter = activateFilter.start(None, self.handleActivateEvent)
-    deactivateFilter = EventFilter(eventsConfig.get('deactivate', 'CmdlineExitEvent'))
-    self.deactivateFilter = deactivateFilter.start(None, self.handleDeactivateEvent)
+    deactivateFilter = EventFilter(
+        eventsConfig.get('deactivate', 'CmdlineExitEvent'))
+    self.deactivateFilter = deactivateFilter.start(None,
+                                                   self.handleDeactivateEvent)
 
     self.logger.debug('Waiting for `{}` before starting'.format(startEvent))
 
@@ -192,23 +195,25 @@ class JMXObserver(Observer):
       # Open process
       try:
 
-          # Open process
-          self.proc = proc = Popen(args, stdout=PIPE, stderr=PIPE, preexec_fn=os.setsid)
+        # Open process
+        self.proc = proc = Popen(
+            args, stdout=PIPE, stderr=PIPE, preexec_fn=os.setsid)
 
-          # Start reading until the process exits
-          while proc.poll() is None:
-            line = proc.stdout.readline().decode('utf-8').strip()
-            if not line:
-              break
-            self.handleMetricLine(line)
+        # Start reading until the process exits
+        while proc.poll() is None:
+          line = proc.stdout.readline().decode('utf-8').strip()
+          if not line:
+            break
+          self.handleMetricLine(line)
 
-          # Drain stderr
-          (_, serr) = proc.communicate()
-          if proc.returncode != 0:
-            if not self.active:
-              break
-            self.logger.warn('Middleware process exited with error: {}'.format(serr.decode('utf-8').strip()))
-            time.sleep(1)
+        # Drain stderr
+        (_, serr) = proc.communicate()
+        if proc.returncode != 0:
+          if not self.active:
+            break
+          self.logger.warn('Middleware process exited with error: {}'.format(
+              serr.decode('utf-8').strip()))
+          time.sleep(1)
 
       except OSError as e:
         self.logger.error(
