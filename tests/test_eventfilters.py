@@ -206,6 +206,77 @@ class TestEventBus(unittest.TestCase):
         call(fooEvent1),
       ])
 
+
+  def test_flag_single(self):
+    """
+    Test if the ":first" flag is working
+    """
+
+    eventFilter = EventFilter("FooEvent:single")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should be handled
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # The second FooEvent should not be handled
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # The BarEvent should not be handled
+    barEvent = BarEvent(traceid=traceids)
+    session.handle(barEvent)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # No more events should be added when the session is finalized
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # Start a new session
+    eventFilter = EventFilter("FooEvent:single")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should be handled
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The second FooEvent should not be handled
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The BarEvent should not be handled
+    barEvent = BarEvent(traceid=traceids)
+    session.handle(barEvent)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # No more events should be added when the session is finalized
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
   def test_flag_last(self):
     """
     Test if the ":last" flag is working

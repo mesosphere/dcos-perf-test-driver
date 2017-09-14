@@ -5,6 +5,8 @@ DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\)]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
 DSL_FLAGS = re.compile(r'\:([^\:]+)')
 
+global_single_events = []
+
 class EventFilterSession:
   """
   An event filter session
@@ -60,6 +62,11 @@ class EventFilterSession:
           self.foundEvent = event
           self.callback(event)
         break
+      if 'single' in flags:
+        evType = type(event)
+        if evType in global_single_events:
+          break
+        global_single_events.append(evType)
 
       # Fire callback
       self.callback(event)
@@ -134,6 +141,8 @@ class EventFilter:
       | ``:last``       | Match the last event in the tracking session       |
       +-----------------+----------------------------------------------------+
       | ``:nth(n)``     | Match the n-th event in the tracking session       |
+      +-----------------+----------------------------------------------------+
+      | ``:single``     | Match a single event, globally                     |
       +-----------------+----------------------------------------------------+
 
   For example, to match every ``HTTPRequestEvent``:
