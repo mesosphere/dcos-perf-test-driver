@@ -79,7 +79,8 @@ class EventFilterSession:
         continue
 
       # Handle trace ID
-      if not self.traceids is None and not event.hasTraces(self.traceids):
+      if not self.traceids is None and not 'notrace' in flags and not event.hasTraces(
+          self.traceids):
         continue
 
       # Increment counter
@@ -205,6 +206,9 @@ class EventFilter:
       | ``:single``     | Match a single event, globally                     |
       +-----------------+----------------------------------------------------+
       | ``:after(Xs)``  | Trigger after X seconds after the last event       |
+      +-----------------+----------------------------------------------------+
+      | ``:notrace``    | Ignore the trace ID matching and accept any event, |
+      |                 | even if they do not belong in the trace session.   |
       +-----------------+----------------------------------------------------+
 
   For example, to match every ``HTTPRequestEvent``:
