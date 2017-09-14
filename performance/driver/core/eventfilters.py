@@ -1,4 +1,6 @@
 import re
+from threading import Timer
+
 from performance.driver.core.events import isEventMatching
 
 DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\)]*))?')
@@ -6,6 +8,33 @@ DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
 DSL_FLAGS = re.compile(r'\:([^\:]+)')
 
 global_single_events = []
+
+def getTime(timeExpr):
+  """
+  Convert a time expression (ex. 1s 5m 1us 1ms) to a float seconds value
+  """
+  scale = 1
+  if timeExpr.endswith('us'):
+    scale = 1 / 1000000
+    timeExpr = timeExpr[:-2]
+  elif timeExpr.endswith('ms'):
+    scale = 1 / 1000
+    timeExpr = timeExpr[:-2]
+  elif timeExpr.endswith('s'):
+    scale = 1
+    timeExpr = timeExpr[:-1]
+  elif timeExpr.endswith('m'):
+    scale = 60
+    timeExpr = timeExpr[:-1]
+  elif timeExpr.endswith('h'):
+    scale = 3600
+    timeExpr = timeExpr[:-1]
+
+  try:
+    value = float(timeExpr)
+    return value * scale
+  except ValueError:
+    return None
 
 class EventFilterSession:
   """
@@ -19,6 +48,14 @@ class EventFilterSession:
     self.traceids = traceids
     self.callback = callback
     self.counter = 0
+    self.timer = None
+
+  def afterTimerCallback(self):
+    """
+    Callback for the :after(x) selector
+    """
+    self.timer = None
+    self.callback(self.foundEvent)
 
   def handle(self, event):
     """
@@ -66,7 +103,22 @@ class EventFilterSession:
         evType = type(event)
         if evType in global_single_events:
           break
+        self.foundEvent = event
+        self.callback(event)
         global_single_events.append(evType)
+        break
+      if 'after' in flags:
+        time = getTime(flagParameters['after'])
+        if time is None:
+          raise ValueError('Event selector `:after({})` contains an invalid time expression'.format(flagParameters['after']))
+
+        # Restart timer to call the callback after the given delay
+        if self.timer:
+          self.timer.cancel()
+        self.foundEvent = event
+        self.timer = Timer(time, self.afterTimerCallback)
+        self.timer.start()
+        break
 
       # Fire callback
       self.callback(event)
@@ -76,6 +128,10 @@ class EventFilterSession:
     """
     Called when a tracking session is finalised
     """
+
+    # If we have an active :after() timer, flush it now
+    if self.timer:
+      self.afterTimerCallback()
 
     # Submit the last event
     if self.triggerAtExit and self.foundEvent:
@@ -143,6 +199,8 @@ class EventFilter:
       | ``:nth(n)``     | Match the n-th event in the tracking session       |
       +-----------------+----------------------------------------------------+
       | ``:single``     | Match a single event, globally                     |
+      +-----------------+----------------------------------------------------+
+      | ``:after(Xs)``  | Trigger after X seconds after the last event       |
       +-----------------+----------------------------------------------------+
 
   For example, to match every ``HTTPRequestEvent``:

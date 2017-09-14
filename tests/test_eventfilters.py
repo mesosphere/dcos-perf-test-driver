@@ -206,10 +206,72 @@ class TestEventBus(unittest.TestCase):
         call(fooEvent1),
       ])
 
+  def test_flag_after(self):
+    """
+    Test if the ":after(1s)" flag is working
+    """
+
+    eventFilter = EventFilter("FooEvent:after(1s)")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled immediately
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The second FooEvent replaces the first yet it's not handled immediately
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The BarEvent should not be handled
+    barEvent = BarEvent(traceid=traceids)
+    session.handle(barEvent)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # Wait for a bit more than 1 second
+    time.sleep(1.01)
+
+    # The last foo event should be there now
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # No more events should be added when the session is finalized
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled immediately
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # But it should appear at finalization, even though it's time is not
+    # there yet.
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
 
   def test_flag_single(self):
     """
-    Test if the ":first" flag is working
+    Test if the ":single" flag is working
     """
 
     eventFilter = EventFilter("FooEvent:single")
@@ -246,7 +308,7 @@ class TestEventBus(unittest.TestCase):
         call(fooEvent1),
       ])
 
-    # Start a new session
+    # Create a new event filter once again
     eventFilter = EventFilter("FooEvent:single")
 
     # Start a session
