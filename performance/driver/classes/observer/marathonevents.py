@@ -61,7 +61,8 @@ class MarathonEventsObserver(Observer):
 
   """
 
-  @subscribesToHint(MarathonDeploymentRequestedEvent, TeardownEvent, StartEvent)
+  @subscribesToHint(MarathonDeploymentRequestedEvent, TeardownEvent,
+                    StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.urlTpl = TemplateString(self.getConfig('url'))
@@ -82,7 +83,9 @@ class MarathonEventsObserver(Observer):
     # When an HTTP request is initiated, get the application name and use this
     # as the means of linking the traceids to the source
     self.eventbus.subscribe(
-        self.handleDeploymentRequest, events=(MarathonDeploymentRequestedEvent, ), order=2)
+        self.handleDeploymentRequest,
+        events=(MarathonDeploymentRequestedEvent, ),
+        order=2)
 
     # Also subscribe to the teardown event in order to cleanly stop the event
     # handling thread. The order=2 here is ensuring that the `running` flag is
@@ -187,10 +190,11 @@ class MarathonEventsObserver(Observer):
           del self.instanceTraceIDs[id]
 
   @publishesHint(MarathonStartedEvent, MarathonGroupChangeSuccessEvent,
-    MarathonGroupChangeFailedEvent, MarathonDeploymentSuccessEvent,
-    MarathonDeploymentFailedEvent, MarathonDeploymentStatusEvent,
-    MarathonDeploymentStepSuccessEvent, MarathonDeploymentStepFailureEvent,
-    MarathonSSEEvent)
+                 MarathonGroupChangeFailedEvent,
+                 MarathonDeploymentSuccessEvent, MarathonDeploymentFailedEvent,
+                 MarathonDeploymentStatusEvent,
+                 MarathonDeploymentStepSuccessEvent,
+                 MarathonDeploymentStepFailureEvent, MarathonSSEEvent)
   def eventEmitterThreadHandler(self):
     """
     This event is draining the receiver queue and is forwarding the events
@@ -224,8 +228,9 @@ class MarathonEventsObserver(Observer):
         affectedIds = [eventData['groupId']]
         self.eventbus.publish(
             MarathonGroupChangeSuccessEvent(
-                deploymentId, affectedIds, traceid=self.getTraceIDs(
-                    affectedIds)))
+                deploymentId,
+                affectedIds,
+                traceid=self.getTraceIDs(affectedIds)))
 
       #
       # group_change_failed
@@ -235,8 +240,10 @@ class MarathonEventsObserver(Observer):
         affectedIds = [eventData['groupId']]
         self.eventbus.publish(
             MarathonGroupChangeFailedEvent(
-                deploymentId, affectedIds, eventData['reason'],
-                  traceid=self.getTraceIDs(affectedIds)))
+                deploymentId,
+                affectedIds,
+                eventData['reason'],
+                traceid=self.getTraceIDs(affectedIds)))
 
       #
       # deployment_success
@@ -260,8 +267,9 @@ class MarathonEventsObserver(Observer):
         affectedIds = self.getStepsAffectedIDs(plan.get('steps', []))
         self.eventbus.publish(
             MarathonDeploymentFailedEvent(
-                deploymentId, affectedIds, traceid=self.getTraceIDs(
-                    affectedIds)))
+                deploymentId,
+                affectedIds,
+                traceid=self.getTraceIDs(affectedIds)))
         self.removeIDs(affectedIds)
 
       #
@@ -273,8 +281,9 @@ class MarathonEventsObserver(Observer):
         affectedIds = self.getStepsAffectedIDs([eventData.get('currentStep')])
         self.eventbus.publish(
             MarathonDeploymentStatusEvent(
-                deploymentId, affectedIds, traceid=self.getTraceIDs(
-                    affectedIds)))
+                deploymentId,
+                affectedIds,
+                traceid=self.getTraceIDs(affectedIds)))
 
       #
       # deployment_step_success
@@ -285,8 +294,9 @@ class MarathonEventsObserver(Observer):
         affectedIds = self.getStepsAffectedIDs([eventData.get('currentStep')])
         self.eventbus.publish(
             MarathonDeploymentStepSuccessEvent(
-                deploymentId, affectedIds, traceid=self.getTraceIDs(
-                    affectedIds)))
+                deploymentId,
+                affectedIds,
+                traceid=self.getTraceIDs(affectedIds)))
 
       #
       # deployment_step_failure
@@ -297,8 +307,9 @@ class MarathonEventsObserver(Observer):
         affectedIds = self.getStepsAffectedIDs([eventData.get('currentStep')])
         self.eventbus.publish(
             MarathonDeploymentStepFailureEvent(
-                deploymentId, affectedIds, traceid=self.getTraceIDs(
-                    affectedIds)))
+                deploymentId,
+                affectedIds,
+                traceid=self.getTraceIDs(affectedIds)))
 
       # Warn unknown events
       else:

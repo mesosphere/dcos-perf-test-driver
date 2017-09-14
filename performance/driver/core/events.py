@@ -8,6 +8,7 @@ ANSI_SEQUENCE = re.compile(r'\x1b[^m]*m')
 # Event matching cache for speed-up
 MATCHER_CACHE = {}
 
+
 def isEventClassMatchingName(eventClass, className):
   """
   Check if the `eventClass` name or it's parent classes equals to `className`
@@ -18,6 +19,7 @@ def isEventClassMatchingName(eventClass, className):
   return any(
       map(lambda c: isEventClassMatchingName(c, className),
           eventClass.__bases__))
+
 
 def isEventMatching(eventInstance, eventCheck):
   """
@@ -43,6 +45,7 @@ def isEventMatching(eventInstance, eventCheck):
   MATCHER_CACHE[eventType][eventCheck] = ans
 
   return ans
+
 
 class Event:
   """

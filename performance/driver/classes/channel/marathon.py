@@ -13,15 +13,18 @@ from threading import Thread
 #       deployment since it's not possible to relate earlier events without
 #       a deployment ID (such as `MarathonDeploymentRequestedEvent`)
 
+
 class MarathonDeploymentRequestedEvent(Event):
   def __init__(self, instance, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.instance = instance
 
+
 class MarathonDeploymentStartedEvent(Event):
   def __init__(self, instance, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.instance = instance
+
 
 class MarathonDeploymentRequestFailedEvent(Event):
   def __init__(self, instance, status_code, respose, *args, **kwargs):
@@ -116,30 +119,44 @@ class MarathonDeployChannel(Channel):
 
         # Start deployment
         if not 'id' in body:
-          self.logger.error('Deployment body is expected to have an "id" field')
+          self.logger.error(
+              'Deployment body is expected to have an "id" field')
           break
 
         # Notify deployment
         inst_id = body['id']
-        self.eventbus.publish(MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
+        self.eventbus.publish(
+            MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
 
         # Callback to acknowledge request
         def ack_response(request, *args, **kwargs):
-          self.eventbus.publish(MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
+          self.eventbus.publish(
+              MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
 
         # Create a request
-        response = requests.post(url, json=body, verify=False, headers=self.getHeaders(), hooks=dict(response=ack_response))
+        response = requests.post(
+            url,
+            json=body,
+            verify=False,
+            headers=self.getHeaders(),
+            hooks=dict(response=ack_response))
         if response.status_code < 200 or response.status_code >= 300:
-          self.logger.error('Unable to deploy {} "{}" (HTTP response {})'.
-                            format(deploymentType, inst_id, response.status_code))
-          self.eventbus.publish(MarathonDeploymentRequestFailedEvent(inst_id, response.status_code, response.text, traceid=traceids))
+          self.logger.error(
+              'Unable to deploy {} "{}" (HTTP response {})'.format(
+                  deploymentType, inst_id, response.status_code))
+          self.eventbus.publish(
+              MarathonDeploymentRequestFailedEvent(
+                  inst_id,
+                  response.status_code,
+                  response.text,
+                  traceid=traceids))
 
       except json.decoder.JSONDecodeError as e:
-        self.logger.error('Invalid JSON syntax in deployment body ({})'.format(e))
+        self.logger.error(
+            'Invalid JSON syntax in deployment body ({})'.format(e))
 
       except requests.exceptions.ConnectionError as e:
         self.logger.error('Unable to start a deployment ({})'.format(e))
-
 
   def handleParameterUpdate(self, event):
     """
@@ -157,11 +174,7 @@ class MarathonDeployChannel(Channel):
       Thread(
           target=self.handleDeployment,
           daemon=True,
-          args=(
-              action,
-              event.parameters,
-              url,
-              event.traceids)).start()
+          args=(action, event.parameters, url, event.traceids)).start()
 
 
 class MarathonUpdateChannel(Channel):
@@ -289,11 +302,13 @@ class MarathonUpdateChannel(Channel):
           del app['version']
 
         # Notify deployment
-        self.eventbus.publish(MarathonDeploymentRequestedEvent(app['id'], traceid=traceids))
+        self.eventbus.publish(
+            MarathonDeploymentRequestedEvent(app['id'], traceid=traceids))
 
         # Callback to acknowledge request
         def ack_response(request, *args, **kwargs):
-          self.eventbus.publish(MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
+          self.eventbus.publish(
+              MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
 
         # Update the specified application
         self.logger.debug('Executing update with body {}'.format(app))
@@ -308,7 +323,9 @@ class MarathonUpdateChannel(Channel):
           self.logger.error(
               'Unable to update app {} (HTTP response {}: {})'.format((app[
                   'id'], response.status_code, response.text)))
-          self.eventbus.publish(MarathonDeploymentRequestFailedEvent(app['id'], response.status_code, traceid=traceids))
+          self.eventbus.publish(
+              MarathonDeploymentRequestFailedEvent(
+                  app['id'], response.status_code, traceid=traceids))
           continue
 
         self.logger.debug('App updated successfully')
@@ -333,10 +350,7 @@ class MarathonUpdateChannel(Channel):
         Thread(
             target=self.handleUpdate_PatchApp,
             daemon=True,
-            args=(
-                action,
-                event.parameters,
-                event.traceids)).start()
+            args=(action, event.parameters, event.traceids)).start()
 
       # Unknown action
       else:

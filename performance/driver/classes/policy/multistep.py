@@ -15,6 +15,7 @@ from performance.driver.core.events import isEventMatching, RunTaskEvent
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.eventfilters import EventFilter
 
+
 class MultiStepPolicy(PolicyFSM):
   """
   The **Step Policy** evolves various parameters through various steps.
@@ -158,7 +159,8 @@ class MultiStepPolicy(PolicyFSM):
 
       # Collect step
       self.step = self.steps.pop(0)
-      self.logger.info('Executing step "{}" ({} remaining)'.format(self.step.name, len(self.steps)))
+      self.logger.info('Executing step "{}" ({} remaining)'.format(
+          self.step.name, len(self.steps)))
 
       # Check if we have to wait for an event before
       # starting the event
@@ -168,7 +170,8 @@ class MultiStepPolicy(PolicyFSM):
 
       # Setup an event session
       self.logger.info('Waiting for start event')
-      self.step.startEventSession = self.step.startEvent.start(None, self.handleStartEvent)
+      self.step.startEventSession = self.step.startEvent.start(
+          None, self.handleStartEvent)
 
     def handleStartEvent(self, event):
       """
@@ -182,7 +185,6 @@ class MultiStepPolicy(PolicyFSM):
       """
       if self.step and self.step.startEventSession:
         self.step.startEventSession.handle(event)
-
 
   class RunStep(State):
     """
@@ -208,9 +210,11 @@ class MultiStepPolicy(PolicyFSM):
       #        however the handers will be feeding events in other steps. That's
       #        ok, as long as you are aware of this)
       if self.step.endEvent:
-        self.step.endEventSession = self.step.endEvent.start([], self.handleEndEvent)
+        self.step.endEventSession = self.step.endEvent.start(
+            [], self.handleEndEvent)
       if self.step.failEvent:
-        self.step.failEventSession = self.step.failEvent.start([], self.handleFailEvent)
+        self.step.failEventSession = self.step.failEvent.start(
+            [], self.handleFailEvent)
 
       # Otherwise stat consuming values
       self.goto(MultiStepPolicy.NextStepValue)
@@ -228,7 +232,7 @@ class MultiStepPolicy(PolicyFSM):
         self.goto(MultiStepPolicy.CompleteStep)
       else:
         self.logger.info('Waiting for {} more events before completion'
-          .format(self.step.completeEventsRemaining))
+                         .format(self.step.completeEventsRemaining))
 
     def handleFailEvent(self, event):
       """
@@ -243,7 +247,7 @@ class MultiStepPolicy(PolicyFSM):
         self.goto(MultiStepPolicy.CompleteStep)
       else:
         self.logger.info('Waiting for {} more events before completion'
-          .format(self.step.completeEventsRemaining))
+                         .format(self.step.completeEventsRemaining))
 
     def onEvent(self, event):
       """
@@ -266,7 +270,6 @@ class MultiStepPolicy(PolicyFSM):
       self.logger.debug('Task {} completed'.format(self.step.startTask))
       self.goto(MultiStepPolicy.NextStepValue)
 
-
   class NextStepValue(State):
     """
     Consume the next step value and send
@@ -279,7 +282,8 @@ class MultiStepPolicy(PolicyFSM):
 
       # Get next value
       try:
-        self.currentParameters = self.step.nextParameters(self.getDefinitions())
+        self.currentParameters = self.step.nextParameters(
+            self.getDefinitions())
         self.logger.debug('Got parameters {}'.format(self.currentParameters))
       except StopIteration:
         self.logger.info('No more values for the current step')
@@ -322,7 +326,6 @@ class MultiStepPolicy(PolicyFSM):
       self.logger.debug('Task {} completed'.format(self.step.preValueTask))
       self.goto(MultiStepPolicy.SendStepParameters)
 
-
   class SendStepParameters(State):
     """
     Sends the step value and waits for advance event
@@ -356,7 +359,8 @@ class MultiStepPolicy(PolicyFSM):
       # If we have an advance event defined, wait for it
       if self.step.advanceEvent:
         self.advanceEventReceived = False
-        self.step.advanceEventSession = self.step.advanceEvent.start(self.traceid, self.handleAdvanceEvent)
+        self.step.advanceEventSession = self.step.advanceEvent.start(
+            self.traceid, self.handleAdvanceEvent)
 
       # If we have a timeout, start timer
       if not self.step.advanceTimeout is None:
@@ -432,7 +436,6 @@ class MultiStepPolicy(PolicyFSM):
       if self.step.failEventSession:
         self.step.failEventSession.handle(event)
 
-
   class CompleteStep(State):
     """
     Handle completion of step
@@ -463,7 +466,6 @@ class MultiStepPolicy(PolicyFSM):
       # One thing has completed
       self.goto(MultiStepPolicy.StartStep)
 
-
   class End(State):
     """
     Sink state
@@ -475,7 +477,6 @@ class PolicyStepState:
   """
 
   def __init__(self, config, logger):
-
     def createEventFilter(expr):
       if expr is None:
         return None
@@ -528,7 +529,8 @@ class PolicyStepState:
       # 2) Value from fixed list
       elif 'values' in value:
         if not type(value['values']) in (list, tuple):
-          logger.error('Value for parameter {} is expected to be an array!'.format(value['parameter']))
+          logger.error('Value for parameter {} is expected to be an array!'.
+                       format(value['parameter']))
           continue
 
         self.parameterNames.append(value['parameter'])
@@ -544,9 +546,13 @@ class PolicyStepState:
         values = []
         if '.' in v_min or '.' in v_max or '.' in v_step:
           if v_step == '':
-            values = list(map(lambda x: x*(v_max - v_min)+v_min, np.random.random_sample(100)))
+            values = list(
+                map(lambda x: x * (v_max - v_min) + v_min,
+                    np.random.random_sample(100)))
           else:
-            values = list(map(lambda x: round(x*(v_max - v_min)+v_min / v_step) * v_step, np.random.random_sample(100)))
+            values = list(
+                map(lambda x: round(x * (v_max - v_min) + v_min / v_step) * v_step,
+                    np.random.random_sample(100)))
         else:
           value = list()
 
@@ -568,7 +574,7 @@ class PolicyStepState:
       # Collect permutations
       self.parameterValues = None
 
-  def nextParameters(self, definitions = {}):
+  def nextParameters(self, definitions={}):
     """
     Return the next parameter pair from the iterator
     """
@@ -595,4 +601,3 @@ class PolicyStepState:
     self.parameterValues = itertools.product(*self.parameterPermutations)
     self.completeEventsRemaining = self.completeEvents
     self.completeLingerRemaining = self.customEndLinger
-

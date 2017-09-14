@@ -3,6 +3,7 @@ import datetime
 from performance.driver.core.classes import Reporter
 from performance.driver.core.events import LogLineEvent, TickEvent
 
+
 class LogReporter(Reporter):
   """
   The **Log Lines Reporter** is writing the contents of every ``LogLineEvent``
@@ -35,8 +36,8 @@ class LogReporter(Reporter):
     self.file = open(config.get('filename', 'trace.log'), mode)
     self.flushTimer = 0
 
-    self.eventbus.subscribe(self.handleLogLine, events=(LogLineEvent,))
-    self.eventbus.subscribe(self.handleTick, events=(TickEvent,))
+    self.eventbus.subscribe(self.handleLogLine, events=(LogLineEvent, ))
+    self.eventbus.subscribe(self.handleTick, events=(TickEvent, ))
 
   def handleTick(self, event):
     """
@@ -53,7 +54,8 @@ class LogReporter(Reporter):
     """
     timestamp = ""
     if self.addTimestamp:
-      timestamp = datetime.datetime.fromtimestamp(event.ts).strftime('[%Y-%m-%d %H:%M:%S] ')
+      timestamp = datetime.datetime.fromtimestamp(
+          event.ts).strftime('[%Y-%m-%d %H:%M:%S] ')
 
     # Write down the log line
     self.file.write(timestamp + event.line + "\n")

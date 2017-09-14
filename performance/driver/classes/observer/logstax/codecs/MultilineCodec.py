@@ -125,7 +125,7 @@ class MultilineCodec(SingleLineCodec):
 
     return []
 
-  def handle(self, line, withLock = True):
+  def handle(self, line, withLock=True):
     """
     Handle the incoming line
     """

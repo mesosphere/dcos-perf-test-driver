@@ -272,7 +272,8 @@ class CmdlineChannel(Channel):
       env = None
 
     # Launch
-    self.logger.debug('Starting process: \'{}\''.format(args if type(args) is str else ' '.join(args)))
+    self.logger.debug('Starting process: \'{}\''.format(
+        args if type(args) is str else ' '.join(args)))
     self.activeParameters = parameters
     proc = Popen(
         args,

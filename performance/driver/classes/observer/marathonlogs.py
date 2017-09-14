@@ -11,10 +11,12 @@ from performance.driver.classes.observer.events.marathon import *
 # Matches the instance ID in an app in deployment
 RE_INSTANCEINDEPLOYMENT = re.compile(r'App\((.*?),')
 
+
 class MarathonDeploymentState:
   def __init__(self, id):
     self.id = id
     self.instances = []
+
 
 class MarathonLogsObserver(LogStaxObserver):
   """
@@ -35,7 +37,9 @@ class MarathonLogsObserver(LogStaxObserver):
     # When an HTTP request is initiated, get the application name and use this
     # as the means of linking the traceids to the source
     self.eventbus.subscribe(
-        self.handleDeploymentRequest, events=(MarathonDeploymentRequestedEvent, ), order=2)
+        self.handleDeploymentRequest,
+        events=(MarathonDeploymentRequestedEvent, ),
+        order=2)
 
   def handleDeploymentRequest(self, event):
     """
@@ -67,31 +71,41 @@ class MarathonLogsObserver(LogStaxObserver):
 
     # Compose the grok rules
     return {
-      'filters': [{
-        'type': 'grok',
-        'match': { 'message': 'Started ServerConnector@.+{%{IP:boundIP}:%{INT:boundPort}' },
-        'add_tag': ['started']
-      }, {
-        'type': 'grok',
-        'match': { 'message': 'Computed new deployment plan.+DeploymentPlan id=%{UUID:planId}' },
-        'add_tag': ['deployment_computed']
-      }, {
-        'type': 'grok',
-        'match': { 'message': 'Deployment %{UUID:planId}:%{TIMESTAMP_ISO8601:version} of (?<pathId>\S+) (?<status>\S+)' },
-        'add_tag': ['deployment_end']
-      }],
-      'codecs': [{
-        'type':
-        'multiline',
-        'lines': [{
-          'match': r'^(\[\w+\]\s+)\[.*$'
+        'filters': [{
+            'type': 'grok',
+            'match': {
+                'message':
+                'Started ServerConnector@.+{%{IP:boundIP}:%{INT:boundPort}'
+            },
+            'add_tag': ['started']
         }, {
-          'match': r'^(\[\w+\]\s+)[^\[].*$',
-          'optional': True,
-          'repeat': True
+            'type': 'grok',
+            'match': {
+                'message':
+                'Computed new deployment plan.+DeploymentPlan id=%{UUID:planId}'
+            },
+            'add_tag': ['deployment_computed']
+        }, {
+            'type': 'grok',
+            'match': {
+                'message':
+                'Deployment %{UUID:planId}:%{TIMESTAMP_ISO8601:version} of (?<pathId>\S+) (?<status>\S+)'
+            },
+            'add_tag': ['deployment_end']
         }],
-        'newline': ' '
-      }]
+        'codecs': [{
+            'type':
+            'multiline',
+            'lines': [{
+                'match': r'^(\[\w+\]\s+)\[.*$'
+            }, {
+                'match': r'^(\[\w+\]\s+)[^\[].*$',
+                'optional': True,
+                'repeat': True
+            }],
+            'newline':
+            ' '
+        }]
     }
 
   @publishesHint(MarathonStartedEvent)
@@ -129,7 +143,9 @@ class MarathonLogsObserver(LogStaxObserver):
     with self.lookupLock:
       state = self.deploymentLookup.get(planId, None)
     if state is None:
-      self.logger.warn('Got completion for a plan {} that hasn\'t been computed yet'.format(planId))
+      self.logger.warn(
+          'Got completion for a plan {} that hasn\'t been computed yet'.format(
+              planId))
       return
 
     # Extract the affected ids
@@ -137,14 +153,14 @@ class MarathonLogsObserver(LogStaxObserver):
 
     # Dispatch event according to status
     if message.fields['status'] == 'finished':
-      self.eventbus.publish(MarathonDeploymentSuccessEvent(
-          planId, affectedIds, traceid=self.getTraceIDs(affectedIds)
-        ))
+      self.eventbus.publish(
+          MarathonDeploymentSuccessEvent(
+              planId, affectedIds, traceid=self.getTraceIDs(affectedIds)))
 
     elif message.fields['status'] == 'failed':
-      self.eventbus.publish(MarathonDeploymentFailedEvent(
-          planId, affectedIds, traceid=self.getTraceIDs(affectedIds)
-        ))
+      self.eventbus.publish(
+          MarathonDeploymentFailedEvent(
+              planId, affectedIds, traceid=self.getTraceIDs(affectedIds)))
 
   def handleMessage(self, message):
     """

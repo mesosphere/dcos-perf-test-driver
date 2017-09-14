@@ -9,6 +9,7 @@ DSL_FLAGS = re.compile(r'\:([^\:]+)')
 
 global_single_events = []
 
+
 def getTime(timeExpr):
   """
   Convert a time expression (ex. 1s 5m 1us 1ms) to a float seconds value
@@ -35,6 +36,7 @@ def getTime(timeExpr):
     return value * scale
   except ValueError:
     return None
+
 
 class EventFilterSession:
   """
@@ -110,7 +112,9 @@ class EventFilterSession:
       if 'after' in flags:
         time = getTime(flagParameters['after'])
         if time is None:
-          raise ValueError('Event selector `:after({})` contains an invalid time expression'.format(flagParameters['after']))
+          raise ValueError(
+              'Event selector `:after({})` contains an invalid time expression'.
+              format(flagParameters['after']))
 
         # Restart timer to call the callback after the given delay
         if self.timer:
@@ -259,7 +263,8 @@ class EventFilter:
         if '(' in flag:
           (flag, params) = flag.split('(')
           if not params.endswith(')'):
-            raise ValueError('Mismatched closing parenthesis in flag {}'.format(flags[i]))
+            raise ValueError(
+                'Mismatched closing parenthesis in flag {}'.format(flags[i]))
           flags[i] = flag
           flagParameters[flag] = params[:-1]
 

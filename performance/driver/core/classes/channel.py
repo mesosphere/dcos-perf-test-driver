@@ -5,6 +5,7 @@ from performance.driver.core.events import ParameterUpdateEvent
 from performance.driver.core.eventbus import EventBusSubscriber
 from performance.driver.core.template import TemplateDict
 
+
 class Channel(Configurable, EventBusSubscriber):
   def __init__(self, config, eventbus):
     Configurable.__init__(self, config)
@@ -17,8 +18,11 @@ class Channel(Configurable, EventBusSubscriber):
 
     # Extract trigger config
     trigger = config.get('trigger', 'matching')
-    triggerWhen = trigger.get('when', 'matching') if (type(trigger) is dict) else trigger
-    triggerParams = trigger.get('parameters', configTemplateMacros) if (type(trigger) is dict) else configTemplateMacros
+    triggerWhen = trigger.get(
+        'when', 'matching') if (type(trigger) is dict) else trigger
+    triggerParams = trigger.get(
+        'parameters', configTemplateMacros) if (type(trigger) is
+                                                dict) else configTemplateMacros
 
     def handleParameterUpdateProxy(event):
       if triggerWhen == 'always':
@@ -43,8 +47,8 @@ class Channel(Configurable, EventBusSubscriber):
         return
 
     # Register proxy to receive parameter update events
-    self.eventbus.subscribe(handleParameterUpdateProxy,
-      events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(
+        handleParameterUpdateProxy, events=(ParameterUpdateEvent, ))
 
   def handleParameterUpdate(self, event):
     pass

@@ -7,6 +7,7 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 from performance.driver.classes.observer.logstax import LogStaxMessageEvent
 
+
 class LogStaxRule:
   """
   State of a logstax matching rule
@@ -27,8 +28,10 @@ class LogStaxRule:
     self.valueExpr = config.get('value', 'None')
     self.valueEnv_parameters = {}
 
-    self.traceidFilter = EventFilter(config.get('traceIdFrom', 'ParameterUpdateEvent'))
-    self.traceidFilterSession = self.traceidFilter.start(None, self.handleTraceIdEvent)
+    self.traceidFilter = EventFilter(
+        config.get('traceIdFrom', 'ParameterUpdateEvent'))
+    self.traceidFilterSession = self.traceidFilter.start(
+        None, self.handleTraceIdEvent)
 
   def setParameters(self, parameters):
     """
@@ -96,12 +99,14 @@ class LogStaxRule:
     try:
       value = eval(self.valueExpr, exprEnv)
     except Exception as e:
-      self.tracker.logger.error('Expression evaluation "{}" failed: {}'.format(self.valueExpr, e))
+      self.tracker.logger.error(
+          'Expression evaluation "{}" failed: {}'.format(self.valueExpr, e))
       return
 
     # Send value update
-    self.tracker.trackMetric(self.metricName, self.tokenCastFn[event.name](event.value), self.traceids)
-
+    self.tracker.trackMetric(self.metricName,
+                             self.tokenCastFn[event.name](event.value),
+                             self.traceids)
 
 
 class LogStaxTracker(Tracker):
@@ -154,7 +159,7 @@ class LogStaxTracker(Tracker):
   tested.
   """
 
-  @subscribesToHint(LogStaxMessageEvent)
+  @subscribesToHint(LogStaxMessageEvent, ParameterUpdateEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
 

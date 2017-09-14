@@ -142,7 +142,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
           v_min = config.get('min', 0.0)
           v_max = config.get('max', 1.0)
 
-          values = range(v_min, v_max+v_step, v_step)
+          values = range(v_min, v_max + v_step, v_step)
           self.parameterOptions.append(values)
 
         # Discreet values
