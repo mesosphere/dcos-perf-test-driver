@@ -43,7 +43,8 @@ setup(
     'scipy>=0.14.0',
     'simplejson==3.10.0',
     'six==1.10.0',
-    'urllib3==1.21.1'
+    'urllib3==1.21.1',
+    'pygrok==1.0.0'
   ],
 
   include_package_data = True,
