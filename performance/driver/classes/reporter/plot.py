@@ -534,7 +534,7 @@ class PlotReporter(Reporter):
     fileSuffix = config.get('suffix', '')
     for metric, plotGroup in metricPlotGroup.items():
       dumpFunction(axisValues, plotGroup, None if referencePlotGroup is None
-                   else referencePlotGroup[metric], '{}{}{}.png'.foramt(
+                   else referencePlotGroup[metric], '{}{}{}.png'.format(
                        filePrefix, metric, fileSuffix))
 
   def dumpPlot_raw1d(self, plotGroup, referencePlotGroup, filename):
