@@ -100,7 +100,7 @@ class TestEventBus(unittest.TestCase):
     """
     Test if the subscription order works
     """
-    eventbus = EventBus()
+    eventbus = EventBus(clockFrequency=0)
     eventbus.start()
 
     # Create a mock subscription
@@ -135,7 +135,7 @@ class TestEventBus(unittest.TestCase):
     """
     Test if the subscription on partial events works
     """
-    eventbus = EventBus()
+    eventbus = EventBus(clockFrequency=0)
     eventbus.start()
 
     # Some test events
@@ -185,7 +185,7 @@ class TestEventBus(unittest.TestCase):
     """
     Exceptions in the handler should not block execution
     """
-    eventbus = EventBus()
+    eventbus = EventBus(clockFrequency=0) # Slow down ticks
     eventbus.start()
 
     # A function that raises an exception
@@ -248,10 +248,10 @@ class TestEventBus(unittest.TestCase):
     eventbus.publish(pubEvent)
 
     # Wait for a bit more than a second, but not enough for another tick
-    time.sleep(1.05)
+    time.sleep(1.02)
 
     # Stop waits for the queue to drain
     eventbus.stop()
 
     # Check if we were called
-    self.assertEqual(len(subscriber.mock_calls), 10)
+    self.assertIn(len(subscriber.mock_calls), (9,10,11))

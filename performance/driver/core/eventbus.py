@@ -35,9 +35,13 @@ class EventBus:
     self.threadCount = threadCount
     self.threads = []
 
+    self.active = False
     self.clockThread = None
     self.clockTicks = 0
-    self.clickInterval = float(1) / clockFrequency
+    if clockFrequency == 0:
+      self.clockInterval = 0
+    else:
+      self.clockInterval = float(1) / clockFrequency
     self.lastTickMs = 0
 
   def subscribe(self, callback, order=5, events=None, args=[], kwargs={}):
@@ -94,9 +98,11 @@ class EventBus:
       self.threads.append(t)
 
     # Start clock thread
+    self.active = True
     self.lastTickMs = time.time()
-    self.clockThread = Timer(self.clickInterval, self._clockthread)
-    self.clockThread.start()
+    if self.clockInterval:
+      self.clockThread = Thread(target=self._clockthread)
+      self.clockThread.start()
 
   def stop(self):
     """
@@ -105,8 +111,9 @@ class EventBus:
     self.logger.debug('Stopping event bus')
 
     self.logger.debug('Cancelling next tick event')
-    self.clockThread.cancel()
-    self.clockThread.join()
+    self.active = False
+    if self.clockThread:
+      self.clockThread.join()
 
     self.logger.debug('Waiting for queue to drain')
     self.queue.join()
@@ -132,14 +139,16 @@ class EventBus:
     """
     Helper thread that dispatches a clock tick every second
     """
-    ts = time.time()
-    self.clockTicks += self.clickInterval
-    self.publish(TickEvent(self.clockTicks, ts - self.lastTickMs))
-    self.lastTickMs = ts
+    while self.active:
 
-    # Schedule next tick
-    self.clockThread = Timer(self.clickInterval, self._clockthread)
-    self.clockThread.start()
+      # Calculate actual time drift & publish event
+      ts = time.time()
+      self.clockTicks += 1
+      self.publish(TickEvent(self.clockTicks, ts - self.lastTickMs))
+      self.lastTickMs = ts
+
+      # Sleep interval time
+      time.sleep(self.clockInterval)
 
   def _loopthread(self):
     """
