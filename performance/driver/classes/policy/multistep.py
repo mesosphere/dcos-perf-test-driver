@@ -106,6 +106,14 @@ class MultiStepPolicy(PolicyFSM):
               # final step is completed before completing the test
               linger: 0
 
+            # [Optional] Custom advance condition
+            advance_condition:
+
+              # [Optional] Wait for the specified number of advance events
+              # before considering the value ready to advance. Note that this
+              # can be a python expression
+              events: ""
+
 
   This policy is first computing all possible combinations of the parameter
   matrix given and is then running the tests for every one.
@@ -349,7 +357,7 @@ class MultiStepPolicy(PolicyFSM):
       # 1) For the postValue task to complete
       # 2) For the advance event to arrive or for a timeout to occur
       self.postValueCompleted = True
-      self.advanceEventReceived = True
+      self.advanceEventsRemaining = 0
       self.timeRemains = 0
 
       # If we have a post-value task, mark it's flag as incompleted
@@ -358,7 +366,8 @@ class MultiStepPolicy(PolicyFSM):
 
       # If we have an advance event defined, wait for it
       if self.step.advanceEvent:
-        self.advanceEventReceived = False
+        self.advanceEventsRemaining = self.step.evaluateAdvanceEvents(
+          self.currentParameters, self.getDefinitions())
         self.step.advanceEventSession = self.step.advanceEvent.start(
             self.traceid, self.handleAdvanceEvent)
 
@@ -389,7 +398,7 @@ class MultiStepPolicy(PolicyFSM):
         return
       if not self.postValueCompleted:
         return
-      if not self.advanceEventReceived:
+      if self.advanceEventsRemaining > 0:
         return
 
       # If everything is done, advance to next value
@@ -422,7 +431,11 @@ class MultiStepPolicy(PolicyFSM):
       Called when the advance event is received
       """
       # One thing has completed
-      self.advanceEventReceived = True
+      self.advanceEventsRemaining -= 1
+      if self.advanceEventsRemaining > 0:
+        self.logger.info('Waiting for {} more advance events'.format(
+          self.advanceEventsRemaining)
+        )
       self.handleCompletion()
 
     def onEvent(self, event):
@@ -510,6 +523,10 @@ class PolicyStepState:
     self.customEndCondition = 'end_condition' in config
     self.customEndLinger = endCondition.get('linger', None)
 
+    # Extract custom advance conditions
+    advanceCondition = config.get('advance_condition', {})
+    self.advanceEventsExpr = advanceCondition.get('events', 1)
+
     # Generate value matrix
     self.staticParameters = {}
     self.parameterNames = []
@@ -593,6 +610,15 @@ class PolicyStepState:
 
     # Return parameters
     return parameters
+
+  def evaluateAdvanceEvents(self, parameters, definitions={}):
+    """
+    Evaluate the advance events expression
+    """
+    evalDict = {}
+    evalDict.update(parameters)
+    evalDict.update(definitions)
+    return eval(str(self.advanceEventsExpr), evalDict)
 
   def start(self):
     """
