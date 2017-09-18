@@ -61,7 +61,7 @@ class MarathonDeployChannel(Channel):
 
             # [Optional] Repeat this deployment for the given number of times
             # (This can be a python expression)
-            repeat "instances * 2"
+            repeat: "instances * 2"
 
   """
 
