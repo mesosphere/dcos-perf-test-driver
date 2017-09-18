@@ -118,7 +118,7 @@ class JMXObserver(Observer):
     self.deactivateFilter = deactivateFilter.start(None,
                                                    self.handleDeactivateEvent)
 
-    self.logger.debug('Waiting for `{}` before starting'.format(startEvent))
+    self.logger.info('Waiting for `{}` before starting'.format(startEvent))
 
   def handleEvent(self, event):
     """
@@ -248,7 +248,7 @@ class JMXObserver(Observer):
         fields[name] = value
 
       # Publish measurement
-      self.logger.debug('Measured {}'.format(fields))
+      self.logger.info('Measured {}'.format(fields))
       self.eventbus.publish(JMXMeasurement(fields))
 
     except json.decoder.JSONDecodeError:
@@ -258,7 +258,7 @@ class JMXObserver(Observer):
     """
     Start polling timer
     """
-    self.logger.debug('Starting jmx middleware')
+    self.logger.info('Starting jmx middleware')
     self.active = True
     self.processThread = Thread(target=self.startProcessThread)
     self.processThread.start()
@@ -267,7 +267,7 @@ class JMXObserver(Observer):
     """
     Interrupt polling timer
     """
-    self.logger.debug('Stopping jmx middleware')
+    self.logger.info('Stopping jmx middleware')
     self.active = False
     if self.proc:
       self.proc.terminate()
