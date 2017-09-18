@@ -1,7 +1,7 @@
 import logging
 import time
 
-from threading import Thread, Timer, Condition
+from threading import Thread, Lock, Condition
 from queue import Queue
 
 from .events import Event, TickEvent, isEventMatching
@@ -34,6 +34,9 @@ class EventBus:
     self.queue = Queue()
     self.threadCount = threadCount
     self.threads = []
+
+    self.activeBlockedSyncs = []
+    self.activeBlockedSyncLock = Lock()
 
     self.active = False
     self.clockThread = None
@@ -79,8 +82,20 @@ class EventBus:
     if sync:
       self.logger.debug(
           'Waiting for condition of event \'{}\''.format(str(event)))
+
+      # Keep track of locked conditions
+      with self.activeBlockedSyncLock:
+        self.activeBlockedSyncs.append(cond)
+
+      # Wait
       with cond:
         cond.wait()
+
+      # Remove lock from the list
+      with self.activeBlockedSyncLock:
+        if cond in self.activeBlockedSyncs:
+          self.activeBlockedSyncs.remove(cond)
+
       self.logger.debug('Condition met for event \'{}\''.format(str(event)))
 
   def start(self):
@@ -109,6 +124,13 @@ class EventBus:
     Gracefully stop the event bus thread loop
     """
     self.logger.debug('Stopping event bus')
+
+    self.logger.debug('Syncing responses to all locked broadcasts')
+    with self.activeBlockedSyncLock:
+      for cond in self.activeBlockedSyncs:
+        with cond:
+          cond.notify()
+      self.activeBlockedSyncs = []
 
     self.logger.debug('Cancelling next tick event')
     self.active = False
@@ -170,7 +192,7 @@ class EventBus:
 
           delta = time.time() - start_ts
           if delta > 0.1:
-            self.logger.warn('Slow consumer ({:.2f}s) {} for event {}'.format(
+            self.logger.warning('Slow consumer ({:.2f}s) {} for event {}'.format(
                 delta, sub, type(event).__name__))
 
         except Exception as e:
