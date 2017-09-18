@@ -7,7 +7,7 @@ DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\)]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
 DSL_FLAGS = re.compile(r'\:([^\:]+)')
 
-global_single_events = []
+global_single_events = {}
 
 
 def getTime(timeExpr):
@@ -52,6 +52,12 @@ class EventFilterSession:
     self.counter = 0
     self.timer = None
 
+    # Immediately call-back to matched filters
+    for (eventSpec, attribChecks, flags, flagParameters, eid) in self.filter.events:
+      if 'single' in flags:
+        if eid in global_single_events:
+          callback(global_single_events[eid])
+
   def afterTimerCallback(self):
     """
     Callback for the :after(x) selector
@@ -63,7 +69,7 @@ class EventFilterSession:
     """
     Handle the incoming event
     """
-    for (eventSpec, attribChecks, flags, flagParameters) in self.filter.events:
+    for (eventSpec, attribChecks, flags, flagParameters, eid) in self.filter.events:
 
       # Handle all events or matching events
       if eventSpec != "*" and not isEventMatching(event, eventSpec):
@@ -103,12 +109,11 @@ class EventFilterSession:
           self.callback(event)
         break
       if 'single' in flags:
-        evType = type(event)
-        if evType in global_single_events:
+        if eid in global_single_events:
           break
         self.foundEvent = event
         self.callback(event)
-        global_single_events.append(evType)
+        global_single_events[eid] = event
         break
       if 'after' in flags:
         time = getTime(flagParameters['after'])
@@ -203,7 +208,8 @@ class EventFilter:
       +-----------------+----------------------------------------------------+
       | ``:nth(n)``     | Match the n-th event in the tracking session       |
       +-----------------+----------------------------------------------------+
-      | ``:single``     | Match a single event, globally                     |
+      | ``:single``     | Match a single event, globally. After the first    |
+      |                 | match all other usages accept by default.          |
       +-----------------+----------------------------------------------------+
       | ``:after(Xs)``  | Trigger after X seconds after the last event       |
       +-----------------+----------------------------------------------------+
@@ -257,6 +263,9 @@ class EventFilter:
     self.events = []
     for (event, exprAttrib, flags) in matches:
 
+      # Calculate event id
+      eid = event + exprAttrib + flags
+
       # Process sub-tokens
       flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
 
@@ -305,7 +314,7 @@ class EventFilter:
                 eval('lambda event: event.{} {} {}'.format(left, op, right)))
 
       # Collect flags
-      self.events.append((event, attrib, flags, flagParameters))
+      self.events.append((event, attrib, flags, flagParameters, eid))
 
   def start(self, traceids, callback):
     """

@@ -316,27 +316,36 @@ class TestEventBus(unittest.TestCase):
     eventCallback = Mock()
     session = eventFilter.start(traceids, eventCallback)
 
-    # The first FooEvent should be handled
-    fooEvent1 = FooEvent(traceid=traceids)
-    session.handle(fooEvent1)
+    # Before even any event is fired, the callback should be fired
     self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
       ])
 
-    # The second FooEvent should not be handled
-    fooEvent2 = FooEvent(traceid=traceids)
-    session.handle(fooEvent2)
+    # No mroe FooEvents should be handled
+    fooEvent3 = FooEvent(traceid=traceids)
+    session.handle(fooEvent3)
     self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # The second FooEvent should not be handled too
+    fooEvent4 = FooEvent(traceid=traceids)
+    session.handle(fooEvent4)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
       ])
 
     # The BarEvent should not be handled
     barEvent = BarEvent(traceid=traceids)
     session.handle(barEvent)
     self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
       ])
 
     # No more events should be added when the session is finalized
     session.finalize()
     self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
       ])
 
   def test_flag_last(self):
