@@ -3,7 +3,7 @@ from threading import Timer
 
 from performance.driver.core.events import isEventMatching
 
-DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\)]*))?')
+DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\),]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
 DSL_FLAGS = re.compile(r'\:([^\:]+)')
 
@@ -49,8 +49,8 @@ class EventFilterSession:
     self.filter = filter
     self.traceids = traceids
     self.callback = callback
-    self.counter = 0
     self.timer = None
+    self.counterGroups = {}
 
     # Immediately call-back to matched filters
     for (eventSpec, attribChecks, flags, flagParameters, eid) in self.filter.events:
@@ -89,9 +89,6 @@ class EventFilterSession:
           self.traceids):
         continue
 
-      # Increment counter
-      self.counter += 1
-
       # Handle order
       if 'first' in flags:
         if self.foundEvent is None:
@@ -101,12 +98,6 @@ class EventFilterSession:
       if 'last' in flags:
         self.foundEvent = event
         self.triggerAtExit = True
-        break
-      if 'nth' in flags:
-        nth = int(flagParameters['nth'])
-        if nth == self.counter:
-          self.foundEvent = event
-          self.callback(event)
         break
       if 'single' in flags:
         if eid in global_single_events:
@@ -128,6 +119,19 @@ class EventFilterSession:
         self.foundEvent = event
         self.timer = Timer(time, self.afterTimerCallback)
         self.timer.start()
+        break
+      if 'nth' in flags:
+        parts = flagParameters['nth'].split(',')
+        nth = int(parts[0])
+        grp = eid
+        if len(parts) > 1:
+          grp = parts[1]
+        if not grp in self.counterGroups:
+          self.counterGroups[grp] = 0
+        self.counterGroups[grp] += 1
+        if nth == self.counterGroups[grp]:
+          self.foundEvent = event
+          self.callback(event)
         break
 
       # Fire callback
@@ -206,7 +210,9 @@ class EventFilter:
       +-----------------+----------------------------------------------------+
       | ``:last``       | Match the last event in the tracking session       |
       +-----------------+----------------------------------------------------+
-      | ``:nth(n)``     | Match the n-th event in the tracking session       |
+      | ``:nth(n)``     | Match the n-th event in the tracking session. If   |
+      | ``:nth(n,grp)`` | a ``grp`` parameter is specified, the counter will |
+      |                 | be groupped with the given indicator.              |
       +-----------------+----------------------------------------------------+
       | ``:single``     | Match a single event, globally. After the first    |
       |                 | match all other usages accept by default.          |

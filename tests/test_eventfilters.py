@@ -386,7 +386,7 @@ class TestEventBus(unittest.TestCase):
 
   def test_flag_nth(self):
     """
-    Test if the ":last" flag is working
+    Test if the ":nth(x)" flag is working
     """
 
     eventFilter = EventFilter("FooEvent:nth(2)")
@@ -427,6 +427,172 @@ class TestEventBus(unittest.TestCase):
     session.finalize()
     self.assertEqual(eventCallback.mock_calls, [
         call(fooEvent2),
+      ])
+
+  def test_flag_nth_multi(self):
+    """
+    Test if the ":nth(x)" flag is correctly applied to the event being tested
+    """
+
+    eventFilter = EventFilter("FooEvent:nth(2) BarEvent:nth(3)")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The second FooEvent should be handled
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The third FooEvent should not be handled
+    fooEvent3 = FooEvent(traceid=traceids)
+    session.handle(fooEvent3)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The first BarEvent should not be handled
+    barEvent1 = BarEvent(traceid=traceids)
+    session.handle(barEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The second BarEvent should not be handled
+    barEvent2 = BarEvent(traceid=traceids)
+    session.handle(barEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The third BarEvent should be handled
+    barEvent3 = BarEvent(traceid=traceids)
+    session.handle(barEvent3)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+        call(barEvent3),
+      ])
+
+    # When the session is finalized, nothing should be changed
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+        call(barEvent3),
+      ])
+
+
+  def test_flag_nth_group(self):
+    """
+    Test if the ":nth(x,grp)" flag is correctly applied to the event being tested
+    """
+
+    eventFilter = EventFilter("FooEvent:nth(2,all) BarEvent:nth(2,all)")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The second FooEvent should be handled
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The third FooEvent should not be handled
+    fooEvent3 = FooEvent(traceid=traceids)
+    session.handle(fooEvent3)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The first BarEvent should not be handled
+    barEvent1 = BarEvent(traceid=traceids)
+    session.handle(barEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The second BarEvent should not be handled
+    barEvent2 = BarEvent(traceid=traceids)
+    session.handle(barEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # The third BarEvent should be handled
+    barEvent3 = BarEvent(traceid=traceids)
+    session.handle(barEvent3)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # When the session is finalized, nothing should be changed
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent2),
+      ])
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled
+    fooEvent1 = FooEvent(traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+      ])
+
+    # The first BarEvent reaches counter to 2, so it should be handled
+    barEvent1 = BarEvent(traceid=traceids)
+    session.handle(barEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(barEvent1),
+      ])
+
+    # The second FooEvent should not be handled
+    fooEvent2 = FooEvent(traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(barEvent1),
+      ])
+
+    # The second BarEvent should not be handled
+    barEvent2 = BarEvent(traceid=traceids)
+    session.handle(barEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(barEvent1),
+      ])
+
+    # The third BarEvent should be handled
+    barEvent3 = BarEvent(traceid=traceids)
+    session.handle(barEvent3)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(barEvent1),
+      ])
+
+    # When the session is finalized, nothing should be changed
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(barEvent1),
       ])
 
   def test_attrib_loose_regex(self):
