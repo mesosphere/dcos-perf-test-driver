@@ -159,17 +159,17 @@ class HTTPTimingObserver(Observer):
         self.logger.warn('Endpoint at {} responded with HTTP {}'.format(
             url, res.status_code))
 
+      # Broadcast status
+      self.logger.debug(
+          'Measurement completed: request={}, response={}, total={}'.format(
+              times[1] - times[0], times[2] - times[1], times[2] - times[0]))
+      self.eventbus.publish(
+          HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
+                                times[2] - times[1], times[2] - times[0],
+                                len(res.text)))
+
     except requests.exceptions.ConnectionError as e:
       self.logger.error('Unable to connect to {}'.format(url))
-
-    # Broadcast status
-    self.logger.debug(
-        'Measurement completed: request={}, response={}, total={}'.format(
-            times[1] - times[0], times[2] - times[1], times[2] - times[0]))
-    self.eventbus.publish(
-        HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
-                              times[2] - times[1], times[2] - times[0],
-                              len(res.text)))
 
     # Schedule next tick
     self.clockThread = Timer(self.interval, self.pollThreadHandler)
