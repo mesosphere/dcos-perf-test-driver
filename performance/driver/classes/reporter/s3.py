@@ -142,7 +142,7 @@ class S3Reporter(Reporter):
 
         # Try to parse body
         if accept and 'Body' in res:
-          index_data = json.loads(res['Body'].read())
+          index_data = json.loads(res['Body'].read().decode('utf-8'))
 
       except json.decoder.JSONDecodeError as e:
         self.logger.warn('Unable to parse JSON of index')
