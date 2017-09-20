@@ -4,7 +4,7 @@ import requests
 from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event, TeardownEvent, StartEvent
 from performance.driver.core.reflection import subscribesToHint, publishesHint
-from threading import Timer
+from threading import Thread
 
 
 class HTTPTimingResultEvent(Event):
@@ -85,6 +85,7 @@ class HTTPTimingObserver(Observer):
     self.url = self.getConfig('url')
     self.interval = float(self.getConfig('interval', '1'))
     self.clockThread = None
+    self.active = False
 
     # Register to the Start / Teardown events
     self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent, ))
@@ -95,7 +96,8 @@ class HTTPTimingObserver(Observer):
     Start polling timer
     """
     self.logger.debug('Starting polling timer')
-    self.clockThread = Timer(self.interval, self.pollThreadHandler)
+    self.active = True
+    self.clockThread = Thread(target=self.pollThreadHandler)
     self.clockThread.start()
 
   def handleTeardownEvent(self, event):
@@ -103,14 +105,14 @@ class HTTPTimingObserver(Observer):
     Interrupt polling timer
     """
     self.logger.debug('Stopping polling timer')
-    self.clockThread.cancel()
+    self.active = False
     self.clockThread.join()
+    self.clockThread = None
 
   def pollThreadHandler(self):
     """
     A thread that keeps polling the given url until it responds
     """
-    self.logger.debug('Checking the endpoint')
 
     # Render config and definitions
     config = self.getRenderedConfig()
@@ -131,46 +133,47 @@ class HTTPTimingObserver(Observer):
     headers = config['headers']
     verb = config.get('verb', 'get')
 
-    # Reset timer values
-    times = [0, 0, 0]
+    # While running, start
+    while self.active:
+      self.logger.debug('Checking the endpoint')
+      try:
 
-    # Perform the request
-    try:
+        # Reset timer values
+        times = [0, 0, 0]
 
-      # Acknowledge response
-      def ack_response(request, *args, **kwargs):
-        times[1] = time.time()
+        # Acknowledge response
+        def ack_response(request, *args, **kwargs):
+          times[1] = time.time()
 
-      # Send request (and catch errors)
-      times[0] = time.time()
-      self.logger.debug('Performing HTTP {} to {}'.format(verb, url))
-      res = requests.request(
-          verb,
-          url,
-          verify=False,
-          data=body,
-          headers=headers,
-          hooks=dict(response=ack_response))
-      times[2] = time.time()
+        # Send request (and catch errors)
+        times[0] = time.time()
+        self.logger.debug('Performing HTTP {} to {}'.format(verb, url))
+        res = requests.request(
+            verb,
+            url,
+            verify=False,
+            data=body,
+            headers=headers,
+            hooks=dict(response=ack_response))
+        times[2] = time.time()
 
-      # Log error status codes
-      self.logger.debug('Completed with HTTP {}'.format(res.status_code))
-      if res.status_code != 200:
-        self.logger.warn('Endpoint at {} responded with HTTP {}'.format(
-            url, res.status_code))
+        # Log error status codes
+        self.logger.debug('Completed with HTTP {}'.format(res.status_code))
+        if res.status_code != 200:
+          self.logger.warn('Endpoint at {} responded with HTTP {}'.format(
+              url, res.status_code))
 
-      # Broadcast status
-      self.logger.debug(
-          'Measurement completed: request={}, response={}, total={}'.format(
-              times[1] - times[0], times[2] - times[1], times[2] - times[0]))
-      self.eventbus.publish(
-          HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
-                                times[2] - times[1], times[2] - times[0],
-                                len(res.text)))
+        # Broadcast status
+        self.logger.debug(
+            'Measurement completed: request={}, response={}, total={}'.format(
+                times[1] - times[0], times[2] - times[1], times[2] - times[0]))
+        self.eventbus.publish(
+            HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
+                                  times[2] - times[1], times[2] - times[0],
+                                  len(res.text)))
 
-    except requests.exceptions.ConnectionError as e:
-      self.logger.error('Unable to connect to {}'.format(url))
+      except requests.exceptions.ConnectionError as e:
+        self.logger.error('Unable to connect to {}'.format(url))
 
-    # Schedule next tick
-    self.clockThread = Timer(self.interval, self.pollThreadHandler)
-    self.clockThread.start()
+      # Wait for next tick
+      time.sleep(self.interval)
