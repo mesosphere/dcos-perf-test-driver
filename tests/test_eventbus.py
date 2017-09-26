@@ -169,7 +169,7 @@ class TestEventBus(unittest.TestCase):
     # Wait some time to verify that the thread is blocked
     time.sleep(0.1)
 
-    # The "fast" subscribers should be called instantly, the others are blocked
+    # The subscribers should be blocked
     self.assertEqual(subscriberFirst.mock_calls, [
         call(firstEvent)
       ])
@@ -182,6 +182,7 @@ class TestEventBus(unittest.TestCase):
     # Stop forces synced events to exit
     eventbus.stop()
 
+    # Now everything should be called
     self.assertEqual(subscriberFirst.mock_calls, [
         call(firstEvent)
       ])

@@ -801,3 +801,43 @@ class TestEventBus(unittest.TestCase):
         call(barEvent1),
         call(barEvent2),
       ])
+
+
+  def test_attrib_expr(self):
+    """
+    Test if attribute expressions are accepted
+    """
+
+    eventFilter = EventFilter("FooEvent[a.'some'.'dict'=1]")
+
+    # Start a session
+    traceids = ['foobar']
+    eventCallback = Mock()
+    session = eventFilter.start(traceids, eventCallback)
+
+    # The first FooEvent should not be handled
+    fooEvent1 = FooEvent(a={'some': {'dict':1}}, b="Zo", traceid=traceids)
+    session.handle(fooEvent1)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # The second FooEvent should not be handled
+    fooEvent2 = FooEvent(a={'some': {'other':1}}, b="Zo", traceid=traceids)
+    session.handle(fooEvent2)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # The BarEvent should not be handled
+    barEvent = BarEvent(traceid=traceids)
+    session.handle(barEvent)
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
+
+    # No more events should be added when the session is finalized
+    session.finalize()
+    self.assertEqual(eventCallback.mock_calls, [
+        call(fooEvent1),
+      ])
