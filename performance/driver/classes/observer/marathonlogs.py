@@ -22,6 +22,21 @@ class MarathonLogsObserver(LogStaxObserver):
   """
   This observer is based on the `LogStaxObserver` functionality in order to
   find and filter-out the marathon lines.
+
+  ::
+
+    observers:
+      - class: observer.MarathonLogsObserver
+
+  This observer accepts no configuration. It is processing the ``LogLineEvent``
+  messages dispatched by other observers or channels (ex. the ``CmdlineChannel``
+  channel).
+
+  .. warning::
+
+    This observer will currently only work if marathon is launched through
+    a ``CmdlineChannel``.
+
   """
 
   def __init__(self, *args, **kwargs):

@@ -103,7 +103,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Policies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#multivariableexplorerpolicy">MultivariableExplorerPolicy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#timeevolutionpolicy">TimeEvolutionPolicy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#burstpolicy">BurstPolicy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multisteppolicy">MultiStepPolicy</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
@@ -194,7 +194,7 @@ test through the <a class="reference internal" href="Channels.html#classref-chan
 <em class="property">class </em><code class="descclassname">performance.driver.classes.policy.</code><code class="descname">MultivariableExplorerPolicy</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em>, <em>parameterBatch</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/policy/multivariableexplorer.html#MultivariableExplorerPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.policy.MultivariableExplorerPolicy" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>Multi-Variable Exploration Policy</strong> is running one scale test for every
 product of the parameters defined in the <code class="docutils literal"><span class="pre">matrix</span></code>.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">policy</span><span class="p p-Indicator">:</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">policies</span><span class="p p-Indicator">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">policy.MultivariableExplorerPolicy</span>
 
     <span class="c1"># The following rules describe the permutation matrix</span>
@@ -278,7 +278,7 @@ from 1.</p>
 <em class="property">class </em><code class="descclassname">performance.driver.classes.policy.</code><code class="descname">TimeEvolutionPolicy</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em>, <em>parameterBatch</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/policy/timeevolution.html#TimeEvolutionPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.policy.TimeEvolutionPolicy" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <strong>Time Evolution Policy</strong> is changing a parameter monotonically as the
 time evolves.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">policy</span><span class="p p-Indicator">:</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">policies</span><span class="p p-Indicator">:</span>
   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">policy.TimeEvolutionPolicy</span>
 
     <span class="c1"># Configure which parameters to evolve over time</span>
@@ -316,72 +316,107 @@ matrix given and is then running the tests for every one.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="burstpolicy">
-<span id="classref-policy-burstpolicy"></span><h2>BurstPolicy<a class="headerlink" href="#burstpolicy" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="multisteppolicy">
+<span id="classref-policy-multisteppolicy"></span><h2>MultiStepPolicy<a class="headerlink" href="#multisteppolicy" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="performance.driver.classes.policy.BurstPolicy">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.policy.</code><code class="descname">BurstPolicy</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em>, <em>parameterBatch</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/policy/burst.html#BurstPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.policy.BurstPolicy" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <strong>Burst Policy</strong> is creating one or more bursts of parameter updates
-over a short period of time.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">policy</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">policy.BurstPolicy</span>
+<dt id="performance.driver.classes.policy.MultiStepPolicy">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.policy.</code><code class="descname">MultiStepPolicy</code><span class="sig-paren">(</span><em>config</em>, <em>eventbus</em>, <em>parameterBatch</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/policy/multistep.html#MultiStepPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.policy.MultiStepPolicy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>Step Policy</strong> evolves various parameters through various steps.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">policies</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">policy.MultiStepPolicy</span>
 
-    <span class="c1"># Configure which bursts to create</span>
-    <span class="l l-Scalar l-Scalar-Plain">bursts</span><span class="p p-Indicator">:</span>
+    <span class="c1"># Configure the policy steps</span>
+    <span class="l l-Scalar l-Scalar-Plain">steps</span><span class="p p-Indicator">:</span>
 
-      <span class="c1"># Every burst in the array is going to be executed in series</span>
+      <span class="c1"># The name of the step</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">First Step</span>
 
-        <span class="c1"># The parameter to change</span>
-      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">parameterName</span>
-
-        <span class="c1"># Option 1) Specify the values for the burst</span>
-        <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="nv">7</span><span class="p p-Indicator">,</span> <span class="nv">...</span><span class="p p-Indicator">]</span>
-
-        <span class="c1"># Option 2) Specify the continuous range of the values for the burst</span>
+        <span class="c1"># The values to explore</span>
         <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span>
-          <span class="l l-Scalar l-Scalar-Plain">min</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-          <span class="l l-Scalar l-Scalar-Plain">max</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
-          <span class="l l-Scalar l-Scalar-Plain">step</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 
-        <span class="c1"># Option 3) Specify the sampled range for the values for the burst</span>
-        <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span>
-          <span class="l l-Scalar l-Scalar-Plain">min</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-          <span class="l l-Scalar l-Scalar-Plain">max</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1000000</span>
-          <span class="l l-Scalar l-Scalar-Plain">samples</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+          <span class="c1"># 1) A fixed-value parameter</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">name</span>
+            <span class="l l-Scalar l-Scalar-Plain">value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 
-        <span class="c1"># End condition</span>
+          <span class="c1"># 2) A fixed-value parameter calculated with an expression</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">name</span>
+            <span class="l l-Scalar l-Scalar-Plain">value</span><span class="p p-Indicator">:</span> <span class="s">&quot;log(parameter1)</span><span class="nv"> </span><span class="s">+</span><span class="nv"> </span><span class="s">parameter2&quot;</span>
+
+          <span class="c1"># 3) A fixed list of values</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">name</span>
+            <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span> <span class="nv">2</span><span class="p p-Indicator">,</span> <span class="nv">3</span><span class="p p-Indicator">,</span> <span class="nv">4</span><span class="p p-Indicator">,</span> <span class="nv">5 ...</span><span class="p p-Indicator">]</span>
+
+          <span class="c1"># 4) A calculated range of values</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">name</span>
+            <span class="l l-Scalar l-Scalar-Plain">min</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+            <span class="l l-Scalar l-Scalar-Plain">max</span> <span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+            <span class="l l-Scalar l-Scalar-Plain">step</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+
+            <span class="c1"># Set to `no` if you don&#39;t want to include the `max` value</span>
+            <span class="l l-Scalar l-Scalar-Plain">inclusive</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">no</span>
+
+          <span class="c1"># 5) A sampled subset of a uniformly distributed values</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">name</span>
+            <span class="l l-Scalar l-Scalar-Plain">min</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+            <span class="l l-Scalar l-Scalar-Plain">max</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10000</span>
+            <span class="l l-Scalar l-Scalar-Plain">step</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+            <span class="l l-Scalar l-Scalar-Plain">sample</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+
+            <span class="c1"># Set to `no` if you don&#39;t want to include the `max` value</span>
+            <span class="l l-Scalar l-Scalar-Plain">inclusive</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">no</span>
+
+        <span class="c1"># [Optional] Trigger the following named tasks</span>
+        <span class="l l-Scalar l-Scalar-Plain">tasks</span><span class="p p-Indicator">:</span>
+
+          <span class="c1"># [Optional] Run this named task before start</span>
+          <span class="l l-Scalar l-Scalar-Plain">start</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">startTask</span>
+
+          <span class="c1"># [Optional] Run this named task after step completion</span>
+          <span class="l l-Scalar l-Scalar-Plain">end</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">endTask</span>
+
+          <span class="c1"># [Optional] Run this named before a value change</span>
+          <span class="l l-Scalar l-Scalar-Plain">pre_value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">advanceTask</span>
+
+          <span class="c1"># [Optional] Run this named after a value change</span>
+          <span class="l l-Scalar l-Scalar-Plain">post_value</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">advanceTask</span>
+
+        <span class="c1"># [Optional] Event configuration</span>
         <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
 
-          <span class="c1"># [Optional] Continue with the next burst when this event is received</span>
-          <span class="c1"># (If this event is defined, the `interval` parameter is ignored)</span>
-          <span class="l l-Scalar l-Scalar-Plain">continue</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventToWaitForContinuingBurst</span>
+          <span class="c1"># [Optional] Wait for this to start the step</span>
+          <span class="l l-Scalar l-Scalar-Plain">start</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventName</span>
 
-          <span class="c1"># [Optional] Terminate the burst when this event is received.</span>
-          <span class="l l-Scalar l-Scalar-Plain">end</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventToWaitForCompletion</span>
+          <span class="c1"># [Optional] Wait for this event to end the step</span>
+          <span class="l l-Scalar l-Scalar-Plain">end</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventName</span>
 
-          <span class="c1"># [Optional] How many events to wait before terminating the burst</span>
-          <span class="c1"># (This is a python expression evaluated at run-time. You can use</span>
-          <span class="c1">#  the parameter names or definitions in your expression)</span>
-          <span class="l l-Scalar l-Scalar-Plain">endEventCount</span><span class="p p-Indicator">:</span> <span class="s">&quot;parameterName</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">3&quot;</span>
+          <span class="c1"># [Optional] Wait for this event to fail this step</span>
+          <span class="l l-Scalar l-Scalar-Plain">fail</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventName</span>
 
-        <span class="c1"># [Optional] How long to wait before completing the burst (seconds)</span>
-        <span class="l l-Scalar l-Scalar-Plain">timeout</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>
+          <span class="c1"># [Optional] Wait for this event before advancing to the next value</span>
+          <span class="l l-Scalar l-Scalar-Plain">advance</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventName</span>
 
-        <span class="c1"># [Optional] The interval between the burst values</span>
-        <span class="l l-Scalar l-Scalar-Plain">interval</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+        <span class="c1"># [Optional] Custom end condition</span>
+        <span class="l l-Scalar l-Scalar-Plain">end_condition</span><span class="p p-Indicator">:</span>
 
-      <span class="c1"># The next burst will be executed when the previous is finished</span>
-      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">parameter</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
-        <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
-        <span class="l l-Scalar l-Scalar-Plain">end</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+          <span class="c1"># [Optional] Wait for the specified number of end/fail events</span>
+          <span class="c1"># before considering the step completed</span>
+          <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 
-    <span class="c1"># The event binding configuration</span>
-    <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
+          <span class="c1"># [Optional] Wait for the specified number of seconds after the</span>
+          <span class="c1"># final step is completed before completing the test</span>
+          <span class="l l-Scalar l-Scalar-Plain">linger</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
 
-      <span class="c1"># [Optional] Start the tests with this event is received</span>
-      <span class="l l-Scalar l-Scalar-Plain">start</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">EventToWaitUntilReady</span>
+        <span class="c1"># [Optional] Custom advance condition</span>
+        <span class="l l-Scalar l-Scalar-Plain">advance_condition</span><span class="p p-Indicator">:</span>
+
+          <span class="c1"># [Optional] Wait for the specified number of advance events</span>
+          <span class="c1"># before considering the value ready to advance. Note that this</span>
+          <span class="c1"># can be a python expression</span>
+          <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span> <span class="s">&quot;&quot;</span>
 </pre></div>
 </div>
+<p>This policy is first computing all possible combinations of the parameter
+matrix given and is then running the tests for every one.</p>
 </dd></dl>
 
 </div>

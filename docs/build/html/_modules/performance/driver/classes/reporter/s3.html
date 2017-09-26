@@ -166,6 +166,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">time</span>
 
 <span class="kn">from</span> <span class="nn">performance.driver.core.classes</span> <span class="k">import</span> <span class="n">Reporter</span>
 
@@ -174,6 +175,7 @@
 <span class="c1">#       the logic of the file itself.</span>
 <span class="k">try</span><span class="p">:</span>
   <span class="kn">import</span> <span class="nn">boto3</span>
+  <span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="k">import</span> <span class="n">ClientError</span>
 <span class="k">except</span> <span class="n">ModuleNotFoundError</span><span class="p">:</span>
   <span class="kn">import</span> <span class="nn">logging</span>
   <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;One or more libraries required by S3Reporter were not&#39;</span>
@@ -209,6 +211,22 @@
 <span class="sd">        # bucket-owner-full-control</span>
 <span class="sd">        acl: private</span>
 
+<span class="sd">        # [Optional] Put the filename uploaded on the given index file</span>
+<span class="sd">        index:</span>
+
+<span class="sd">          # The path to the index JSON file</span>
+<span class="sd">          path: path/to/index.json</span>
+
+<span class="sd">          # The index entry to update</span>
+<span class="sd">          entry: some_key</span>
+
+<span class="sd">          # [Optional] How many items to keep under this key</span>
+<span class="sd">          max_entries: 100</span>
+
+<span class="sd">          # [Optional] The bucket name if different than the above</span>
+<span class="sd">          bucket: dcos-perf-test-results</span>
+
+
 <span class="sd">  This reporter behaves exactly like :ref:`classref-reporter-RawReporter`, but</span>
 <span class="sd">  the generated JSON blob is uploaded to an S3 bucket instead of a file</span>
 <span class="sd">  in your local filesystem.</span>
@@ -233,10 +251,11 @@
       <span class="n">aws_secret_access_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;AWS_SECRET_ACCESS_KEY&#39;</span><span class="p">]</span>
 
     <span class="c1"># Instantiate boto</span>
-    <span class="n">s3</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span>
-        <span class="s1">&#39;s3&#39;</span><span class="p">,</span>
-        <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">aws_access_key_id</span><span class="p">,</span>
-        <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">aws_secret_access_key</span><span class="p">)</span>
+    <span class="n">s3</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
+      <span class="s1">&#39;s3&#39;</span><span class="p">,</span>
+      <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">aws_access_key_id</span><span class="p">,</span>
+      <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">aws_secret_access_key</span>
+    <span class="p">)</span>
 
     <span class="c1"># Get bucket and filename</span>
     <span class="n">bucket_key</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;results-raw.json&#39;</span><span class="p">)</span>
@@ -246,20 +265,89 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Uploading raw results to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bucket_key</span><span class="p">))</span>
 
     <span class="c1"># Upload into the bucket</span>
-    <span class="n">s3</span><span class="o">.</span><span class="n">Bucket</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;bucket&#39;</span><span class="p">])</span> \
-      <span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Key</span><span class="o">=</span><span class="n">bucket_key</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
-          <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStarted</span><span class="p">,</span>
-            <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-          <span class="p">},</span>
-          <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRootConfig</span><span class="p">()</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
-          <span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">raw</span><span class="p">(),</span>
-          <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
-          <span class="s1">&#39;indicators&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">indicators</span><span class="p">(),</span>
-          <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">()</span>
-        <span class="p">},</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">s3</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;bucket&#39;</span><span class="p">],</span> <span class="n">Key</span><span class="o">=</span><span class="n">bucket_key</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+        <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStarted</span><span class="p">,</span>
+          <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRootConfig</span><span class="p">()</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+        <span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">raw</span><span class="p">(),</span>
+        <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+        <span class="s1">&#39;indicators&#39;</span><span class="p">:</span> <span class="n">summarizer</span><span class="o">.</span><span class="n">indicators</span><span class="p">(),</span>
+        <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">()</span>
+      <span class="p">},</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+      <span class="o">**</span><span class="n">optional_kwargs</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Update index if needed</span>
+    <span class="k">if</span> <span class="s1">&#39;index&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+      <span class="n">indexConfig</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
+
+      <span class="c1"># Get current value</span>
+      <span class="n">indexBucket</span> <span class="o">=</span> <span class="n">indexConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bucket&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;bucket&#39;</span><span class="p">])</span>
+      <span class="n">indexKey</span> <span class="o">=</span> <span class="n">indexConfig</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;index.json&#39;</span><span class="p">)</span>
+      <span class="n">index_data</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">try</span><span class="p">:</span>
+
+        <span class="c1"># Get object</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span>
+          <span class="n">Bucket</span><span class="o">=</span><span class="n">indexBucket</span><span class="p">,</span>
+          <span class="n">Key</span><span class="o">=</span><span class="n">indexKey</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check response code</span>
+        <span class="n">accept</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="s1">&#39;ResponseMetadata&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+          <span class="k">if</span> <span class="s1">&#39;HTTPStatusCode&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ResponseMetadata&#39;</span><span class="p">]:</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ResponseMetadata&#39;</span><span class="p">][</span><span class="s1">&#39;HTTPStatusCode&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">code</span> <span class="o">&lt;</span> <span class="mi">200</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to fetch index: Server responded with </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+              <span class="n">accept</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Try to parse body</span>
+        <span class="k">if</span> <span class="n">accept</span> <span class="ow">and</span> <span class="s1">&#39;Body&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+          <span class="n">index_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;Body&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+
+      <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to parse JSON of index&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to fetch current index state: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+      <span class="c1"># Check index</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">index_data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Unexpected index file contents. Won</span><span class="se">\&#39;</span><span class="s1">t update&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+      <span class="c1"># Get/Create datasets</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;datasets&#39;</span> <span class="ow">in</span> <span class="n">index_data</span><span class="p">:</span>
+        <span class="n">index_data</span><span class="p">[</span><span class="s1">&#39;datasets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="n">dataset_data</span> <span class="o">=</span> <span class="n">index_data</span><span class="p">[</span><span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+
+      <span class="c1"># Get/Create entry key</span>
+      <span class="n">entry</span> <span class="o">=</span> <span class="n">indexConfig</span><span class="p">[</span><span class="s1">&#39;entry&#39;</span><span class="p">]</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">dataset_data</span><span class="p">:</span>
+        <span class="n">dataset_data</span><span class="p">[</span><span class="n">entry</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">dataset_entries</span> <span class="o">=</span> <span class="n">dataset_data</span><span class="p">[</span><span class="n">entry</span><span class="p">]</span>
+
+      <span class="c1"># Insert item</span>
+      <span class="n">dataset_entries</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+        <span class="s1">&#39;ts&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+        <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMeta</span><span class="p">(),</span>
+        <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">bucket_key</span>
+      <span class="p">})</span>
+
+      <span class="c1"># Keep the most recent `max_entries`</span>
+      <span class="n">dataset_entries</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;ts&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+      <span class="k">if</span> <span class="s1">&#39;max_entries&#39;</span> <span class="ow">in</span> <span class="n">indexConfig</span><span class="p">:</span>
+        <span class="n">trim_to</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">indexConfig</span><span class="p">[</span><span class="s1">&#39;max_entries&#39;</span><span class="p">])</span>
+        <span class="n">dataset_entries</span> <span class="o">=</span> <span class="n">dataset_entries</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">trim_to</span><span class="p">]</span>
+
+      <span class="c1"># Update index file</span>
+      <span class="n">s3</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="n">indexBucket</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">indexKey</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">index_data</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
         <span class="o">**</span><span class="n">optional_kwargs</span>
       <span class="p">)</span></div>
+
+
 </pre></div>
 
            </div>

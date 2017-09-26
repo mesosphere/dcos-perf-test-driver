@@ -34,7 +34,30 @@ class EventAttributeTracker(Tracker):
         # given filter. If missing, the trace ID of the event is used.
         traceIdFrom: ParameterUpdateEvent
 
-  This tracker is frequently used in conjunction with
+  This tracker is frequently used in conjunction with observers that broadcast
+  measurements as single events.
+
+  For example you can use this tracker to extract JMX measurements as metrics:
+
+  ::
+
+    trackers:
+      - class: tracker.EventAttributeTracker
+        event: JMXMeasurement
+        extract:
+          - metric: metricName
+            attrib: "fields['jmxFieldName']""
+
+  Or you can extract raw log line messages as a metric:
+
+  ::
+
+    trackers:
+      - class: tracker.EventAttributeTracker
+        event: LogLineEvent
+        extract:
+          - metric: metricName
+            attrib: "line"
   """
 
   def __init__(self, *args, **kwargs):

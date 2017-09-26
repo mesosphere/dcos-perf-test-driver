@@ -204,6 +204,17 @@
 <span class="sd">  &quot;&quot;&quot;</span></div>
 
 
+<div class="viewcode-block" id="CmdlineStartedEvent"><a class="viewcode-back" href="../../../../../classes/EventReference.html#performance.driver.classes.channel.CmdlineStartedEvent">[docs]</a><span class="k">class</span> <span class="nc">CmdlineStartedEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  This event is published when the process has started. It contains the process</span>
+<span class="sd">  ID so the observers can attach to the process and extract useful data.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">pid</span></div>
+
+
 <div class="viewcode-block" id="CmdlineChannel"><a class="viewcode-back" href="../../../../../classes/Channels.html#performance.driver.classes.channel.CmdlineChannel">[docs]</a><span class="k">class</span> <span class="nc">CmdlineChannel</span><span class="p">(</span><span class="n">Channel</span><span class="p">):</span>
   <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  The *Command-line Channel* launches an application, passes the test parameters</span>
@@ -237,6 +248,10 @@
 <span class="sd">        # [Optional] If set to `yes` (default) the app will be re-launched</span>
 <span class="sd">        # if it exits on it&#39;s own.</span>
 <span class="sd">        restart: yes</span>
+
+<span class="sd">        # [Optional] If set to `yes` the &quot;cmdline&quot; expression will be evalued</span>
+<span class="sd">        # in a shell.</span>
+<span class="sd">        shell: no</span>
 
 <span class="sd">  When a parameter is changed, the channel will kill the process and re-launch</span>
 <span class="sd">  it with the new command-line.</span>
@@ -425,7 +440,8 @@
       <span class="n">env</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># Launch</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Starting process: </span><span class="se">\&#39;</span><span class="si">{}</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="k">else</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Starting process: </span><span class="se">\&#39;</span><span class="si">{}</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">args</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="k">else</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">activeParameters</span> <span class="o">=</span> <span class="n">parameters</span>
     <span class="n">proc</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span>
         <span class="n">args</span><span class="p">,</span>
@@ -436,6 +452,9 @@
         <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
         <span class="n">shell</span><span class="o">=</span><span class="n">shell</span><span class="p">,</span>
         <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span><span class="p">)</span>
+
+    <span class="c1"># Dispatch start event</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eventbus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">CmdlineStartedEvent</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">))</span>
 
     <span class="c1"># Launch a thread to monitor it&#39;s output</span>
     <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">proc</span><span class="p">,</span> <span class="n">stdin</span><span class="p">))</span>

@@ -225,6 +225,10 @@ through command-line arguments and monitors it’s standard output and error.</p
     <span class="c1"># [Optional] If set to `yes` (default) the app will be re-launched</span>
     <span class="c1"># if it exits on it&#39;s own.</span>
     <span class="l l-Scalar l-Scalar-Plain">restart</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+
+    <span class="c1"># [Optional] If set to `yes` the &quot;cmdline&quot; expression will be evalued</span>
+    <span class="c1"># in a shell.</span>
+    <span class="l l-Scalar l-Scalar-Plain">shell</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">no</span>
 </pre></div>
 </div>
 <p>When a parameter is changed, the channel will kill the process and re-launch
@@ -415,7 +419,7 @@ based on the given rules.</p>
 
         <span class="c1"># [Optional] Repeat this deployment for the given number of times</span>
         <span class="c1"># (This can be a python expression)</span>
-        <span class="l l-Scalar l-Scalar-Plain">repeat &quot;instances * 2&quot;</span>
+        <span class="l l-Scalar l-Scalar-Plain">repeat</span><span class="p p-Indicator">:</span> <span class="s">&quot;instances</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">2&quot;</span>
 </pre></div>
 </div>
 </dd></dl>

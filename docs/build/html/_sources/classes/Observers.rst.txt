@@ -17,12 +17,25 @@ HTTPTimingObserver
 
 .. autoclass:: performance.driver.classes.observer.HTTPTimingObserver
 
-.. _classref-observers-LogLineObserver:
+.. _classref-observers-JMXObserver:
 
-LogLineObserver
+JMXObserver
 ---------------
 
-.. autoclass:: performance.driver.classes.observer.LogLineObserver
+.. autoclass:: performance.driver.classes.observer.JMXObserver
+
+.. _classref-observers-LogStaxObserver:
+
+LogStaxObserver
+---------------
+
+.. autoclass:: performance.driver.classes.observer.LogStaxObserver
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Related:
+
+   related/LogStaxObserverExtra
 
 .. _classref-observers-MarathonEventsObserver:
 
@@ -30,6 +43,13 @@ MarathonEventsObserver
 ----------------------
 
 .. autoclass:: performance.driver.classes.observer.MarathonEventsObserver
+
+.. _classref-observers-MarathonLogsObserver:
+
+MarathonLogsObserver
+-----------------------
+
+.. autoclass:: performance.driver.classes.observer.MarathonLogsObserver
 
 .. _classref-observers-MarathonMetricsObserver:
 

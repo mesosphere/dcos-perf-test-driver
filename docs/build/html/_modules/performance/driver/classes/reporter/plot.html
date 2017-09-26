@@ -311,7 +311,7 @@
 
 <span class="sd">        # [Optional] The colormap to use when plotting 2D plots</span>
 <span class="sd">        # Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html</span>
-<span class="sd">        colormap: plasma</span>
+<span class="sd">        colormap: winter</span>
 
 <span class="sd">        # [Optional] Plot the raw values as a scatter plot and not the summarised</span>
 <span class="sd">        raw: False</span>
@@ -514,7 +514,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Configurable variables</span>
-    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;colormap&#39;</span><span class="p">,</span> <span class="s1">&#39;plasma&#39;</span><span class="p">))</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getConfig</span><span class="p">(</span><span class="s1">&#39;colormap&#39;</span><span class="p">,</span> <span class="s1">&#39;winter&#39;</span><span class="p">))</span>
 
     <span class="c1"># Populate axis values</span>
     <span class="n">p</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalConfig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
@@ -698,7 +698,7 @@
     <span class="n">fileSuffix</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;suffix&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">plotGroup</span> <span class="ow">in</span> <span class="n">metricPlotGroup</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
       <span class="n">dumpFunction</span><span class="p">(</span><span class="n">axisValues</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">referencePlotGroup</span> <span class="ow">is</span> <span class="kc">None</span>
-                   <span class="k">else</span> <span class="n">referencePlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}{}{}</span><span class="s1">.png&#39;</span><span class="o">.</span><span class="n">foramt</span><span class="p">(</span>
+                   <span class="k">else</span> <span class="n">referencePlotGroup</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{}{}{}</span><span class="s1">.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                        <span class="n">filePrefix</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">fileSuffix</span><span class="p">))</span>
 
   <span class="k">def</span> <span class="nf">dumpPlot_raw1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotGroup</span><span class="p">,</span> <span class="n">referencePlotGroup</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>

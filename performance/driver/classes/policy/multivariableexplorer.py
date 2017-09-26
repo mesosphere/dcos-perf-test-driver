@@ -13,7 +13,7 @@ class MultivariableExplorerPolicy(PolicyFSM):
 
   ::
 
-    policy:
+    policies:
       - class: policy.MultivariableExplorerPolicy
 
         # The following rules describe the permutation matrix

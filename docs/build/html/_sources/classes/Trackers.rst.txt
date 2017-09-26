@@ -11,6 +11,13 @@ your results.
 
 Refer to the :ref:`classref-events` to know the events broadcasted in the bus.
 
+.. _classref-tracker-DurationTracker:
+
+DurationTracker
+---------------
+
+.. autoclass:: performance.driver.classes.tracker.DurationTracker
+
 .. _classref-tracker-EventAttributeTracker:
 
 EventAttributeTracker
@@ -25,13 +32,6 @@ CountTracker
 
 .. autoclass:: performance.driver.classes.tracker.CountTracker
 
-.. _classref-tracker-DurationTracker:
-
-DurationTracker
----------------
-
-.. autoclass:: performance.driver.classes.tracker.DurationTracker
-
 .. _classref-tracker-DumpMetricTracker:
 
 DumpMetricTracker
@@ -39,9 +39,9 @@ DumpMetricTracker
 
 .. autoclass:: performance.driver.classes.tracker.DumpMetricTracker
 
-.. _classref-tracker-LogLineTokenTracker:
+.. _classref-tracker-LogStaxTracker:
 
-LogLineTokenTracker
+LogStaxTracker
 -------------------
 
-.. autoclass:: performance.driver.classes.tracker.LogLineTokenTracker
+.. autoclass:: performance.driver.classes.tracker.LogStaxTracker

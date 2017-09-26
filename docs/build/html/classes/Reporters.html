@@ -320,7 +320,7 @@ and storing it in the results folder.</p>
 
     <span class="c1"># [Optional] The colormap to use when plotting 2D plots</span>
     <span class="c1"># Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html</span>
-    <span class="l l-Scalar l-Scalar-Plain">colormap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">plasma</span>
+    <span class="l l-Scalar l-Scalar-Plain">colormap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">winter</span>
 
     <span class="c1"># [Optional] Plot the raw values as a scatter plot and not the summarised</span>
     <span class="l l-Scalar l-Scalar-Plain">raw</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
@@ -529,6 +529,21 @@ Amazon’s S3 services</p>
     <span class="c1"># public-read-write, authenticated-read, bucket-owner-read,</span>
     <span class="c1"># bucket-owner-full-control</span>
     <span class="l l-Scalar l-Scalar-Plain">acl</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">private</span>
+
+    <span class="c1"># [Optional] Put the filename uploaded on the given index file</span>
+    <span class="l l-Scalar l-Scalar-Plain">index</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># The path to the index JSON file</span>
+      <span class="l l-Scalar l-Scalar-Plain">path</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">path/to/index.json</span>
+
+      <span class="c1"># The index entry to update</span>
+      <span class="l l-Scalar l-Scalar-Plain">entry</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">some_key</span>
+
+      <span class="c1"># [Optional] How many items to keep under this key</span>
+      <span class="l l-Scalar l-Scalar-Plain">max_entries</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+
+      <span class="c1"># [Optional] The bucket name if different than the above</span>
+      <span class="l l-Scalar l-Scalar-Plain">bucket</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">dcos-perf-test-results</span>
 </pre></div>
 </div>
 <p>This reporter behaves exactly like <a class="reference internal" href="#classref-reporter-rawreporter"><span class="std std-ref">RawReporter</span></a>, but

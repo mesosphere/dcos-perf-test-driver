@@ -33,7 +33,8 @@ class MultilineRule:
 
 class MultilineCodec(SingleLineCodec):
   """
-  The simple line codec is just returning the line received
+  The multi-line codec is able to collect more than one matching lines into
+  a single message.
 
   ::
 
@@ -78,6 +79,26 @@ class MultilineCodec(SingleLineCodec):
 
               # [Optional] Set to the new-line character you want to use when joining
               newline: ";""
+
+  For example, to join together lines that start with "::" you can use:
+
+  ::
+
+              ...
+              lines:
+                - match: "^::.*$"
+                  repeat: yes
+
+  Or, to join together lines that open a bracket and close it on another line:
+
+  ::
+
+              ...
+              lines:
+                - match: "^.*{$"
+                - match: "^.*[^}]$"
+                  repeat: yes
+
 
   """
 

@@ -22,7 +22,7 @@ class MultiStepPolicy(PolicyFSM):
 
   ::
 
-    policy:
+    policies:
       - class: policy.MultiStepPolicy
 
         # Configure the policy steps

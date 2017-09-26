@@ -149,7 +149,7 @@ class RunTaskCompletedEvent(Event):
 
 class TickEvent(Event):
   """
-  A clock event is dispatched every second
+  A clock event is dispatched periodically by the event bus
   """
 
   def __init__(self, count, delta, *args, **kwargs):

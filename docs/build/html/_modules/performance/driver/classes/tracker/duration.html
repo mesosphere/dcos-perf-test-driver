@@ -185,11 +185,9 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">traceids</span> <span class="o">=</span> <span class="n">traceids</span>
 
   <span class="k">def</span> <span class="nf">handleStart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-    <span class="c1"># self.logger.info(&#39;Found start, matching&#39; + str(self.tracker.startFilter))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 
   <span class="k">def</span> <span class="nf">handleEnd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-    <span class="c1"># self.logger.info(&#39;Found end, matching &#39; + str(self.tracker.endFilter))</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="n">start_event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">Empty</span><span class="p">:</span>
@@ -266,7 +264,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># A terminal events terminates an active trace</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">RestartEvent</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">):</span>
+    <span class="n">eventType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eventType</span> <span class="ow">in</span> <span class="p">(</span><span class="n">RestartEvent</span><span class="p">,</span> <span class="n">TeardownEvent</span><span class="p">):</span>
       <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">traces</span><span class="p">:</span>
         <span class="n">trace</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
 
@@ -275,7 +274,7 @@
       <span class="k">return</span>
 
     <span class="c1"># Each parameter update initiates a trace of interest</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ParameterUpdateEvent</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">eventType</span> <span class="ow">is</span> <span class="n">ParameterUpdateEvent</span><span class="p">:</span>
 
       <span class="c1"># Start a new session tracker</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">activeTrace</span> <span class="o">=</span> <span class="n">DurationTrackerSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">traceids</span><span class="p">)</span>

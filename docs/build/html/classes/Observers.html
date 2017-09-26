@@ -37,7 +37,7 @@
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="dcos-perf-test-driver 0.1.0 documentation" href="../index.html"/>
         <link rel="up" title="Class Reference" href="Readme.html"/>
-        <link rel="next" title="Trackers" href="Trackers.html"/>
+        <link rel="next" title="MultilineCodec" href="related/LogStaxObserverExtra.html"/>
         <link rel="prev" title="Channels" href="Channels.html"/> 
 
   
@@ -104,8 +104,14 @@
 <li class="toctree-l2"><a class="reference internal" href="Channels.html">Channels</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Observers</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#httptimingobserver">HTTPTimingObserver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#loglineobserver">LogLineObserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jmxobserver">JMXObserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logstaxobserver">LogStaxObserver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="related/LogStaxObserverExtra.html">MultilineCodec</a></li>
+<li class="toctree-l4"><a class="reference internal" href="related/LogStaxObserverExtra.html#singlelinecodec">SingleLineCodec</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#marathoneventsobserver">MarathonEventsObserver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#marathonlogsobserver">MarathonLogsObserver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#marathonmetricsobserver">MarathonMetricsObserver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#marathonpollerobserver">MarathonPollerObserver</a></li>
 </ul>
@@ -232,45 +238,148 @@ is taken. Refer to the event documentation for more details.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="loglineobserver">
-<span id="classref-observers-loglineobserver"></span><h2>LogLineObserver<a class="headerlink" href="#loglineobserver" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jmxobserver">
+<span id="classref-observers-jmxobserver"></span><h2>JMXObserver<a class="headerlink" href="#jmxobserver" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="performance.driver.classes.observer.LogLineObserver">
-<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">LogLineObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/logline.html#LogLineObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.LogLineObserver" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <strong>Log Line Observer</strong> is post-processing every <code class="docutils literal"><span class="pre">LogLineEvent</span></code> and
-extracts tokens that can be later converted into metrics.</p>
+<dt id="performance.driver.classes.observer.JMXObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">JMXObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/jmx/observer.html#JMXObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.JMXObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>JMX Observer</em> connects to the java management console of a running java
+application and extracts the given metrics.</p>
 <div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.LogLineObserver</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.JMXObserver</span>
 
-    <span class="c1"># An array of the matching rules to apply on every line</span>
-    <span class="l l-Scalar l-Scalar-Plain">rules</span><span class="p p-Indicator">:</span>
+    <span class="c1"># Connection information</span>
+    <span class="l l-Scalar l-Scalar-Plain">connect</span><span class="p p-Indicator">:</span>
 
-      <span class="c1"># A rule is activated when the `match` regexp is matching</span>
-      <span class="c1"># the line.</span>
-      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span> <span class="s">&quot;^status:&quot;</span>
+      <span class="c1"># [Optional] Specify the host/port where to connect</span>
+      <span class="l l-Scalar l-Scalar-Plain">host</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
+      <span class="l l-Scalar l-Scalar-Plain">port</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">9010</span>
 
-        <span class="c1"># The `regex` expression defines the groups to capture</span>
-        <span class="l l-Scalar l-Scalar-Plain">regex</span><span class="p p-Indicator">:</span> <span class="s">&quot;^status:([^,]+),([^,]+),([^,]+),$&quot;</span>
+      <span class="c1"># [Optional] Execute the given shell expression and assume the STDOUT</span>
+      <span class="c1"># contents is the PID where to attach. If available, {{cmdlinepid}}</span>
+      <span class="c1"># will contain the PID of the last detected PID from the cmdline</span>
+      <span class="c1"># channel</span>
+      <span class="c1"># ------------------------------------------------------------------</span>
+      <span class="c1"># DANGER!! Evaluated as a shell expression</span>
+      <span class="c1"># ------------------------------------------------------------------</span>
+      <span class="l l-Scalar l-Scalar-Plain">pid_from</span><span class="p p-Indicator">:</span> <span class="s">&quot;pgrep</span><span class="nv"> </span><span class="s">-P</span><span class="nv"> </span><span class="s">$(pgrep</span><span class="nv"> </span><span class="s">-P</span><span class="nv"> </span><span class="s">{{cmdlinepid}})&quot;</span>
 
-        <span class="c1"># The `groups` array specifies the token names for the</span>
-        <span class="c1"># equivalent captured group</span>
-        <span class="l l-Scalar l-Scalar-Plain">groups</span><span class="p p-Indicator">:</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">status</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">time</span>
-          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">latency</span>
+    <span class="c1"># Which metrics to extract</span>
+    <span class="l l-Scalar l-Scalar-Plain">metrics</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># Specify the name of the metric and the source</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">field</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">tagName</span>
+
+        <span class="c1"># The java Management Interface MBean to use (Object Name)</span>
+        <span class="l l-Scalar l-Scalar-Plain">mbean</span><span class="p p-Indicator">:</span> <span class="s">&quot;java.lang:type=Threading&quot;</span>
+
+        <span class="c1"># The attribute value to extract</span>
+        <span class="l l-Scalar l-Scalar-Plain">attrib</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ThreadCount</span>
+
+        <span class="c1"># [Optional] Python evaluation expression for the value</span>
+        <span class="l l-Scalar l-Scalar-Plain">value</span><span class="p p-Indicator">:</span> <span class="s">&quot;value&quot;</span>
+
+    <span class="c1"># Optional event configuration</span>
+    <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># [Optional] Wait for this event before activating the observer</span>
+      <span class="l l-Scalar l-Scalar-Plain">activate</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">MarathonStartedEvent</span>
+
+      <span class="c1"># [Optional] If this event is received the observer is deactivated</span>
+      <span class="l l-Scalar l-Scalar-Plain">deactivate</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ExitEvent</span>
 </pre></div>
 </div>
-<p>This observer is going to apply the full set of rules for every log line
-broadcasted in the bus and is going to extract tokens for every match.</p>
-<p>It first ries to match the <code class="docutils literal"><span class="pre">match</span></code> regular expression against the line
-and it then applies the <code class="docutils literal"><span class="pre">regex</span></code> regular expression in order to extract
-one or more capturing groups. It then uses the <code class="docutils literal"><span class="pre">groups</span></code> array to assign
-token names to each captured group.</p>
-<p>A <code class="docutils literal"><span class="pre">LogLineTokenMatchEvent</span></code> will be published for every captured group,
-allowing a tracker to collect these values as metrics.</p>
-<p>Otherwise such events can be used for synchronisation purposes.</p>
+<p>This observer is going to launch a utility process that is going to attach
+on the specified JVM instance. Upon successful connection it’s going to start
+extracting all the useful information as <code class="docutils literal"><span class="pre">JMXMeasurement</span></code> events in the
+message bus.</p>
+<p>Such events can be passed down to metrics using the <code class="docutils literal"><span class="pre">JMXTracker</span></code> tracker.</p>
 </dd></dl>
 
+</div>
+<div class="section" id="logstaxobserver">
+<span id="classref-observers-logstaxobserver"></span><h2>LogStaxObserver<a class="headerlink" href="#logstaxobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.LogStaxObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">LogStaxObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/logstax/observer.html#LogStaxObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.LogStaxObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <strong>Logstax Observer</strong> is logstash-like observer for dcos-perf-test-driver
+that uses some event contents as the line source and a set of rules for
+creating fields for post-processing.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.LogStaxObserver</span>
+
+    <span class="c1"># An array of filters to apply on every line</span>
+    <span class="l l-Scalar l-Scalar-Plain">filters</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># Grok Pattern Matching</span>
+      <span class="c1"># ---------------------</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">grok</span>
+
+        <span class="c1"># Match the given field(s) for GROK expressions</span>
+        <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">message</span><span class="p p-Indicator">:</span> <span class="s">&quot;^%{IP:httpHost}</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">(?&lt;user&gt;%{WORD}|-).*&quot;</span>
+
+        <span class="c1"># [Optional] Overwrite the specified fields with the values</span>
+        <span class="c1"># extracted from the grok pattern. By default only new fields</span>
+        <span class="c1"># are appended.</span>
+        <span class="l l-Scalar l-Scalar-Plain">overwrite</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">message</span><span class="p p-Indicator">,</span> <span class="nv">name</span><span class="p p-Indicator">]</span>
+
+        <span class="c1"># [Optional] Add the given fields to the message</span>
+        <span class="l l-Scalar l-Scalar-Plain">add_field</span><span class="p p-Indicator">:</span>
+          <span class="l l-Scalar l-Scalar-Plain">source</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">grok</span>
+
+        <span class="c1"># [Optional] Remove the given fields from the message</span>
+        <span class="l l-Scalar l-Scalar-Plain">remove_field</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">source</span><span class="p p-Indicator">]</span>
+
+        <span class="c1"># [Optional] Add the given tags in the message</span>
+        <span class="l l-Scalar l-Scalar-Plain">add_tag</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">foo</span><span class="p p-Indicator">,</span> <span class="nv">bar</span><span class="p p-Indicator">]</span>
+
+        <span class="c1"># [Optional] Remove the given tags in the message</span>
+        <span class="l l-Scalar l-Scalar-Plain">remove_tag</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">bar</span><span class="p p-Indicator">,</span> <span class="nv">baz</span><span class="p p-Indicator">]</span>
+
+    <span class="c1"># [Optional] Which event(s) to listen for and which fields to extract</span>
+    <span class="l l-Scalar l-Scalar-Plain">events</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># By default it&#39;s using the `LogLineEvent`</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">LogLineEvent</span>
+        <span class="l l-Scalar l-Scalar-Plain">field</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">line</span>
+
+    <span class="c1"># [Optional] One or more `codecs` to apply on the incoming lines.</span>
+    <span class="c1">#            These codecs convert one or more log lines into</span>
+    <span class="l l-Scalar l-Scalar-Plain">codecs</span><span class="p p-Indicator">:</span>
+
+      <span class="c1"># Pass-through every incoming line to a rule matcher</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">singleline</span>
+
+      <span class="c1"># Group multiple lines into a block and then pass it to the</span>
+      <span class="c1"># rule matcher as an array of lines. Refer to the `MultilineCodec`</span>
+      <span class="c1"># for more details.</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">multiline</span>
+        <span class="l l-Scalar l-Scalar-Plain">lines</span><span class="p p-Indicator">:</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">firstLine.*</span>
+          <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">match</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">secondLine.*</span>
+</pre></div>
+</div>
+<p>This observer is trying to reproduce a logstash set-up, using the LogLineEvent
+as the only source. It is first passing the events through a <cite>codec</cite> that is
+going to create a processable messages. Each message contains fields and tags.</p>
+<p>By default, the <cite>singleline</cite> codec is populating the <cite>message</cite> field with the
+contents of the line. The <cite>multiline</cite> codec is more elaborate and can be used
+in order to extract multi-line blocks from the incoming stream.</p>
+<p>The messages are then passed to the filters. If a filter matches the incoming
+message it is going to apply the transformations described.</p>
+<p>When the filter process is completed, the observer is going to braodcast a
+<code class="docutils literal"><span class="pre">LogStaxMessageEvent</span></code> that can be processed at a later time by the
+<code class="docutils literal"><span class="pre">LogStaxTracker</span></code> in order to extract useful metrics.</p>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Related:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="related/LogStaxObserverExtra.html">MultilineCodec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="related/LogStaxObserverExtra.html#singlelinecodec">SingleLineCodec</a></li>
+</ul>
+</div>
 </div>
 <div class="section" id="marathoneventsobserver">
 <span id="classref-observers-marathoneventsobserver"></span><h2>MarathonEventsObserver<a class="headerlink" href="#marathoneventsobserver" title="Permalink to this headline">¶</a></h2>
@@ -316,6 +425,28 @@ a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code>
 it through the <code class="docutils literal"><span class="pre">headers</span></code> configuration.</p>
 <p class="last">Note that a <code class="docutils literal"><span class="pre">dcos_auth_token</span></code> can be dynamically injected via an
 authentication task.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="marathonlogsobserver">
+<span id="classref-observers-marathonlogsobserver"></span><h2>MarathonLogsObserver<a class="headerlink" href="#marathonlogsobserver" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="performance.driver.classes.observer.MarathonLogsObserver">
+<em class="property">class </em><code class="descclassname">performance.driver.classes.observer.</code><code class="descname">MarathonLogsObserver</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/performance/driver/classes/observer/marathonlogs.html#MarathonLogsObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#performance.driver.classes.observer.MarathonLogsObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>This observer is based on the <cite>LogStaxObserver</cite> functionality in order to
+find and filter-out the marathon lines.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">observers</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">class</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">observer.MarathonLogsObserver</span>
+</pre></div>
+</div>
+<p>This observer accepts no configuration. It is processing the <code class="docutils literal"><span class="pre">LogLineEvent</span></code>
+messages dispatched by other observers or channels (ex. the <code class="docutils literal"><span class="pre">CmdlineChannel</span></code>
+channel).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This observer will currently only work if marathon is launched through
+a <code class="docutils literal"><span class="pre">CmdlineChannel</span></code>.</p>
 </div>
 </dd></dl>
 
@@ -427,7 +558,7 @@ authentication task.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Trackers.html" class="btn btn-neutral float-right" title="Trackers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="related/LogStaxObserverExtra.html" class="btn btn-neutral float-right" title="MultilineCodec" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Channels.html" class="btn btn-neutral" title="Channels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -11,7 +11,7 @@ class TimeEvolutionPolicy(PolicyFSM):
 
   ::
 
-    policy:
+    policies:
       - class: policy.TimeEvolutionPolicy
 
         # Configure which parameters to evolve over time

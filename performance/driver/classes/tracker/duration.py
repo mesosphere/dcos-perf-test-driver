@@ -21,11 +21,9 @@ class DurationTrackerSession:
     self.traceids = traceids
 
   def handleStart(self, event):
-    # self.logger.info('Found start, matching' + str(self.tracker.startFilter))
     self.queue.put(event)
 
   def handleEnd(self, event):
-    # self.logger.info('Found end, matching ' + str(self.tracker.endFilter))
     try:
       start_event = self.queue.get(False)
     except Empty:

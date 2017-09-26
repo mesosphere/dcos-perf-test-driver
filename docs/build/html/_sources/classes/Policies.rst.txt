@@ -23,9 +23,9 @@ TimeEvolutionPolicy
 
 .. autoclass:: performance.driver.classes.policy.TimeEvolutionPolicy
 
-.. _classref-policy-BurstPolicy:
+.. _classref-policy-MultiStepPolicy:
 
-BurstPolicy
+MultiStepPolicy
 ---------------------------
 
-.. autoclass:: performance.driver.classes.policy.BurstPolicy
+.. autoclass:: performance.driver.classes.policy.MultiStepPolicy

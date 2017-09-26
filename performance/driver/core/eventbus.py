@@ -69,7 +69,7 @@ class EventBus:
 
     # If we are requested to perform a synchronous broadcast, we need to
     # wait until the event is consumed. So create a condition variable
-    # and wait for signal
+    # and wait for the signal to be handled.
     cond = None
     if sync:
       cond = Condition()

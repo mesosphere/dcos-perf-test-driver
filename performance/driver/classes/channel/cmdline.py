@@ -85,6 +85,10 @@ class CmdlineChannel(Channel):
         # if it exits on it's own.
         restart: yes
 
+        # [Optional] If set to `yes` the "cmdline" expression will be evalued
+        # in a shell.
+        shell: no
+
   When a parameter is changed, the channel will kill the process and re-launch
   it with the new command-line.
 

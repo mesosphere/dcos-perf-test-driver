@@ -1,5 +1,8 @@
 .. highlight:: yaml
 
+.. generated using
+.. grep -Er 'class\s.*Event[\(:]' performance | sed -E 's/^(.*)\.py.*class ([A-Za-z]+).*$/\1\/\2/' | tr '/' '.' | sort
+
 .. _classref-events:
 
 Event Reference
@@ -8,273 +11,268 @@ Event Reference
 This is a reference to all events broadcasted in the internal event bus, including
 their available attributes.
 
+.. inheritance-diagram:: performance.driver.classes.channel.cmdline.CmdlineExitEvent
+                         performance.driver.classes.channel.cmdline.CmdlineExitNonzeroEvent
+                         performance.driver.classes.channel.cmdline.CmdlineExitZeroEvent
+                         performance.driver.classes.channel.cmdline.CmdlineStartedEvent
+                         performance.driver.classes.channel.http.HTTPErrorEvent
+                         performance.driver.classes.channel.http.HTTPFirstRequestEndEvent
+                         performance.driver.classes.channel.http.HTTPFirstRequestStartEvent
+                         performance.driver.classes.channel.http.HTTPFirstResponseEndEvent
+                         performance.driver.classes.channel.http.HTTPFirstResponseErrorEvent
+                         performance.driver.classes.channel.http.HTTPFirstResponseStartEvent
+                         performance.driver.classes.channel.http.HTTPLastRequestEndEvent
+                         performance.driver.classes.channel.http.HTTPLastRequestStartEvent
+                         performance.driver.classes.channel.http.HTTPLastResponseEndEvent
+                         performance.driver.classes.channel.http.HTTPLastResponseErrorEvent
+                         performance.driver.classes.channel.http.HTTPLastResponseStartEvent
+                         performance.driver.classes.channel.http.HTTPRequestEndEvent
+                         performance.driver.classes.channel.http.HTTPRequestStartEvent
+                         performance.driver.classes.channel.http.HTTPResponseEndEvent
+                         performance.driver.classes.channel.http.HTTPResponseErrorEvent
+                         performance.driver.classes.channel.http.HTTPResponseStartEvent
+                         performance.driver.classes.channel.marathon.MarathonDeploymentRequestFailedEvent
+                         performance.driver.classes.channel.marathon.MarathonDeploymentRequestedEvent
+                         performance.driver.classes.channel.marathon.MarathonDeploymentStartedEvent
+                         performance.driver.classes.observer.events.marathon.MarathonDeploymentFailedEvent
+                         performance.driver.classes.observer.events.marathon.MarathonDeploymentStatusEvent
+                         performance.driver.classes.observer.events.marathon.MarathonDeploymentStepFailureEvent
+                         performance.driver.classes.observer.events.marathon.MarathonDeploymentStepSuccessEvent
+                         performance.driver.classes.observer.events.marathon.MarathonDeploymentSuccessEvent
+                         performance.driver.classes.observer.events.marathon.MarathonEvent
+                         performance.driver.classes.observer.events.marathon.MarathonGroupChangeFailedEvent
+                         performance.driver.classes.observer.events.marathon.MarathonGroupChangeSuccessEvent
+                         performance.driver.classes.observer.events.marathon.MarathonSSEEvent
+                         performance.driver.classes.observer.events.marathon.MarathonStartedEvent
+                         performance.driver.classes.observer.events.marathon.MarathonUpgradeEvent
+                         performance.driver.classes.observer.httptiming.HTTPTimingResultEvent
+                         performance.driver.classes.observer.logstax.observer.LogStaxMessageEvent
+                         performance.driver.core.eventbus.ExitEvent
+                         performance.driver.core.events.Event
+                         performance.driver.core.events.FlagUpdateEvent
+                         performance.driver.core.events.InterruptEvent
+                         performance.driver.core.events.LogLineEvent
+                         performance.driver.core.events.MetricUpdateEvent
+                         performance.driver.core.events.ObserverEvent
+                         performance.driver.core.events.ObserverValueEvent
+                         performance.driver.core.events.ParameterUpdateEvent
+                         performance.driver.core.events.RestartEvent
+                         performance.driver.core.events.RunTaskCompletedEvent
+                         performance.driver.core.events.RunTaskEvent
+                         performance.driver.core.events.StalledEvent
+                         performance.driver.core.events.StartEvent
+                         performance.driver.core.events.TeardownEvent
+                         performance.driver.core.events.TickEvent
+   :parts: 3
+
+Event Details
+-------------
+
 .. autoclass:: performance.driver.classes.channel.cmdline.CmdlineExitEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.channel.cmdline.CmdlineExitZeroEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.cmdline.CmdlineExitNonzeroEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.channel.cmdline.CmdlineExitZeroEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.channel.cmdline.CmdlineStartedEvent
+   :members:
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPErrorEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPFirstRequestEndEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPFirstRequestStartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPFirstResponseEndEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPFirstResponseErrorEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPFirstResponseStartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPLastRequestEndEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPLastRequestStartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPLastResponseEndEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPLastResponseErrorEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPLastResponseStartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPRequestEndEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPRequestStartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPResponseEndEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPResponseErrorEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.channel.http.HTTPResponseStartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
-.. autoclass:: performance.driver.classes.observer.httpstatus.HTTPStatusEvent
+.. autoclass:: performance.driver.classes.channel.marathon.MarathonDeploymentRequestFailedEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
-.. autoclass:: performance.driver.classes.observer.httptiming.HTTPTimingResultEvent
+.. autoclass:: performance.driver.classes.channel.marathon.MarathonDeploymentRequestedEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
-.. autoclass:: performance.driver.classes.observer.logline.LogLineTokenMatchEvent
+.. autoclass:: performance.driver.classes.channel.marathon.MarathonDeploymentStartedEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
-
-.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonUpgradeEvent
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentFailedEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentStatusEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentStepFailureEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentStepSuccessEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonDeploymentSuccessEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonGroupChangeFailedEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonGroupChangeSuccessEvent
+   :members:
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonSSEEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonStartedEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonUpgradeEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.httptiming.HTTPTimingResultEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.logstax.observer.LogStaxMessageEvent
+   :members:
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.eventbus.ExitEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
+
+.. autoclass:: performance.driver.core.events.Event
+   :members:
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.FlagUpdateEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.InterruptEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.LogLineEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.MetricUpdateEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.ObserverEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.ObserverValueEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.ParameterUpdateEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.RestartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.RunTaskCompletedEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.RunTaskEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.StalledEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.StartEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.TeardownEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
 .. autoclass:: performance.driver.core.events.TickEvent
    :members:
-   :inherited-members:
-   :show-inheritance:
-   :exclude-members: hasTrace, hasTraces
+   :undoc-members:
 
