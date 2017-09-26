@@ -2,7 +2,7 @@ import time
 import requests
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import Event, TeardownEvent, StartEvent
+from performance.driver.core.events import Event, TeardownEvent, StartEvent, ParameterUpdateEvent
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from threading import Thread
 
@@ -80,16 +80,25 @@ class HTTPTimingObserver(Observer):
 
   """
 
+  @subscribesToHint(TeardownEvent, StartEvent, ParameterUpdateEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.url = self.getConfig('url')
     self.interval = float(self.getConfig('interval', '1'))
     self.clockThread = None
     self.active = False
+    self.traceids = None
 
     # Register to the Start / Teardown events
     self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent, ))
     self.eventbus.subscribe(self.handleStartEvent, events=(StartEvent, ))
+    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
+
+  def handleParameterUpdate(self, event):
+    """
+    Update trace IDs
+    """
+    self.traceids = event.traceids
 
   def handleStartEvent(self, event):
     """
@@ -170,7 +179,7 @@ class HTTPTimingObserver(Observer):
         self.eventbus.publish(
             HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
                                   times[2] - times[1], times[2] - times[0],
-                                  len(res.text)))
+                                  len(res.text), traceid=self.traceids))
 
       except requests.exceptions.ConnectionError as e:
         self.logger.error('Unable to connect to {}'.format(url))
