@@ -4,8 +4,10 @@ from threading import Timer
 from performance.driver.core.events import isEventMatching
 
 DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\),]*))?')
-DSL_ATTRIB = re.compile(r'(?:^|,)(\w+)([=~!><]+)([^,]+)')
+DSL_ATTRIB = re.compile(r'(?:^|,)([\w\.\']+)([=~!><]+)([^,]+)')
 DSL_FLAGS = re.compile(r'\:([^\:]+)')
+
+REPLACE_DICT = re.compile(r"\.\'(.*?)\'")
 
 global_single_events = {}
 
@@ -78,7 +80,11 @@ class EventFilterSession:
       # Handle attributes
       attribCheckFailed = False
       for attribCheckFn in attribChecks:
-        if not attribCheckFn(event):
+        try:
+          if not attribCheckFn(event):
+            attribCheckFailed = True
+            break
+        except KeyError:
           attribCheckFailed = True
           break
       if attribCheckFailed:
@@ -270,7 +276,7 @@ class EventFilter:
     for (event, exprAttrib, flags) in matches:
 
       # Calculate event id
-      eid = event + exprAttrib + flags
+      eid = event + ':' + exprAttrib + ':' + flags
 
       # Process sub-tokens
       flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
@@ -291,6 +297,9 @@ class EventFilter:
       attrib = []
       if exprAttrib:
         for (left, op, right) in DSL_ATTRIB.findall(exprAttrib):
+
+          # Expand .'xx' to ['xxx']
+          left = REPLACE_DICT.sub(lambda x: '["{}"]'.format(x.group(1)), left)
 
           # Shorthand some ops
           if op == "=":
@@ -314,7 +323,7 @@ class EventFilter:
 
           # Handle operator match
           else:
-            if not right.isnumeric():
+            if not right.isnumeric() and not right[0] in ('"', "'"):
               right = '"{}"'.format(right.replace('"', '\\"'))
             attrib.append(
                 eval('lambda event: event.{} {} {}'.format(left, op, right)))
