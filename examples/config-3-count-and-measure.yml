@@ -1,0 +1,116 @@
+# ----------------------------------------------------------- #
+# Example 3: Count and measure metrics based on events        #
+# ----------------------------------------------------------- #
+# This example demonstrates how to use `CountTracker` and     #
+# `DurationTracker` trackers in order to extract counters     #
+# and duration metrics.                                       #
+# ----------------------------------------------------------- #
+
+# Global test configuration
+# ===========================
+config:
+
+  # The name of the test
+  title: "Config 3 - Count and Measure"
+
+  # Repeat tests 3 times to increase statistics
+  repeat: 3
+
+  # The one parameter we are going to modify
+  parameters:
+    - name: param1
+
+  # The one two metrics we are monitoring
+  metrics:
+    - name: count1
+      summarize: [mean_err]
+
+    - name: measure1
+      summarize: [mean_err]
+
+# Policy configuration
+# ===========================
+policies:
+
+  # We are going to use the multi-variable explorer policy since it's
+  # simple to configure. This policy is going to change the `param1`
+  # parameter.
+  - class: policy.MultivariableExplorerPolicy
+
+    # The following rules describe the permutation matrix
+    matrix:
+
+      # We are going to sweep `param1` from 1 to 10 with step 1
+      param1:
+        type: range
+        min: 100
+        max: 1000
+        step: 100
+
+    # We are going to advance to the next value when the process that
+    # we launched exits.
+    events:
+      signal:
+        OK: CmdlineExitEvent
+
+# Channel configuration
+# ===========================
+channels:
+
+  # We are launching a shell script that is going to generate a couple of random
+  # numbers. We are going to count the duration between some numbers and the
+  # presence of some others
+  - class: channel.CmdlineChannel
+    cmdline: "for i in {0..1000}; do echo I picked $(($RANDOM % {{param1}})); done"
+    shell: yes
+    restart: no
+
+# Observer configuration
+# ===========================
+observers:
+
+  # We are observing the standard output of the CmdlineChannel and
+  # we are tracking for interesting tokens that we are going to
+  # convert into metrics at later time.
+  - class: observer.LogStaxObserver
+
+    # An array of filters to apply on every line
+    filters:
+      - type: grok
+
+        # The "message" field contains the full log line. The GROK
+        # pattern below is extracting the measured value into a field
+        # called `logStaxField1` for further processing.
+        match:
+          message: "I picked %{NUMBER:logStaxField1}"
+
+
+# Tracker configuration
+# ===========================
+trackers:
+
+  # Count how many times we saw the number 50
+  - class: tracker.CountTracker
+    metric: count1
+
+    # We are counting LogStax observations, whose `logStaxField1` field
+    # equals to "50"
+    events: LogStaxMessageEvent[fields.'logStaxField1'='50']
+
+  # Count the distance between number 10 and 60
+  - class: tracker.DurationTracker
+    metric: measure1
+
+    # We are counting the duration between the first counter of '10' and the
+    # last encounter of '60' within each testing session.
+    events:
+      start: LogStaxMessageEvent[fields.'logStaxField1'='10']:first
+      end: LogStaxMessageEvent[fields.'logStaxField1'='60']:last
+
+
+# Reporter configuration
+# ===========================
+reporters:
+
+  # We are going to generate a PNG plot with the results
+  - class: reporter.PlotReporter

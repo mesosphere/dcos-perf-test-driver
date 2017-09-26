@@ -1,9 +1,0 @@
-
-#################################################
-# Global test configuration
-#################################################
-reporters:
-
-  # Dump summarized CSV values to results/results.csv
-  - class: reporter.CSVReporter
-    filename: results/results.csv

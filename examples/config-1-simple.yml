@@ -1,0 +1,104 @@
+# ----------------------------------------------------------- #
+# Example 1: Simple introduction to perf driver               #
+# ----------------------------------------------------------- #
+# This test is going to launch a dummy bash script that       #
+# echoes back the arguments and is going to collect it's      #
+# output as a parameter. The resulting plot should be a       #
+# straight line.                                              #
+# ----------------------------------------------------------- #
+
+# Global test configuration
+# ===========================
+config:
+
+  # The name of the test
+  title: "Config 1 - Simple Example"
+
+  # The one parameter we are going to modify
+  parameters:
+    - name: param1
+
+  # The one parameter we are monitoring
+  metrics:
+    - name: metric1
+      summarize: [mean]
+
+# Policy configuration
+# ===========================
+policies:
+
+  # We are going to use the multi-variable explorer policy since it's
+  # simple to configure. This policy is going to change the `param1`
+  # parameter.
+  - class: policy.MultivariableExplorerPolicy
+
+    # The following rules describe the permutation matrix
+    matrix:
+
+      # We are going to sweep `param1` from 1 to 100 with step 1
+      param1:
+        type: range
+        min: 1
+        max: 100
+        step: 1
+
+    # We are going to advance to the next value when the process that
+    # we launched exits.
+    events:
+      signal:
+        OK: CmdlineExitEvent
+
+# Channel configuration
+# ===========================
+channels:
+
+  # We are launching the given script every time the `param1`
+  # parameter is changed by the policy.
+  - class: channel.CmdlineChannel
+    cmdline: "echo you said {{param1}}"
+    shell: yes
+    restart: no
+
+# Observer configuration
+# ===========================
+observers:
+
+  # We are observing the standard output of the CmdlineChannel and
+  # we are tracking for interesting tokens that we are going to
+  # convert into metrics at later time.
+  - class: observer.LogStaxObserver
+
+    # An array of filters to apply on every line
+    filters:
+      - type: grok
+
+        # The "message" field contains the full log line. The GROK
+        # pattern below is extracting the measured value into a field
+        # called `logStaxField1` for further processing.
+        match:
+          message: "you said %{NUMBER:logStaxField1}"
+
+
+# Tracker configuration
+# ===========================
+trackers:
+
+  # We are receiving the observations of `LogStaxObserver` and we are
+  # tracking the collected value as a parameter value
+  - class: tracker.LogStaxTracker
+    collect:
+
+      # We are assigning to the metric `metric1` the value of the
+      # field `logStaxField1`
+      - metric: metric1
+
+        # Note: `value` is a python expression. In your scope you can
+        # access the fields exposed by their names.
+        value: "int(logStaxField1)"
+
+# Reporter configuration
+# ===========================
+reporters:
+
+  # We are going to generate a PNG plot with the results
+  - class: reporter.PlotReporter

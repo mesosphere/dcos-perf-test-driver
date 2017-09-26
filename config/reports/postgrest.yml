@@ -1,9 +1,0 @@
-
-#################################################
-# Global test configuration
-#################################################
-reporters:
-
-  # Report results to PostgREST endpoint
-  - class: reporter.PostgRESTReporter
-    url: "http://127.0.0.1:4000"
