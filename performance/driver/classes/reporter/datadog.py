@@ -8,7 +8,7 @@ from performance.driver.core.classes import Reporter
 #       the logic of the file itself.
 try:
   from datadog import initialize, api
-except ModuleNotFoundError:
+except ImportError:
   import logging
   logging.error('One or more libraries required by DataDogReporter were not'
                 'installed. The reporter will not work.')

@@ -6,7 +6,7 @@ import itertools
 #       the logic of the file itself.
 try:
   import numpy as np
-except ModuleNotFoundError:
+except ImportError:
   import logging
   logging.error('One or more libraries required by MultiStepPolicy were not'
                 'installed. The policy will not work.')

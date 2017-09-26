@@ -12,7 +12,7 @@ from performance.driver.core.classes import Reporter
 try:
   import boto3
   from botocore.exceptions import ClientError
-except ModuleNotFoundError:
+except ImportError:
   import logging
   logging.error('One or more libraries required by S3Reporter were not'
                 'installed. The reporter will not work.')

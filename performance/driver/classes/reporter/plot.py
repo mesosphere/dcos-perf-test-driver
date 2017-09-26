@@ -12,7 +12,7 @@ try:
   import matplotlib.pyplot as plt
   import matplotlib.cm as cm
   import scipy.interpolate
-except ModuleNotFoundError:
+except ImportError:
   import logging
   logging.error('One or more libraries required by PlotReporter were not'
                 'installed. The reporter will not work.')

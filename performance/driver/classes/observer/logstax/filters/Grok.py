@@ -5,7 +5,7 @@ from .Basic import BasicFilter
 #       the logic of the file itself.
 try:
   from pygrok import Grok
-except ModuleNotFoundError:
+except ImportError:
   import logging
   logging.error(
       'One or more libraries required by Grok Logstax Filter were not'

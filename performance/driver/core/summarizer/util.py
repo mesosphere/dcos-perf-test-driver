@@ -6,7 +6,7 @@ from .timeseries import SummarizerAxisTimeseries
 try:
   import numpy as np
   from scipy import stats
-except ModuleNotFoundError:
+except ImportError:
   import logging
   logging.error(
       'One or more libraries required by core.classes.summarizer.util'
