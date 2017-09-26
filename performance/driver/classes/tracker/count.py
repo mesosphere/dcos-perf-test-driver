@@ -48,7 +48,7 @@ class CountTracker(Tracker):
 
         # The event to count
         # (This can be a filter expression)
-        event: SomeEvent
+        events: SomeEvent
 
   This tracker always operates within a tracking session, initiated by a
   ``ParameterUpdateEvent`` and terminated by the next ``ParameterUpdateEvent``,
