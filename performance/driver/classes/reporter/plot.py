@@ -147,7 +147,7 @@ class PlotReporter(Reporter):
 
         # [Optional] The colormap to use when plotting 2D plots
         # Valid options from: https://matplotlib.org/examples/color/colormaps_reference.html
-        colormap: plasma
+        colormap: winter
 
         # [Optional] Plot the raw values as a scatter plot and not the summarised
         raw: False
@@ -350,7 +350,7 @@ class PlotReporter(Reporter):
     """
 
     # Configurable variables
-    cmap = plt.get_cmap(self.getConfig('colormap', 'plasma'))
+    cmap = plt.get_cmap(self.getConfig('colormap', 'winter'))
 
     # Populate axis values
     p = list(self.generalConfig.parameters.values())
