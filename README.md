@@ -4,12 +4,12 @@
 
 This utility is the test harness that drives the _Performance_ and _Scale_ tests. 
 
-The full documentation manual is maintained in the [docs](docs) folder.
+The full documentation manual is maintained in readthedocs.io and [you can find it here](http://dcos-performance-test-driver.readthedocs.io/en/latest). 
 
 ## Installation
 
 The `dcos-perf-test-driver` can be installed as a standard python module
-using `pip`. However since the project is not publicly available in PyPI
+using `pip`. However since the project is not yet available in PyPI
 so you will need to point it to the github repository:
 
 ```
@@ -24,11 +24,7 @@ be now available.
 The `dcos-perf-test-driver` requires a configuration YAML file that describes the testing set-up. To launch the driver with your configuration, simply use:
 
 ```
-dcos-perf-test-driver ./path/to/config.yml \
-  -D define=property \
-  ...
-  -M metadata=value \
-  ...
+dcos-perf-test-driver ./path/to/config.yml
 ```
 
-To learn more about the structure of the configuration file refer to the documentation in the [docs](docs) folder.
+To learn more about the structure of the configuration file refer to the [examples](examples) directory or have a look to the [introduction tutorial](http://dcos-performance-test-driver.readthedocs.io/en/latest/general/Tutorial.html)

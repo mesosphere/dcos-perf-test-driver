@@ -12,7 +12,7 @@ This example is passing the values  `param1=` 1, 2, 3, ... 100 into a dummy shel
 
 The generated plot should look like this:
 
-![config-1-plot](results/config-1_plot-metric1.png)
+![config-1-plot](/examples/results/config-1_plot-metric1.png?raw=true)
 
 ## Config 2 - Two Dimentions
 
@@ -24,7 +24,7 @@ This example exploring two parameters, `param1=` 1, 2, 3, ... 10 and `param2=` 1
 
 The generated plot should look like this:
 
-![config-2-plot](results/config-2_plot-metric1-mean.png)
+![config-2-plot](/examples/results/config-2_plot-metric1-mean.png?raw=true)
 
 ## Config 3 - Count and Measure
 
@@ -39,5 +39,6 @@ This example is modifying a parameter `param1=` 100, 200, 300, ... 1000 and for 
 
 The generated plots should look like this:
 
-![config-3-plot-1](results/config-3_plot-count1.png)
-![config-3-plot-2](results/config-3_plot-measure1.png)
+![config-3-plot-1](/examples/results/config-3_plot-count1.png?raw=true)
+
+![config-3-plot-2](/examples/results/config-3_plot-measure1.png?raw=true)
