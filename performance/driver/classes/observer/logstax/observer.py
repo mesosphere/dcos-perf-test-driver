@@ -1,7 +1,7 @@
 import re
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import Event, LogLineEvent, isEventMatching
+from performance.driver.core.events import Event, ParameterUpdateEvent, LogLineEvent, isEventMatching
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 from .codecs import CodecTypes
@@ -12,8 +12,8 @@ class LogStaxMessageEvent(Event):
   def __init__(self, message, **kwargs):
     super().__init__(**kwargs)
 
-    # Extract tokens and fields
-    self.tokens = message.tokens
+    # Extract tags and fields
+    self.tags = message.tags
     self.fields = message.fields
 
 
@@ -28,8 +28,8 @@ class LogStaxObserver(Observer):
     observers:
       - class: observer.LogStaxObserver
 
-        # An array of  rules to apply on every line
-        rules:
+        # An array of filters to apply on every line
+        filters:
 
           # Grok Pattern Matching
           # ---------------------
@@ -95,7 +95,7 @@ class LogStaxObserver(Observer):
   ``LogStaxTracker`` in order to extract useful metrics.
   """
 
-  @subscribesToHint(LogLineEvent)
+  @subscribesToHint(LogLineEvent, ParameterUpdateEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     config = self.getRenderedConfig()
@@ -132,6 +132,16 @@ class LogStaxObserver(Observer):
     # Stop thread at teardown
     self.eventbus.subscribe(self.handleAnyEvent)
 
+    # Keep trace ID of the latest parameter update
+    self.traceids = None
+    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
+
+  def handleParameterUpdate(self, event):
+    """
+    Update the eventID to use on the log line events
+    """
+    self.traceids = event.traceids
+
   def handleLine(self, line):
     """
     Process the given log line, regardless of it's origin
@@ -167,8 +177,9 @@ class LogStaxObserver(Observer):
     """
     Handle a completed message
     """
-    print(message['message'])
-    self.publish(LogStaxMessageEvent(message))
+    self.eventbus.publish(
+      LogStaxMessageEvent(message, traceid=self.traceids)
+    )
 
   def handleAnyEvent(self, event):
     """
