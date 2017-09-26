@@ -17,7 +17,7 @@ class LogStaxRule:
     self.tracker = tracker
     self.traceids = None
 
-    self.metricName = config.get['metric']
+    self.metricName = config['metric']
 
     self.filterAllTags = config.get('all_tags', config.get('tags', []))
     self.filterSomeTags = config.get('some_tags', [])
@@ -43,7 +43,7 @@ class LogStaxRule:
     """
     Set the trace ID from the given event
     """
-    self.traceids = event.traceid
+    self.traceids = event.traceids
 
   def handleTraceIdCandidateEvent(self, event):
     """
@@ -105,7 +105,7 @@ class LogStaxRule:
 
     # Send value update
     self.tracker.trackMetric(self.metricName,
-                             self.tokenCastFn[event.name](event.value),
+                             value,
                              self.traceids)
 
 
@@ -167,10 +167,10 @@ class LogStaxTracker(Tracker):
     config = self.getRenderedConfig()
     self.rules = []
     for rule in config.get('collect', []):
-      self.rules.append(LogStaxRule(rule))
+      self.rules.append(LogStaxRule(rule, self))
 
     # Subscribe to all events
-    self.eventbus.subscribe(self.handleAnyEvent)
+    self.eventbus.subscribe(self.handleAnyEvent, order=1)
 
   def handleAnyEvent(self, event):
     """
