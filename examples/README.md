@@ -32,7 +32,9 @@ The generated plot should look like this:
 dcos-perf-test-driver.py examples/config-3-count-and-measure.yml
 ```
 
-This example is modifying a parameter `param1=` 100, 200, 300, ... 1000 and for every value is launching a dummy shell script that generates 1000 random numbers. It then:
+This example is modifying a parameter `param1=` 100, 200, 300, ... 1000 and for every value is launching a dummy shell script that generates 1000 random numbers. In addition, it repeats the tests 3 times in order to increased statistics.
+
+It then:
 
 * Counts the occurrence of value `50` in the results into the `count1` metric
 * Measures the duration between the first value `10` until the last value `60` into the `measure1` metric.
