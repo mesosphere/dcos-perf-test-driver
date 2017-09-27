@@ -1,3 +1,4 @@
+import os
 from performance.driver.core.classes import Reporter
 
 
@@ -128,7 +129,14 @@ class CSVReporter(Reporter):
       for name, value in testCase['flags'].items():
         csv.col(name).set(str(value))
 
+    # Create missing directory for the files
+    filename = config.get('filename', 'results.csv')
+    os.makedirs(
+      os.path.abspath(os.path.dirname(filename)),
+      exist_ok=True
+    )
+
     # Dump csv file
     config = self.getRenderedConfig()
     csv.saveTo(
-        config.get('filename', 'results.csv'), config.get('separator', ','))
+        filename, config.get('separator', ','))

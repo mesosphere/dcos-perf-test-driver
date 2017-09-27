@@ -1,3 +1,4 @@
+import os
 import json
 
 from requests.structures import CaseInsensitiveDict
@@ -46,7 +47,15 @@ class RawEventsReporter(Reporter):
     super().__init__(*args)
 
     config = self.getRenderedConfig()
-    self.file = open(config.get('filename', 'events.dump'), 'w')
+    filename = config.get('filename', 'events.dump')
+
+    # Create missing directory for the files
+    os.makedirs(
+      os.path.abspath(os.path.dirname(filename)),
+      exist_ok=True
+    )
+
+    self.file = open(filename, 'w')
     self.eventbus.subscribe(self.handleEvent)
 
   def handleEvent(self, event):

@@ -1,3 +1,4 @@
+import os
 import json
 import datetime
 from performance.driver.core.classes import Reporter
@@ -122,6 +123,12 @@ class RawReporter(Reporter):
     # Get the fiename to write into
     config = self.getRenderedConfig()
     filename = config.get('filename', 'results-raw.json')
+
+    # Create missing directory for the files
+    os.makedirs(
+      os.path.abspath(os.path.dirname(filename)),
+      exist_ok=True
+    )
 
     # Dump the raw timeseries
     with open(filename, 'w') as f:

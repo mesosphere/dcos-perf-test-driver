@@ -1,3 +1,4 @@
+import os
 import datetime
 
 from performance.driver.core.classes import Reporter
@@ -32,8 +33,16 @@ class LogReporter(Reporter):
 
     config = self.getRenderedConfig()
     mode = 'a' if config.get('append', False) else 'w'
+    filename = config.get('filename', 'trace.log')
+
+    # Create missing directory for the files
+    os.makedirs(
+      os.path.abspath(os.path.dirname(filename)),
+      exist_ok=True
+    )
+
     self.addTimestamp = config.get('timestamp', False)
-    self.file = open(config.get('filename', 'trace.log'), mode)
+    self.file = open(filename, mode)
     self.flushTimer = 0
 
     self.eventbus.subscribe(self.handleLogLine, events=(LogLineEvent, ))

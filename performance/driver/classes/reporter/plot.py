@@ -1,3 +1,4 @@
+import os
 import requests
 from performance.driver.core.classes import Reporter
 
@@ -652,6 +653,12 @@ class PlotReporter(Reporter):
                 map(lambda v: ('refmeta:{}'.format(v[0]), v[1]), reference[
                     'meta'].items())))
         refConfig = renderedConfig['reference']
+
+    # Create missing directory for the files
+    os.makedirs(
+      os.path.abspath(os.path.dirname(config.get('prefix', 'plot-'))),
+      exist_ok=True
+    )
 
     if config.get('raw', False):
       self.plot_raw(config, summarizer, reference, refConfig)
