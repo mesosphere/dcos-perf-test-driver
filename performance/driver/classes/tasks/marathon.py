@@ -6,7 +6,7 @@ import time
 import json
 
 from performance.driver.core.classes import Task
-from performance.driver.core.events import ParameterUpdateEvent
+from performance.driver.core.events import ParameterUpdateEvent, TeardownEvent
 from ..observer.marathonevents import MarathonDeploymentSuccessEvent, \
   MarathonDeploymentFailedEvent
 
@@ -33,6 +33,8 @@ class MarathonDeploymentMonitorTask(Task):
     self.trackDeployments = []
     self.eventbus.subscribe(self.handleMarathonDeploymentCompletionEvent, \
       events=(MarathonDeploymentSuccessEvent,MarathonDeploymentFailedEvent))
+    self.eventbus.subscribe(self.handleTeardown, \
+      events=(TeardownEvent,))
 
   def getHeaders(self):
     """
@@ -45,6 +47,14 @@ class MarathonDeploymentMonitorTask(Task):
       headers = {'Authorization': 'token={}'.format(dcos_auth_token)}
 
     return headers
+
+  def handleTeardown(self, event):
+    """
+    Teardown events abort every lingering task
+    """
+    with self.cv:
+      self.trackDeployments = []
+      self.cv.notify()
 
   def handleMarathonDeploymentCompletionEvent(self, event):
     """
