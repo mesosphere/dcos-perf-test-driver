@@ -2,6 +2,7 @@ import re
 from threading import Timer
 
 from performance.driver.core.events import isEventMatching
+from performance.driver.core.utils import parseTimeExpr
 
 DSL_TOKENS = re.compile(r'(\*|\w+)(?:\[(.*?)\])?(\:(?:\w[\:\w\(\),]*))?')
 DSL_ATTRIB = re.compile(r'(?:^|,)([\w\.\']+)([=~!><]+)([^,]+)')
@@ -10,34 +11,6 @@ DSL_FLAGS = re.compile(r'\:([^\:]+)')
 REPLACE_DICT = re.compile(r"\.\'(.*?)\'")
 
 global_single_events = {}
-
-
-def getTime(timeExpr):
-  """
-  Convert a time expression (ex. 1s 5m 1us 1ms) to a float seconds value
-  """
-  scale = 1
-  if timeExpr.endswith('us'):
-    scale = 1 / 1000000
-    timeExpr = timeExpr[:-2]
-  elif timeExpr.endswith('ms'):
-    scale = 1 / 1000
-    timeExpr = timeExpr[:-2]
-  elif timeExpr.endswith('s'):
-    scale = 1
-    timeExpr = timeExpr[:-1]
-  elif timeExpr.endswith('m'):
-    scale = 60
-    timeExpr = timeExpr[:-1]
-  elif timeExpr.endswith('h'):
-    scale = 3600
-    timeExpr = timeExpr[:-1]
-
-  try:
-    value = float(timeExpr)
-    return value * scale
-  except ValueError:
-    return None
 
 
 class EventFilterSession:
@@ -113,7 +86,7 @@ class EventFilterSession:
         global_single_events[eid] = event
         break
       if 'after' in flags:
-        time = getTime(flagParameters['after'])
+        time = parseTimeExpr(flagParameters['after'])
         if time is None:
           raise ValueError(
               'Event selector `:after({})` contains an invalid time expression'.
