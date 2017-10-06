@@ -1,6 +1,8 @@
 import logging
 import signal
+import sys
 import threading
+import traceback
 import time
 
 from .eventbus import EventBus, EventBusSubscriber
@@ -103,6 +105,27 @@ class Session(EventBusSubscriber):
     self.eventbus.publish(RunTaskCompletedEvent(event))
     return True
 
+  def force_interrupt(self, *argv):
+    """
+    In case the user forced the interrupt, something might be wrong. Perform
+    a debug stack trace in order to troubleshoot such cases.
+    """
+
+    # Restore signal handler (to cover cases where the code below failes)
+    signal.signal(signal.SIGINT, self.prevSigHandler)
+
+    # Debug traces
+    code = []
+    for threadId, stack in sys._current_frames().items():
+      self.logger.debug("Thread {}".format(threadId))
+      for filename, lineno, name, line in traceback.extract_stack(stack):
+        self.logger.debug("  File: {}, line {}, in {}".format(filename, lineno, name))
+        if line:
+          self.logger.debug("    {}".format(line.strip()))
+
+    # Call the previous signal handler
+    self.prevSigHandler(*argv)
+
   @publishesHint(InterruptEvent)
   def interrupt(self, *argv):
     """
@@ -112,7 +135,7 @@ class Session(EventBusSubscriber):
         'Tests interrupted; trying to report. Interrupt again to force quit')
 
     # Restore signal handler
-    signal.signal(signal.SIGINT, self.prevSigHandler)
+    signal.signal(signal.SIGINT, self.force_interrupt)
 
     # Dispatch the interrupt signal that will make all policies to terminate
     # as soon as possible. This interrupt will be injected in-frame, meaning
