@@ -269,7 +269,7 @@ class MarathonUpdateChannel(Channel):
 
       # Filter by name
       if 'filter' in action:
-        apps = filter(lambda x: re.match(action['filter'], x['id']), apps)
+        apps = list(filter(lambda x: re.match(action['filter'], x['id']), apps))
 
       # Shuffle
       if action.get('shuffle', True):
@@ -290,6 +290,15 @@ class MarathonUpdateChannel(Channel):
         # Apply patch
         action = action_tpl.apply(action_params)
         patch = action.get('patch', {})
+
+        # If patch is string, parse it as JSON
+        if type(patch) is str:
+          try:
+            patch = json.loads(patch)
+          except json.JSONDecodeError:
+            self.logger.error('Unable to parse the `patch` property')
+            return
+
         self.logger.debug('Patching {} with {}'.format(app['id'], patch))
         app.update(patch)
 
@@ -321,11 +330,11 @@ class MarathonUpdateChannel(Channel):
         if response.status_code < 200 or response.status_code >= 300:
           self.logger.debug("Server responded with: {}".format(response.text))
           self.logger.error(
-              'Unable to update app {} (HTTP response {}: {})'.format((app[
-                  'id'], response.status_code, response.text)))
+              'Unable to update app {} (HTTP response {}: {})'.format(app.get(
+                  'id', '<unknown>'), response.status_code, response.text))
           self.eventbus.publish(
               MarathonDeploymentRequestFailedEvent(
-                  app['id'], response.status_code, traceid=traceids))
+                  app['id'], response.status_code, response.text, traceid=traceids))
           continue
 
         self.logger.debug('App updated successfully')
