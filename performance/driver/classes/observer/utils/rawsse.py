@@ -10,6 +10,13 @@ import ssl
 from urllib.parse import urlparse
 from socket import socket, AF_INET, SOCK_STREAM
 
+class RawSSEDisconnectedError(IOError):
+  """
+  Exception raised when the connection is interrupted
+  """
+
+  def __init__(self):
+    super().__init__("Disconnected")
 
 class ChunkedReader:
   """
@@ -117,8 +124,7 @@ class RawSSE:
     while not b'\r\n\r\n' in response:
       chunk = self.socket.recv(self.chunkSize)
       if not chunk:
-        self.socket.shutdown(2)
-        self.socket.close()
+        self.close()
         raise IOError('Did not find a valid HTTP response')
 
       # Collect chunks since the headers might not fit in a
@@ -135,8 +141,7 @@ class RawSSE:
 
     # Check HTTP response status
     if int(status) != 200:
-      self.socket.shutdown(2)
-      self.socket.close()
+      self.close()
       raise IOError('Remote server responded with an HTTP {} {}' \
         .format(status, status_str))
 
@@ -159,15 +164,14 @@ class RawSSE:
               self.socket,
           ], [], [], 5)
         except select.error:
-          self.socket.shutdown(2)
-          self.socket.close()
-          raise IOError('Disconnected')
+          self.close()
+          raise RawSSEDisconnectedError()
 
         # Handle read events
         if len(rd) > 0:
           chunk = self.socket.recv(self.chunkSize)
           if not chunk:
-            raise IOError('Disconnected')
+            raise RawSSEDisconnectedError()
 
           # Feed data to the transfer manager
           reader.feed(chunk)
@@ -208,9 +212,17 @@ class RawSSE:
     return eventGenerator()
 
   def __exit__(self, *args):
-    self.socket.shutdown(2)
-    self.socket.close()
+    self.close()
 
   def close(self):
-    self.socket.shutdown(2)
-    self.socket.close()
+    if not self.socket:
+      return
+
+    try:
+      self.socket.shutdown(2)
+    except Exception as e:
+      pass
+    try:
+      self.socket.close()
+    except Exception as e:
+      pass

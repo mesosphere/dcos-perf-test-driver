@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-from .utils import RawSSE
+from .utils import RawSSE, RawSSEDisconnectedError
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
@@ -150,6 +150,18 @@ class MarathonEventsObserver(Observer):
     self.eventEmitterThread = threading.Thread(
         target=self.eventEmitterThreadHandler)
     self.eventEmitterThread.start()
+
+  def allTraceIDs(self):
+    """
+    Return the trace IDs of all affected instances
+    """
+    traceids = set()
+
+    with self.instanceTraceIDsLock:
+      for key, ids in self.instanceTraceIDs.items():
+        traceids.update(ids)
+
+    return list(traceids)
 
   def getTraceIDs(self, ids):
     """
@@ -371,6 +383,7 @@ class MarathonEventsObserver(Observer):
     headers['Accept'] = 'text/event-stream'
 
     # Bind on event stream
+    is_connected = False
     while self.running:
       #
       # Process server-side events in per-line basis. The SSE protocol has the
@@ -391,6 +404,12 @@ class MarathonEventsObserver(Observer):
               if not self.running:
                 break
 
+              # Broadcast connected on first event
+              if not is_connected:
+                is_connected = True
+                self.eventbus.publish(MarathonSSEConnectedEvent(
+                  traceid=self.allTraceIDs()))
+
               # Load event name and data
               eventName = event.get('event')
               eventData = json.loads(event.get('data'))
@@ -402,9 +421,20 @@ class MarathonEventsObserver(Observer):
             if not self.running:
               return
 
+            # Broadcast disconnected on first error
+            if is_connected:
+              is_connected = False
+              self.eventbus.publish(MarathonSSEDisconnectedEvent(
+                traceid=self.allTraceIDs()))
+
+            # Handle errors according to type
             if isinstance(e, requests.exceptions.ConnectionError):
               self.logger.error(
-                  'Unable to connect to the remote host. Retrying in 1s sec.')
+                  'Unable to connect to the remote host. Retrying in 1 sec.')
+              time.sleep(1)
+            elif isinstance(e, RawSSEDisconnectedError):
+              self.logger.error(
+                  'Marathon closed the SSE endpoint. Trying to connect again in 1 sec.')
               time.sleep(1)
             else:
               self.logger.error('Exception in the marathon events main loop')

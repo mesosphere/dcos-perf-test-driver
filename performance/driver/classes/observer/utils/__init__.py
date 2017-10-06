@@ -1,1 +1,1 @@
-from .rawsse import RawSSE
+from .rawsse import RawSSE, RawSSEDisconnectedError

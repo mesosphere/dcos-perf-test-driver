@@ -24,6 +24,17 @@ class MarathonSSEEvent(MarathonEvent):
     self.eventData = eventData
 
 
+class MarathonSSEDisconnectedEvent(MarathonEvent):
+  """
+  Raw SSE endpoint was disconnected
+  """
+
+class MarathonSSEConnectedEvent(MarathonEvent):
+  """
+  Raw SSE endpoint was connected
+  """
+
+
 class MarathonUpgradeEvent(MarathonEvent):
   """
   Base class for update events
