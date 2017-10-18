@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-from .utils import RawSSE, RawSSEDisconnectedError
+from .utils import CurlSSE, CurlSSEDisconnectedError
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
@@ -395,7 +395,7 @@ class MarathonEventsObserver(Observer):
       # ...
       #
       try:
-        self.activeSse = RawSSE(url, headers=headers)
+        self.activeSse = CurlSSE(url, headers=headers)
         with self.activeSse as rawsse:
           try:
             for event in rawsse:
@@ -432,7 +432,7 @@ class MarathonEventsObserver(Observer):
               self.logger.error(
                   'Unable to connect to the remote host. Retrying in 1 sec.')
               time.sleep(1)
-            elif isinstance(e, RawSSEDisconnectedError):
+            elif isinstance(e, CurlSSEDisconnectedError):
               self.logger.error(
                   'Marathon closed the SSE endpoint. Trying to connect again in 1 sec.')
               time.sleep(1)
@@ -452,5 +452,8 @@ class MarathonEventsObserver(Observer):
         else:
           self.logger.error('Exception while connecting to SSE event stream')
           self.logger.exception(e)
+
+        # Such failures usually take longer to recover from
+        time.sleep(5)
 
     self.logger.debug('Terminated event emitter thread')
