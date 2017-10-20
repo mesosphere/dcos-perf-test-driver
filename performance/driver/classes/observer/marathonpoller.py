@@ -215,7 +215,6 @@ class MarathonPollerObserver(Observer):
     elif self.connected:
       (diff_instances, diff_groups) = diffRootGroups(self.lastGroup, group)
       self.lastGroup = group
-      print(diff_instances, diff_groups)
 
       # Create one virtual deployments for every affected instance
       for inst in diff_instances:
