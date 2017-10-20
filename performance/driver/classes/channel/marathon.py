@@ -78,7 +78,8 @@ class MarathonDeployChannel(Channel):
 
     return headers
 
-  @publishesHint(MarathonDeploymentRequestedEvent)
+  @publishesHint(MarathonDeploymentStartedEvent, MarathonDeploymentRequestedEvent,
+    MarathonDeploymentRequestFailedEvent)
   def handleDeployment(self, deployment, parameters, url, traceids):
     """
     Handle deployment
@@ -234,6 +235,8 @@ class MarathonUpdateChannel(Channel):
 
     return headers
 
+  @publishesHint(MarathonDeploymentRequestedEvent, MarathonDeploymentStartedEvent,
+    MarathonDeploymentRequestFailedEvent)
   def handleUpdate_PatchApp(self, action, parameters, traceids):
     """
     Handle a `patch_app` action
