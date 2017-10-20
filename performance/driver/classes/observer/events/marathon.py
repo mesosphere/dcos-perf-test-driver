@@ -12,6 +12,11 @@ class MarathonStartedEvent(MarathonEvent):
   Marathon is up and accepting HTTP requests
   """
 
+class MarathonUnavailableEvent(MarathonEvent):
+  """
+  Marathon is up and accepting HTTP requests
+  """
+
 
 class MarathonSSEEvent(MarathonEvent):
   """
@@ -35,7 +40,7 @@ class MarathonSSEConnectedEvent(MarathonEvent):
   """
 
 
-class MarathonUpgradeEvent(MarathonEvent):
+class MarathonUpdateEvent(MarathonEvent):
   """
   Base class for update events
   """
@@ -46,37 +51,37 @@ class MarathonUpgradeEvent(MarathonEvent):
     self.instances = instances
 
 
-class MarathonGroupChangeSuccessEvent(MarathonUpgradeEvent):
+class MarathonGroupChangeSuccessEvent(MarathonUpdateEvent):
   def __init__(self, deployment, groupid, *args, **kwargs):
     super().__init__(deployment, [groupid], *args, **kwargs)
 
 
-class MarathonGroupChangeFailedEvent(MarathonUpgradeEvent):
+class MarathonGroupChangeFailedEvent(MarathonUpdateEvent):
   def __init__(self, deployment, groupid, reason, *args, **kwargs):
     super().__init__(deployment, [groupid], *args, **kwargs)
     self.reason = reason
 
 
-class MarathonDeploymentSuccessEvent(MarathonUpgradeEvent):
+class MarathonDeploymentSuccessEvent(MarathonUpdateEvent):
   def __init__(self, deployment, affectedInstances, *args, **kwargs):
     super().__init__(deployment, affectedInstances, *args, **kwargs)
 
 
-class MarathonDeploymentFailedEvent(MarathonUpgradeEvent):
+class MarathonDeploymentFailedEvent(MarathonUpdateEvent):
   def __init__(self, deployment, affectedInstances, *args, **kwargs):
     super().__init__(deployment, affectedInstances, *args, **kwargs)
 
 
-class MarathonDeploymentStatusEvent(MarathonUpgradeEvent):
+class MarathonDeploymentStatusEvent(MarathonUpdateEvent):
   def __init__(self, deployment, affectedInstances, *args, **kwargs):
     super().__init__(deployment, affectedInstances, *args, **kwargs)
 
 
-class MarathonDeploymentStepSuccessEvent(MarathonUpgradeEvent):
+class MarathonDeploymentStepSuccessEvent(MarathonUpdateEvent):
   def __init__(self, deployment, affectedInstances, *args, **kwargs):
     super().__init__(deployment, affectedInstances, *args, **kwargs)
 
 
-class MarathonDeploymentStepFailureEvent(MarathonUpgradeEvent):
+class MarathonDeploymentStepFailureEvent(MarathonUpdateEvent):
   def __init__(self, deployment, affectedInstances, *args, **kwargs):
     super().__init__(deployment, affectedInstances, *args, **kwargs)
