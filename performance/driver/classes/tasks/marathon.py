@@ -7,6 +7,7 @@ import json
 
 from performance.driver.core.classes import Task
 from performance.driver.core.events import ParameterUpdateEvent, TeardownEvent
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 from ..observer.marathonevents import MarathonDeploymentSuccessEvent, \
   MarathonDeploymentFailedEvent
 
@@ -19,6 +20,7 @@ class MarathonDeploymentMonitorTask(Task):
   Base class that subscribes to the event bus and waits for a success event
   """
 
+  @subscribesToHint(MarathonDeploymentSuccessEvent, MarathonDeploymentFailedEvent, TeardownEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
 
@@ -29,10 +31,8 @@ class MarathonDeploymentMonitorTask(Task):
       raise ValueError('Missing `url` parameter')
 
     # Track delpoyments
-    self.cv = threading.Condition()
+    self.active = True
     self.trackDeployments = []
-    self.eventbus.subscribe(self.handleMarathonDeploymentCompletionEvent, \
-      events=(MarathonDeploymentSuccessEvent,MarathonDeploymentFailedEvent))
     self.eventbus.subscribe(self.handleTeardown, \
       events=(TeardownEvent,))
 
@@ -52,28 +52,46 @@ class MarathonDeploymentMonitorTask(Task):
     """
     Teardown events abort every lingering task
     """
-    with self.cv:
-      self.trackDeployments = []
-      self.cv.notify()
-
-  def handleMarathonDeploymentCompletionEvent(self, event):
-    """
-    Keep track of completed deployments
-    """
-    if event.deployment in self.trackDeployments:
-      with self.cv:
-        self.trackDeployments.remove(event.deployment)
-        self.cv.notify()
+    self.active = False
 
   def waitDeployments(self):
     """
-    Wait for deployment ID to complete
+    Wait for all tracked deployments are gone
     """
-    if len(self.trackDeployments) == 0:
-      return
-    with self.cv:
-      while len(self.trackDeployments) > 0:
-        self.cv.wait()
+    while self.active:
+      try:
+        response = requests.get(
+          '{}/v2/deployments'.
+          format(self.url),
+          verify=False,
+          headers=self.getHeaders())
+      except Exception as e:
+        self.logger.error('Exception {} while waiting for deployment to complete: {}'.format(type(e).__name__, str(e)))
+        break
+
+      if response.status_code < 200 or response.status_code >= 300:
+        self.logger.warn('Received unexpected HTTP {} response while waiting for deployment to complete'.format(response.status_code))
+        break
+
+      deployments = response.json()
+      if not type(deployments) is list:
+        self.logger.warn('Received unexpected deployments response from marathon')
+        break
+
+      hasDeployments = False
+      for deployment in deployments:
+        depl_id = deployment.get('id', None)
+        if depl_id in self.trackDeployments:
+          hasDeployments = True
+          break
+
+      # If there are no deployments pending, break
+      if not hasDeployments:
+        self.logger.debug('No pending deployments left')
+        break
+
+      # Wait for a sec before trying again
+      time.sleep(1)
 
 
 class RemoveAllApps(MarathonDeploymentMonitorTask):
