@@ -242,7 +242,11 @@ class JMXObserver(Observer):
         evaluate = self.metricsConfig[i].get('value', None)
         if not evaluate is None:
           evalContext['value'] = value
-          value = eval(evaluate, evalContext)
+          try:
+            value = eval(evaluate, evalContext)
+          except Exception as e:
+            self.logger.error('Error evaluating expression "{}": {}'.format(evaluate, e))
+            value = 0
 
         # Store value
         fields[name] = value
