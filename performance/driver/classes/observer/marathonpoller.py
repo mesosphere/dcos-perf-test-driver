@@ -122,16 +122,25 @@ class MarathonPollerObserver(Observer):
       "pods": []
     }
 
+  def cleanupInstanceDeployment(self, inst):
+    """
+    Remove records associated to the given instance
+    """
+    if inst in self.requestedDeployments:
+      self.requestedDeployments.remove(inst)
+    if inst in self.requestedDeploymentTimeout:
+      del self.requestedDeploymentTimeout[inst]
+    if inst in self.requestTraceIDs:
+      del self.requestTraceIDs[inst]
+
   @publishesHint(MarathonDeploymentFailedEvent)
   def failRequestedDeployment(self, inst):
     """
     Fail the specified requested deployment
     """
-    self.requestedDeployments.remove(inst)
-    del self.requestedDeploymentTimeout[inst]
-    del self.requestTraceIDs[inst]
-
-    self.eventbus.publish(MarathonDeploymentFailedEvent(None, inst))
+    self.logger.warn('Failing deployment {} due to timeout'.format(inst))
+    self.eventbus.publish(MarathonDeploymentFailedEvent(None, inst, traceid=self.requestTraceIDs.get(inst, None)))
+    self.cleanupInstanceDeployment(inst)
 
   def failAllPendingRequests(self):
     """
@@ -145,9 +154,12 @@ class MarathonPollerObserver(Observer):
     Fail all the requests that passed it's grace timeout
     """
     ts = time.time()
+    expire_ids = []
     for inst, timeout in self.requestedDeploymentTimeout.items():
-      if timeout >= ts:
-        self.failRequestedDeployment(inst)
+      if ts >= timeout:
+        expire_ids.append(inst)
+    for inst in expire_ids:
+      self.failRequestedDeployment(inst)
 
   def handleRequest(self, event):
     """
@@ -157,8 +169,9 @@ class MarathonPollerObserver(Observer):
     self.requestedDeployments.add(event.instance)
 
     # Set the deployment failure timeout
+    ts = time.time()
     if self.failureTimeout > 0:
-      self.requestedDeploymentTimeout[event.instance] = time.time() + self.failureTimeout
+      self.requestedDeploymentTimeout[event.instance] = ts + self.failureTimeout
 
   @publishesHint(MarathonStartedEvent, MarathonUnavailableEvent,
     MarathonDeploymentSuccessEvent, MarathonGroupChangeSuccessEvent)
@@ -219,15 +232,13 @@ class MarathonPollerObserver(Observer):
       # Create one virtual deployments for every affected instance
       for inst in diff_instances:
         self.eventbus.publish(MarathonDeploymentSuccessEvent(None, [inst], traceid=self.requestTraceIDs.get(inst, None)))
-        if inst in self.requestedDeployments:
-          self.requestedDeployments.remove(inst)
+        self.cleanupInstanceDeployment(inst)
 
       # Create virtual group deployments
       for grp in diff_groups:
         self.eventbus.publish(MarathonDeploymentSuccessEvent(None, [grp], traceid=self.requestTraceIDs.get(grp, None)))
         self.eventbus.publish(MarathonGroupChangeSuccessEvent(None, grp, traceid=self.requestTraceIDs.get(grp, None)))
-        if grp in self.requestedDeployments:
-          self.requestedDeployments.remove(grp)
+        self.cleanupInstanceDeployment(grp)
 
       # Fail expired requests
       self.failExpiredPendingRequests()
