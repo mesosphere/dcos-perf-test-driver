@@ -111,7 +111,7 @@ class CurlSSE:
             break
           if self.proc_subprocess.returncode == 0: # Gracefully disconnected
             raise CurlSSEDisconnectedError()
-          elif self.proc_subprocess.returncode in (5, 6, 7): # Connection error
+          elif self.proc_subprocess.returncode in (5, 6, 7, 52, 55, 56): # Connection or communication error
             raise IOError('A network error occurred while trying to connect to the endpoint')
           elif self.proc_subprocess.returncode in (22,): # HTTP Error
             raise IOError('An HTTP error occurred while trying to read from the endpoint')
