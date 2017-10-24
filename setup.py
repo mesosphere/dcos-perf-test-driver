@@ -62,6 +62,7 @@ setup(
 
   scripts=[
     'tools/dcos-ccm-tool',
-    'tools/dcos-pr-tool'
+    'tools/dcos-pr-tool',
+    'tools/perf-compare-tool'
   ]
 )

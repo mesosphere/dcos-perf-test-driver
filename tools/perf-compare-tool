@@ -1,0 +1,438 @@
+#!/usr/bin/env python
+import argparse
+import json
+import logging
+import math
+import numpy as np
+import os
+import re
+import requests
+import sys
+import time
+import warnings
+
+RE_URL = re.compile(r'^([\w+]+:)')
+
+class Dataset:
+  """
+  Internal representation of the raw values of a dataset
+  """
+
+  def __init__(self, contents):
+    self.config = contents.get('config', None)
+    self.raw = contents['raw']
+    self.axes = list(self.raw[0]['parameters'].keys())
+    self.metrics = list(self.raw[0]['values'].keys())
+
+  def dataPairs(self, axis, metric):
+    """
+    Collect all the interesting data pairs
+    """
+    pairs = []
+    for sample in self.raw:
+      xv = sample['parameters'][axis]
+      for value in sample['values'][metric]:
+        pairs.append(
+          (xv, value[1])
+        )
+    return np.array(pairs)
+
+  def metricConfig(self, metric, default=None):
+    """
+    Lookup metric configuration until we find the one we need
+    """
+    if not self.config:
+      return default
+    if not 'config' in self.config:
+      return default
+    if not 'metrics' in self.config['config']:
+      return default
+
+    # Return found conig
+    for conf in self.config['config']['metrics']:
+      if conf['name'] == metric:
+        return conf
+    return default
+
+  def axisConfig(self, metric, default=None):
+    """
+    Lookup metric configuration until we find the one we need
+    """
+    if not self.config:
+      return default
+    if not 'config' in self.config:
+      return default
+    if not 'parameters' in self.config['config']:
+      return default
+
+    # Return found conig
+    for conf in self.config['config']['parameters']:
+      if conf['name'] == metric:
+        return conf
+    return default
+
+def pf_plotDiff(axis, summ1, summ2, maxis, mmetric):
+  """
+  Difference between the two plots
+  """
+  y_diff = summ2[:,1] - summ1[:,1]
+  y_delta = np.sqrt( summ1[:,2] ** 2 / summ1[:,3] + summ2[:,2] ** 2 / summ2[:,3] )
+  y_z = y_diff / y_delta
+  # axis.errorbar(summ2[:,0], y_diff, yerr=y_delta, label="diff")
+  axis.plot(summ2[:,0], y_z)
+  axis.plot([0,np.max(summ2[:,0])], [0, 0], c='black')
+  axis.set_title(mmetric['name'])
+
+def pf_plotSumm(axis, summ1, summ2, maxis, mmetric):
+  """
+  Metric configuration
+  """
+  axis.errorbar(summ1[:,0], summ1[:,1], yerr=summ1[:,2])
+  axis.errorbar(summ2[:,0], summ2[:,1], yerr=summ2[:,2])
+  axis.set_title(mmetric['name'])
+
+def pf_plotQQ(axis, summ1, summ2, maxis, mmetric):
+  """
+  Metric configuration
+  """
+  axis.scatter(summ1[:,1], summ2[:,1])
+  lb = np.min(summ1[:,1])
+  ub = np.max(summ1[:,1])
+  axis.plot([lb, ub], [lb, ub])
+  axis.set_title(mmetric['name'])
+
+def calcDiffSD(summ1, summ2):
+  """
+  Calculate the standard deviation of the difference of the samples
+  """
+  y_diff = np.abs(summ2[:,1] - summ1[:,1])
+  y_sd = np.sqrt( summ1[:,2] ** 2 / summ1[:,3] + summ2[:,2] ** 2 / summ2[:,3] )
+
+  # Calculate the Z-score
+  with warnings.catch_warnings():
+    z_score = np.nan_to_num(y_diff / y_sd)
+
+  # Return the difference in sigmas
+  return np.sum(z_score) / len(z_score)
+
+def calcDiffOfMetrics(datasets1, datasets2, axis, metrics):
+  """
+  Calculate the difference of every metric
+  """
+  ans = {}
+
+  # Combine the metrics of all datasets
+  for metric in metrics:
+    points1 = rejectOutliers(normalizeAndMergeDatapoint(
+      list(map(lambda d: d.dataPairs(axis, metric), datasets1))
+    ), 4.0)
+    points2 = rejectOutliers(normalizeAndMergeDatapoint(
+      list(map(lambda d: d.dataPairs(axis, metric), datasets2))
+    ), 4.0)
+
+    # Normalize data points
+    (points1, points2) = normalizeOverlappingDatapoints(points1, points2)
+
+    # Summarize observations
+    summ1 = summarizeDatapoints(points1)
+    summ2 = summarizeDatapoints(points2)
+
+    ans[metric] = calcDiffSD(summ1, summ2)
+
+  return ans
+
+def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
+  """
+  Plots something
+  """
+  import matplotlib.pyplot as plt
+
+  # Generate plot figures
+  row_plots = 2
+  y = math.ceil(len(metrics) / row_plots)
+  x = min(len(metrics), row_plots)
+  f, axarr = plt.subplots(x, y)
+  x_i = 0
+  y_i = 0
+
+  # Get axis meta-data
+  meta_axis = datasets1[0].axisConfig(axis, {"name": axis, "units": ""})
+
+  # In case we have only one plot axarr will become scalar value
+  if x == 1 and y == 1:
+    axarr = np.array([np.array([axarr])])
+
+  # Combine the metrics of all datasets
+  for metric in metrics:
+    points1 = rejectOutliers(normalizeAndMergeDatapoint(
+      list(map(lambda d: d.dataPairs(axis, metric), datasets1))
+    ), 4.0)
+    points2 = rejectOutliers(normalizeAndMergeDatapoint(
+      list(map(lambda d: d.dataPairs(axis, metric), datasets2))
+    ), 4.0)
+
+    # Summarize observations
+    summ1 = summarizeDatapoints(points1)
+    summ2 = summarizeDatapoints(points2)
+
+    # Extract metric meta-data
+    meta_metric = datasets1[0].metricConfig(metric, {"name": metric, "units": ""})
+
+    # Call the plot function on the axis
+    plotFn(axarr[x_i, y_i], summ1, summ2, meta_axis, meta_metric)
+
+    # Advance to next plot
+    x_i += 1
+    if x_i >= x:
+      x_i = 0
+      y_i += 1
+
+  plt.show()
+
+def normalizeAndMergeDatapoint(pairList):
+  """
+  Compute the common overlapping set of points in the given list of pairs and
+  merge them together to increase the statistical accuracy.
+  """
+  ans = pairList[0]
+  for i in range(1, len(pairList)):
+    (ans, new) = normalizeOverlappingDatapoints(ans, pairList[i])
+    ans = np.concatenate([ans, new])
+
+  return ans
+
+def normalizeOverlappingDatapoints(pairs1, pairs2):
+  """
+  Processes the two data pairs and returns the common subset of data points.
+  If some data points are missing, this function will do a linear interpolation
+  between the neighboring two points.
+  """
+
+  dp1_x = np.unique(pairs1[:,0])
+  dp2_x = np.unique(pairs2[:,0])
+
+  # Get the maximum overlapping data bounds since we don't want to
+  # extrapolate data. We only interpolate.
+  min_x = max(np.min(dp1_x), np.min(dp2_x))
+  max_x = min(np.max(dp1_x), np.max(dp2_x))
+
+  # Filter-out results
+  dp1_x = dp1_x[np.logical_and(dp1_x >= min_x, dp1_x <= max_x)]
+  dp2_x = dp2_x[np.logical_and(dp2_x >= min_x, dp2_x <= max_x)]
+
+  # Check which missing x values we have in either of datasets
+  missing_1 = []
+  missing_2 = []
+  for i in dp1_x:
+    if not i in dp2_x:
+      missing_1.append(i)
+  for i in dp2_x:
+    if not i in dp1_x:
+      missing_2.append(i)
+
+  # Interpolate data points on x
+  interp1 = np.array(list(zip(missing_1, np.interp(missing_1, pairs1[:,0], pairs1[:,1]))))
+  interp2 = np.array(list(zip(missing_2, np.interp(missing_2, pairs2[:,0], pairs2[:,1]))))
+
+  # Make sure shape is correct on empty arrays
+  if not len(interp1):
+    interp1.shape = (0,2)
+  if not len(interp2):
+    interp2.shape = (0,2)
+
+  # Filter and combine results
+  return (
+    np.concatenate([interp1, list(filter(lambda xy: xy[0] >= min_x and xy[0] <= max_x, pairs1))]),
+    np.concatenate([interp2, list(filter(lambda xy: xy[0] >= min_x and xy[0] <= max_x, pairs2))])
+  )
+
+def rejectOutliers(pairs, m = 2.):
+  """
+  Reject outliers from the given sample
+  """
+  d = np.abs(pairs[:,1] - np.median(pairs[:,1]))
+  mdev = np.median(d)
+  s = d/mdev if mdev else np.zeros(len(pairs))
+  return pairs[s<m]
+
+def summarizeDatapoints(pairs):
+  """
+  Groups the data points on x values and calculates standard error of mean when
+  more than one data point is collected per bin
+  """
+
+  # Create bins
+  bins = np.unique(pairs[:,0])
+  bin_values = [pairs[pairs[:,0] == x] for x in bins]
+
+  # Calculate mean and sd
+  bin_count = [len(values) for values in bin_values]
+
+  bin_mean = [np.mean(values[:,1]) for values in bin_values]
+  bin_sd = [np.std(values[:,1]) for values in bin_values]
+
+  # Compose and return
+  return np.array(
+    list(zip(bins, bin_mean, bin_sd, bin_count))
+  )
+
+def loadDataset(uri):
+  """
+  Load dataset either from file or from the web
+  """
+
+  # If this doesn't look like a URL, assume it's a file
+  if not RE_URL.match(uri):
+    uri = 'file:' + uri
+
+  # Handle URLs
+  (scheme, path) = uri.split(':', 1)
+  scheme = scheme.lower()
+
+  # Web scheme
+  if scheme in ('http', 'https', 'ftp'):
+    res = requests.get(uri)
+    if res.status_code < 200 or res.status_code >= 300:
+      raise IOError('Received an unexpected HTTP {} response while fetching {}'.format(res.status_code, uri))
+    return Dataset(json.loads(res.text))
+
+  # File scheme
+  elif scheme in ('file',):
+    if not os.path.isfile(path):
+      raise IOError('Could not find file {}'.format(path))
+    with open(path, 'r') as f:
+      contents = f.read()
+      return Dataset(json.loads(contents))
+
+  # Unknown scheme
+  else:
+    raise IOError('Unknown scheme "{}" in URI {}'.format(scheme, uri))
+
+
+if __name__ == '__main__':
+  """
+  Entry point
+  """
+
+  # Parse arguments
+  parser = argparse.ArgumentParser(description='The DC/OS Performance Comparison Tool')
+
+  parser.add_argument('-i', dest='input', action='append',
+                      help='one or more paths (or URLs) to the input raw dump')
+  parser.add_argument('-r', dest='ref', action='append',
+                      help='one or more paths (or URLs) to the reference raw dump')
+
+  parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                      help='Enable verbose logging')
+  parser.add_argument('-s', '--silent', action='store_true', dest='silent',
+                      help='Disable all output')
+
+  parser.add_argument('-P', '--plot', action='store_true', dest='plot',
+                      help='View results as plots')
+
+  parser.add_argument('-w', '--weight', action='append', dest='weights',
+                      help='Specify metric contribution between 1.0 (full) and 0.0 (none)')
+
+  parser.add_argument('-t', '--threshold', default=1.0, type=float, dest='threshold',
+                      help='The threshold (in standard deviations) to accept')
+
+  parser.add_argument('-W', '--weight-only', action='store_true', dest='weight_only',
+                      help='If specified, all metrics other than the ones defined by -w will have weight 0.0 instead of 1.0')
+
+  parser.add_argument('--json', action='store_true', dest='json',
+                      help='Return results in JSON format')
+
+  args = parser.parse_args()
+
+  # Setup logging
+  level = logging.INFO
+  if args.verbose:
+    level = logging.DEBUG
+  if args.silent:
+    level = logging.CRITICAL
+  logging.basicConfig(format='%(asctime)s: %(message)s', level=level)
+  logger = logging.getLogger('dcostool')
+
+  # Expand argument weights
+  weights = {}
+  inv_weights = {}
+  if args.weights:
+    for arg in args.weights:
+      if not '=' in arg:
+        raise ValueError('Please specify weights in `metric=weight` format')
+      (name, score) = arg.split('=', 1)
+      weights[name] = float(score)
+
+  # Load datasets
+  dataset_input = []
+  dataset_reference = []
+  for fname in args.input:
+    try:
+      dataset_input.append(loadDataset(fname))
+    except Exception as e:
+      logger.error('{} while loading {}: {}'.format(type(e).__name__, fname, e))
+      sys.exit(1)
+  for fname in args.ref:
+    try:
+      dataset_reference.append(loadDataset(fname))
+    except Exception as e:
+      logger.error('{} while loading {}: {}'.format(type(e).__name__, fname, e))
+      sys.exit(1)
+
+  # Print the Z-score for all metrics
+  scores = calcDiffOfMetrics(
+    dataset_input,
+    dataset_reference,
+    dataset_input[0].axes[0],
+    dataset_input[0].metrics
+  )
+
+  if not args.json:
+    print("{:30s} {:10s} {:10s}   {:10s}".format("Metric", "Z-Score", "Weight", "Weighted"))
+    print("----------------------------------------------------------------")
+
+  # Calculate overall score
+  value = 0
+  total = 0
+  for name, score in scores.items():
+    weight = weights.get(name, 0.0 if args.weight_only else 1.0)
+    weighted_score = 0
+    accounted = " "
+    if not math.isnan(score):
+      weighted_score = score * weight#
+    if weighted_score != 0:
+      accounted = "+"
+      value += weighted_score
+      total += weight
+
+    if not args.json:
+      print("{:30s} {:<10.3f} {:<10.2f} {} {:<10.3f}".format(name, score, weight, accounted, weighted_score))
+
+  value /= total
+
+  if not args.json:
+
+    if value > args.threshold:
+      status = "REJECTED (threshold = {:.1f} σ)".format(args.threshold)
+    else:
+      status = "Accepted (threshold = {:.1f} σ)".format(args.threshold)
+
+    print("----------------------------------------------------------------")
+    print("{:52s} = {:<10.3f}".format(status, value))
+
+  # Now it's time for JSON
+  if args.json:
+    print(json.dumps({"scores": scores, "sum": value}, sort_keys=True, indent=4, separators=(',', ': ')))
+
+  # Check for debug condition
+  if args.plot:
+    displayPlot(dataset_input, dataset_reference, dataset_input[0].axes[0],
+                dataset_input[0].metrics, pf_plotDiff)
+    displayPlot(dataset_input, dataset_reference, dataset_input[0].axes[0],
+                dataset_input[0].metrics, pf_plotSumm)
+
+  # Check if score is within threshold
+  if value >= args.threshold:
+    sys.exit(1)
+  else:
+    sys.exit(0)
