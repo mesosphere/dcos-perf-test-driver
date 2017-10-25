@@ -79,27 +79,34 @@ def pf_plotDiff(axis, summ1, summ2, maxis, mmetric):
   y_delta = np.sqrt( summ1[:,2] ** 2 / summ1[:,3] + summ2[:,2] ** 2 / summ2[:,3] )
   y_z = y_diff / y_delta
   # axis.errorbar(summ2[:,0], y_diff, yerr=y_delta, label="diff")
-  axis.plot(summ2[:,0], y_z)
-  axis.plot([0,np.max(summ2[:,0])], [0, 0], c='black')
+  axis.set_ylabel('Sigmas')
+  p1 = axis.plot(summ2[:,0], y_z)
+  p2 = axis.plot([0,np.max(summ2[:,0])], [0, 0], c='black')
   axis.set_title(mmetric['name'])
+  return ((p1[0], p2[0]), ('Difference (sigmas)', 'Zero'))
 
 def pf_plotSumm(axis, summ1, summ2, maxis, mmetric):
   """
   Metric configuration
   """
-  axis.errorbar(summ1[:,0], summ1[:,1], yerr=summ1[:,2])
-  axis.errorbar(summ2[:,0], summ2[:,1], yerr=summ2[:,2])
+  p1 = axis.errorbar(summ1[:,0], summ1[:,1], yerr=summ1[:,2])
+  p2 = axis.errorbar(summ2[:,0], summ2[:,1], yerr=summ2[:,2])
+  axis.set_ylabel(mmetric['units'])
   axis.set_title(mmetric['name'])
+  return ((p1, p2), ('Input', 'Reference'))
 
 def pf_plotQQ(axis, summ1, summ2, maxis, mmetric):
   """
   Metric configuration
   """
-  axis.scatter(summ1[:,1], summ2[:,1])
+  p1 = axis.scatter(summ1[:,1], summ2[:,1])
   lb = np.min(summ1[:,1])
   ub = np.max(summ1[:,1])
+  axis.set_ylabel('{} ({})'.format(metric['name'], metric['units']))
+  axis.set_xlabel('{} ({})'.format(metric['name'], metric['units']))
   axis.plot([lb, ub], [lb, ub])
   axis.set_title(mmetric['name'])
+  return ((p1,), ('Input - Reference',))
 
 def calcDiffSD(summ1, summ2):
   """
@@ -146,14 +153,18 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
   Plots something
   """
   import matplotlib.pyplot as plt
+  from matplotlib.ticker import NullFormatter  # useful for `logit` scale
 
   # Generate plot figures
   row_plots = 2
   y = math.ceil(len(metrics) / row_plots)
   x = min(len(metrics), row_plots)
-  f, axarr = plt.subplots(x, y)
+  fig, axarr = plt.subplots(x, y, sharex=True)
   x_i = 0
   y_i = 0
+
+  # Used for legend plotting
+  first_lines = None
 
   # Get axis meta-data
   meta_axis = datasets1[0].axisConfig(axis, {"name": axis, "units": ""})
@@ -179,7 +190,10 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
     meta_metric = datasets1[0].metricConfig(metric, {"name": metric, "units": ""})
 
     # Call the plot function on the axis
-    plotFn(axarr[x_i, y_i], summ1, summ2, meta_axis, meta_metric)
+    lines = plotFn(axarr[x_i, y_i], summ1, summ2, meta_axis, meta_metric)
+    if first_lines is None:
+      print(lines)
+      first_lines = lines
 
     # Advance to next plot
     x_i += 1
@@ -187,6 +201,11 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
       x_i = 0
       y_i += 1
 
+  # Show legend
+  fig.legend(first_lines[0], first_lines[1], 'lower right')
+  plt.gca().yaxis.set_minor_formatter(NullFormatter())
+  plt.subplots_adjust(top=0.92, bottom=0.08, left=0.10, right=0.95, hspace=0.25,
+                      wspace=0.35)
   plt.show()
 
 def normalizeAndMergeDatapoint(pairList):
