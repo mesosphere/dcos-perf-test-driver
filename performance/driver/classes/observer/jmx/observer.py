@@ -238,6 +238,14 @@ class JMXObserver(Observer):
         name = self.fieldNames[i]
         value = fieldValues[i]
 
+        # Handle errors
+        if value.endswith("-error>"):
+          self.logger.warn("Measurement of metric {} encountered an error: {}".format(name, value[1:-1]))
+          continue
+        if value == "<missing>":
+          self.logger.warn("The MBean or Attribute for metric {} is missing".format(name))
+          continue
+
         # In case we have an expression to evaluate, do it now
         evaluate = self.metricsConfig[i].get('value', None)
         if not evaluate is None:
@@ -250,6 +258,10 @@ class JMXObserver(Observer):
 
         # Store value
         fields[name] = value
+
+      # If all fields had errors, don't submit anything
+      if not fields:
+        return
 
       # Publish measurement
       self.logger.info('Measured {}'.format(fields))
