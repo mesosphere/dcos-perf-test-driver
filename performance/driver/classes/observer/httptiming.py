@@ -184,5 +184,8 @@ class HTTPTimingObserver(Observer):
       except requests.exceptions.ConnectionError as e:
         self.logger.error('Unable to connect to {}'.format(url))
 
+      except Exception as e:
+        self.logger.error('An unhandled urllib exception occurred: {}'.format(e))
+
       # Wait for next tick
       time.sleep(self.interval)
