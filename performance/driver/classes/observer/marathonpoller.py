@@ -146,7 +146,10 @@ class MarathonPollerObserver(Observer):
     """
     Fail all the requested deployments
     """
-    for inst in self.requestedDeployments:
+    # Copy this list in order to be able to iterate on it's items
+    # while removing items from `self.requestedDeployments`
+    immutableList = list(self.requestedDeployments)
+    for inst in immutableList:
       self.failRequestedDeployment(inst)
 
   def failExpiredPendingRequests(self):
