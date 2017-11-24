@@ -105,7 +105,10 @@ class EventAttributeTracker(Tracker):
 
     # Track metric values
     for metric, fn in self.extractMap.items():
-      self.trackMetric(metric, fn(event), traceid)
+      try:
+        self.trackMetric(metric, fn(event), traceid)
+      except Exception as e:
+        self.logger.warn("Error while handling matched event: {}".format(e))
 
   def handleTraceidEvent(self, event):
     """
