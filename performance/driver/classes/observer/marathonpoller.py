@@ -215,18 +215,23 @@ class MarathonPollerObserver(Observer):
       if res.status_code < 200 or res.status_code >= 300:
         self.logger.warn('Unexpected HTTP response HTTP/{}'.format(res.status_code))
         if self.connected:
+          self.logger.debug('We are connected, ignoring for {} more tries'.format(self.retriesLeft))
           self.retriesLeft -= 1
           if self.retriesLeft > 0:
+            self.logger.debug('Not taking an action')
             return # Don't take any action, wait for next tick
       else:
         self.retriesLeft = self.retries
+        self.logger.debug('Resetting retries to {}'.format(self.retriesLeft))
         group = res.json()
 
     except Exception as e:
       self.logger.error('Unexpected exception {}: {}'.format(type(e).__name__, str(e)))
       if self.connected:
+        self.logger.debug('We are connected, ignoring for {} more tries'.format(self.retriesLeft))
         self.retriesLeft -= 1
         if self.retriesLeft > 0:
+          self.logger.debug('Not taking an action')
           return # Don't take any action, wait for next tick
 
     # Handle connected state toggle
