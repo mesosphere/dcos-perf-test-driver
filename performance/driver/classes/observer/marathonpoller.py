@@ -47,6 +47,10 @@ class MarathonPollerObserver(Observer):
         # If set to 0 the deployment will never fail.
         failureTimeout: 0
 
+        # [Optional] How many times to re-try polling the endpoint before
+        # considering the connection closed
+        retries: 3
+
         # [Optional] Event binding
         events:
 
@@ -88,7 +92,9 @@ class MarathonPollerObserver(Observer):
     self.headers = config.get('headers', {})
     self.pollInterval = config.get('interval', 0.5)
     self.failureTimeout = config.get('failureTimeout', 0)
+    self.retries = config.get('retries', 3)
 
+    self.retriesLeft = self.retries
     self.requestTraceIDs = {}
     self.requestedDeployments = set()
     self.requestedDeploymentTimeout = {}
@@ -114,6 +120,7 @@ class MarathonPollerObserver(Observer):
     """
     Reset the local state
     """
+    self.retriesLeft = self.retries
     self.connected = False
     self.lastGroup = {
       "id": "/",
@@ -134,11 +141,11 @@ class MarathonPollerObserver(Observer):
       del self.requestTraceIDs[inst]
 
   @publishesHint(MarathonDeploymentFailedEvent)
-  def failRequestedDeployment(self, inst):
+  def failRequestedDeployment(self, inst, reason="due to timeout"):
     """
     Fail the specified requested deployment
     """
-    self.logger.warn('Failing deployment {} due to timeout'.format(inst))
+    self.logger.warn('Failing deployment {} {}'.format(inst, reason))
     self.eventbus.publish(MarathonDeploymentFailedEvent(None, inst, traceid=self.requestTraceIDs.get(inst, None)))
     self.cleanupInstanceDeployment(inst)
 
@@ -150,7 +157,7 @@ class MarathonPollerObserver(Observer):
     # while removing items from `self.requestedDeployments`
     immutableList = list(self.requestedDeployments)
     for inst in immutableList:
-      self.failRequestedDeployment(inst)
+      self.failRequestedDeployment(inst, "due to connection interrupt")
 
   def failExpiredPendingRequests(self):
     """
@@ -207,25 +214,30 @@ class MarathonPollerObserver(Observer):
       # Handle HTTP response
       if res.status_code < 200 or res.status_code >= 300:
         self.logger.warn('Unexpected HTTP response HTTP/{}'.format(res.status_code))
+        self.retriesLeft -= 1
+        if self.retriesLeft > 0:
+          return # Don't take any action, wait for next tick
       else:
+        self.retriesLeft = self.retries
         group = res.json()
 
-    except requests.ConnectionError as e:
-      pass
     except Exception as e:
       self.logger.error('Unexpected exception {}: {}'.format(type(e).__name__, str(e)))
+      self.retriesLeft -= 1
+      if self.retriesLeft > 0:
+        return # Don't take any action, wait for next tick
 
     # Handle connected state toggle
     if not self.connected and group:
+      self.logger.info('Marathon is responding')
       self.connected = True
       self.lastGroup = group
-      self.logger.info('Marathon is responding')
       self.eventbus.publish(MarathonStartedEvent())
 
     elif self.connected and not group:
+      self.logger.warn('Marathon became unresponsive')
       self.failAllPendingRequests()
       self.reset()
-      self.logger.warn('Marathon became unresponsive')
       self.eventbus.publish(MarathonUnavailableEvent())
 
     elif self.connected:
