@@ -42,6 +42,15 @@ def parse_cmdline(args=None):
       dest='meta',
       help='Define one or more metadata value.')
 
+  parser.add_argument(
+      '-w',
+      '--workers',
+      default=8,
+      dest='workers',
+      type=int,
+      help='The number of workers to allocate on the thread pool ' +
+      '(default 8)')
+
   # The remaining part is the configuration and it's arguments
   parser.add_argument(
       'config', nargs='*', help='The configuration script to use.')

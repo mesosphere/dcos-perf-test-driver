@@ -108,7 +108,7 @@ def dcos_perf_test_driver(args=None):
       return 1
 
     # Start a test session
-    session = Session(config)
+    session = Session(config, cmdline.workers)
 
     # Before we start the tests we need to make sure that all the event
     # subscribers are listening for valid events. Otherwise we are going to
