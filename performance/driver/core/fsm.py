@@ -131,9 +131,8 @@ class FSM:
       # Call the event handler if we have one
       if hasattr(stateInst, handlerName):
         getattr(stateInst, handlerName)(event)
-        return
 
-      # Otherwise call the event sink
+      # Also call the onEvent handler
       stateInst.onEvent(event)
 
     except Exception as e:
