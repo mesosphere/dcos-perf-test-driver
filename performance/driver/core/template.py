@@ -1,11 +1,13 @@
 import re
 import time
 import uuid
+import logging
 
 PATHCOMP = re.compile(r'([\\/]|\.\.)')
 MACRO = re.compile(r'{{(.*?)}}')
 METHOD = re.compile(r'([\w_]+)\((.*)\)')
 
+logger = logging.getLogger("template")
 
 class TemplateMethods:
   """
@@ -33,6 +35,17 @@ class TemplateMethods:
     """
     return PATHCOMP.sub('_', evaluateExpr(args, props))
 
+  @staticmethod
+  def eval(args, props):
+    """
+    Evaluate the given python expression
+    """
+    evalArgs = dict(props)
+    try:
+      return eval(args, evalArgs)
+    except Exception as e:
+      logger.debug("Ignoring evaluation exception in template expression \"{}\": {}".format(args, e))
+      return ""
 
 def toTemplate(obj):
   """
