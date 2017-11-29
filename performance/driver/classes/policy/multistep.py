@@ -11,10 +11,12 @@ except ImportError:
   logging.error('One or more libraries required by MultiStepPolicy were not'
                 'installed. The policy will not work.')
 
-from performance.driver.core.events import isEventMatching, RunTaskEvent
+from performance.driver.core.events import isEventMatching, RunTaskEvent, Event
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.eventfilters import EventFilter
 
+class CompleteStepImmediatelyEvent(Event):
+  pass
 
 class MultiStepPolicy(PolicyFSM):
   """
@@ -378,7 +380,7 @@ class MultiStepPolicy(PolicyFSM):
       # If we did not have an advance event, advance immediately
       if self.step.advanceEvent is None:
         self.logger.debug('Advance is not defined, completing immediately')
-        self.checkCompletion()
+        self.eventbus.publish(CompleteStepImmediatelyEvent())
 
     def handleCompletion(self):
       """
@@ -408,6 +410,13 @@ class MultiStepPolicy(PolicyFSM):
 
       # If everything is done, advance to next value
       self.goto(MultiStepPolicy.NextStepValue)
+
+    def onCompleteStepImmediatelyEvent(self, event):
+      """
+      This event is dispatched when we want to immediately continue to the next
+      tests, skipping the advance conditions.
+      """
+      self.checkCompletion()
 
     def onTickEvent(self, event):
       """
