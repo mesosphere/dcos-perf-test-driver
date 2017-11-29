@@ -338,7 +338,8 @@ def diffRootGroups(group_a, group_b):
         diff_groups.add(gid)
 
   # For every changed group, deep into details
-  for group in diff_groups:
+  base_groups_immutable = set(diff_groups)
+  for group in base_groups_immutable:
     empty_group = {
       "id": group,
       "apps": [],
