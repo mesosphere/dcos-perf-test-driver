@@ -375,6 +375,11 @@ class MultiStepPolicy(PolicyFSM):
       if not self.step.advanceTimeout is None:
         self.timeRemains = self.step.advanceTimeout
 
+      # If we did not have an advance event, advance immediately
+      if self.step.advanceEvent is None:
+        self.logger.debug('Advance is not defined, completing immediately')
+        self.checkCompletion()
+
     def handleCompletion(self):
       """
       The value has completed its change
