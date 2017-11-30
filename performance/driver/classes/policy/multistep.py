@@ -15,8 +15,10 @@ from performance.driver.core.events import isEventMatching, RunTaskEvent, Event
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.eventfilters import EventFilter
 
+
 class CompleteStepImmediatelyEvent(Event):
   pass
+
 
 class MultiStepPolicy(PolicyFSM):
   """
@@ -369,7 +371,7 @@ class MultiStepPolicy(PolicyFSM):
       # If we have an advance event defined, wait for it
       if self.step.advanceEvent:
         self.advanceEventsRemaining = self.step.evaluateAdvanceEvents(
-          self.currentParameters, self.getDefinitions())
+            self.currentParameters, self.getDefinitions())
         self.step.advanceEventSession = self.step.advanceEvent.start(
             self.traceid, self.handleAdvanceEvent)
 
@@ -448,8 +450,7 @@ class MultiStepPolicy(PolicyFSM):
       self.advanceEventsRemaining -= 1
       if self.advanceEventsRemaining > 0:
         self.logger.info('Waiting for {} more advance events'.format(
-          self.advanceEventsRemaining)
-        )
+            self.advanceEventsRemaining))
       self.handleCompletion()
 
     def onEvent(self, event):

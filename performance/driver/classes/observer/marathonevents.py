@@ -407,8 +407,8 @@ class MarathonEventsObserver(Observer):
               # Broadcast connected on first event
               if not is_connected:
                 is_connected = True
-                self.eventbus.publish(MarathonSSEConnectedEvent(
-                  traceid=self.allTraceIDs()))
+                self.eventbus.publish(
+                    MarathonSSEConnectedEvent(traceid=self.allTraceIDs()))
 
               # Load event name and data
               eventName = event.get('event')
@@ -424,8 +424,8 @@ class MarathonEventsObserver(Observer):
             # Broadcast disconnected on first error
             if is_connected:
               is_connected = False
-              self.eventbus.publish(MarathonSSEDisconnectedEvent(
-                traceid=self.allTraceIDs()))
+              self.eventbus.publish(
+                  MarathonSSEDisconnectedEvent(traceid=self.allTraceIDs()))
 
             # Handle errors according to type
             if isinstance(e, requests.exceptions.ConnectionError):
@@ -434,7 +434,8 @@ class MarathonEventsObserver(Observer):
               time.sleep(1)
             elif isinstance(e, CurlSSEDisconnectedError):
               self.logger.error(
-                  'Marathon closed the SSE endpoint. Trying to connect again in 1 sec.')
+                  'Marathon closed the SSE endpoint. Trying to connect again in 1 sec.'
+              )
               time.sleep(1)
             else:
               self.logger.error('Exception in the marathon events main loop')

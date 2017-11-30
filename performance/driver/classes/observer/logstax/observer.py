@@ -134,7 +134,8 @@ class LogStaxObserver(Observer):
 
     # Keep trace ID of the latest parameter update
     self.traceids = None
-    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
+    self.eventbus.subscribe(
+        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
 
   def handleParameterUpdate(self, event):
     """
@@ -177,9 +178,7 @@ class LogStaxObserver(Observer):
     """
     Handle a completed message
     """
-    self.eventbus.publish(
-      LogStaxMessageEvent(message, traceid=self.traceids)
-    )
+    self.eventbus.publish(LogStaxMessageEvent(message, traceid=self.traceids))
 
   def handleAnyEvent(self, event):
     """

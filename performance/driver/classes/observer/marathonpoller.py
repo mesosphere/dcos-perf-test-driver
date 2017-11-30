@@ -15,12 +15,8 @@ DIFF_REASON_REMOVED = 0
 DIFF_REASON_CREATED = 1
 DIFF_REASON_MODIFIED = 2
 
-EMPTY_GROUP = {
-  "id": "/",
-  "apps": [],
-  "groups": [],
-  "pods": []
-}
+EMPTY_GROUP = {"id": "/", "apps": [], "groups": [], "pods": []}
+
 
 class MarathonPollerObserver(Observer):
   """
@@ -104,8 +100,9 @@ class MarathonPollerObserver(Observer):
     self.reset()
 
     # Keep track of outgoing deployment requests
-    self.eventbus.subscribe(self.handleRequest, events=(MarathonDeploymentStartedEvent,))
-    self.eventbus.subscribe(self.handleTick, events=(TickEvent,))
+    self.eventbus.subscribe(
+        self.handleRequest, events=(MarathonDeploymentStartedEvent, ))
+    self.eventbus.subscribe(self.handleTick, events=(TickEvent, ))
 
   def handleTick(self, event):
     """
@@ -122,12 +119,7 @@ class MarathonPollerObserver(Observer):
     """
     self.retriesLeft = self.retries
     self.connected = False
-    self.lastGroup = {
-      "id": "/",
-      "apps": [],
-      "groups": [],
-      "pods": []
-    }
+    self.lastGroup = {"id": "/", "apps": [], "groups": [], "pods": []}
 
   def cleanupInstanceDeployment(self, inst):
     """
@@ -146,7 +138,9 @@ class MarathonPollerObserver(Observer):
     Fail the specified requested deployment
     """
     self.logger.warn('Failing deployment {} {}'.format(inst, reason))
-    self.eventbus.publish(MarathonDeploymentFailedEvent(None, inst, traceid=self.requestTraceIDs.get(inst, None)))
+    self.eventbus.publish(
+        MarathonDeploymentFailedEvent(
+            None, inst, traceid=self.requestTraceIDs.get(inst, None)))
     self.cleanupInstanceDeployment(inst)
 
   def failAllPendingRequests(self):
@@ -181,10 +175,12 @@ class MarathonPollerObserver(Observer):
     # Set the deployment failure timeout
     ts = time.time()
     if self.failureTimeout > 0:
-      self.requestedDeploymentTimeout[event.instance] = ts + self.failureTimeout
+      self.requestedDeploymentTimeout[
+          event.instance] = ts + self.failureTimeout
 
   @publishesHint(MarathonStartedEvent, MarathonUnavailableEvent,
-    MarathonDeploymentSuccessEvent, MarathonGroupChangeSuccessEvent)
+                 MarathonDeploymentSuccessEvent,
+                 MarathonGroupChangeSuccessEvent)
   def pollGroupsEndpoint(self):
     """
     Poll the groups endpoint
@@ -207,32 +203,37 @@ class MarathonPollerObserver(Observer):
     # Poll the endpoint
     group = None
     try:
-      url = '{}/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods&embed=group.apps.deployments'.format(self.url)
+      url = '{}/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods&embed=group.apps.deployments'.format(
+          self.url)
       self.logger.debug('Requesting {}'.format(url))
       res = requests.get(url, headers=headers)
 
       # Handle HTTP response
       if res.status_code < 200 or res.status_code >= 300:
-        self.logger.warn('Unexpected HTTP response HTTP/{}'.format(res.status_code))
+        self.logger.warn(
+            'Unexpected HTTP response HTTP/{}'.format(res.status_code))
         if self.connected:
-          self.logger.debug('We are connected, ignoring for {} more tries'.format(self.retriesLeft))
+          self.logger.debug('We are connected, ignoring for {} more tries'.
+                            format(self.retriesLeft))
           self.retriesLeft -= 1
           if self.retriesLeft > 0:
             self.logger.debug('Not taking an action')
-            return # Don't take any action, wait for next tick
+            return  # Don't take any action, wait for next tick
       else:
         self.retriesLeft = self.retries
         self.logger.debug('Resetting retries to {}'.format(self.retriesLeft))
         group = res.json()
 
     except Exception as e:
-      self.logger.error('Unexpected exception {}: {}'.format(type(e).__name__, str(e)))
+      self.logger.error(
+          'Unexpected exception {}: {}'.format(type(e).__name__, str(e)))
       if self.connected:
-        self.logger.debug('We are connected, ignoring for {} more tries'.format(self.retriesLeft))
+        self.logger.debug('We are connected, ignoring for {} more tries'.
+                          format(self.retriesLeft))
         self.retriesLeft -= 1
         if self.retriesLeft > 0:
           self.logger.debug('Not taking an action')
-          return # Don't take any action, wait for next tick
+          return  # Don't take any action, wait for next tick
 
     # Handle connected state toggle
     if not self.connected and group:
@@ -253,13 +254,19 @@ class MarathonPollerObserver(Observer):
 
       # Create one virtual deployments for every affected instance
       for inst in diff_instances:
-        self.eventbus.publish(MarathonDeploymentSuccessEvent(None, [inst], traceid=self.requestTraceIDs.get(inst, None)))
+        self.eventbus.publish(
+            MarathonDeploymentSuccessEvent(
+                None, [inst], traceid=self.requestTraceIDs.get(inst, None)))
         self.cleanupInstanceDeployment(inst)
 
       # Create virtual group deployments
       for grp in diff_groups:
-        self.eventbus.publish(MarathonDeploymentSuccessEvent(None, [grp], traceid=self.requestTraceIDs.get(grp, None)))
-        self.eventbus.publish(MarathonGroupChangeSuccessEvent(None, grp, traceid=self.requestTraceIDs.get(grp, None)))
+        self.eventbus.publish(
+            MarathonDeploymentSuccessEvent(
+                None, [grp], traceid=self.requestTraceIDs.get(grp, None)))
+        self.eventbus.publish(
+            MarathonGroupChangeSuccessEvent(
+                None, grp, traceid=self.requestTraceIDs.get(grp, None)))
         self.cleanupInstanceDeployment(grp)
 
       # Fail expired requests
@@ -284,16 +291,16 @@ def diffRootGroups(group_a, group_b):
   # Check for changes in apps
   for iid in apps_a.keys():
     if not iid in apps_b:
-      diff_instances.add(iid) # Removed
+      diff_instances.add(iid)  # Removed
   for iid in apps_b.keys():
     if not iid in apps_a:
       if len(apps_b[iid].get('deployments', [])) == 0:
-        diff_instances.add(iid) # Added & No remaining deployments
+        diff_instances.add(iid)  # Added & No remaining deployments
   for iid, app_a in apps_a.items():
     if iid in apps_b:
       if dictDiff(app_a, apps_b[iid]):
         if len(apps_b[iid].get('deployments', [])) == 0:
-          diff_instances.add(iid) # Added & No remaining deployments
+          diff_instances.add(iid)  # Added & No remaining deployments
 
   # Get pod IDs from two groups
   pods_a = {}
@@ -310,12 +317,12 @@ def diffRootGroups(group_a, group_b):
   for iid in pods_b.keys():
     if not iid in pods_a:
       if len(pods_b[iid].get('deployments', [])) == 0:
-        diff_instances.add(iid) # Added & No remaining deployments
+        diff_instances.add(iid)  # Added & No remaining deployments
   for iid, pod_a in pods_a.items():
     if iid in pods_b:
       if dictDiff(pod_a, pods_b[iid]):
         if len(pods_b[iid].get('deployments', [])) == 0:
-          diff_instances.add(iid) # Added & No remaining deployments
+          diff_instances.add(iid)  # Added & No remaining deployments
 
   # Get IDs from two groups
   groups_a = {}
@@ -340,23 +347,21 @@ def diffRootGroups(group_a, group_b):
   # For every changed group, deep into details
   base_groups_immutable = set(diff_groups)
   for group in base_groups_immutable:
-    empty_group = {
-      "id": group,
-      "apps": [],
-      "pods": [],
-      "groups": []
-    }
+    empty_group = {"id": group, "apps": [], "pods": [], "groups": []}
     if group in groups_a:
       if group in groups_b:
-        (child_diff_instances, child_diff_groups) = diffRootGroups(groups_a[group], groups_b[group])
+        (child_diff_instances, child_diff_groups) = diffRootGroups(
+            groups_a[group], groups_b[group])
         diff_instances.update(child_diff_instances)
         diff_groups.update(child_diff_groups)
       else:
-        (child_diff_instances, child_diff_groups) = diffRootGroups(groups_a[group], empty_group)
+        (child_diff_instances, child_diff_groups) = diffRootGroups(
+            groups_a[group], empty_group)
         diff_instances.update(child_diff_instances)
         diff_groups.update(child_diff_groups)
     else:
-      (child_diff_instances, child_diff_groups) = diffRootGroups(empty_group, groups_b[group])
+      (child_diff_instances, child_diff_groups) = diffRootGroups(
+          empty_group, groups_b[group])
       diff_instances.update(child_diff_instances)
       diff_groups.update(child_diff_groups)
 

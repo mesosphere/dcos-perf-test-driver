@@ -78,8 +78,9 @@ class MarathonDeployChannel(Channel):
 
     return headers
 
-  @publishesHint(MarathonDeploymentStartedEvent, MarathonDeploymentRequestedEvent,
-    MarathonDeploymentRequestFailedEvent)
+  @publishesHint(MarathonDeploymentStartedEvent,
+                 MarathonDeploymentRequestedEvent,
+                 MarathonDeploymentRequestFailedEvent)
   def handleDeployment(self, deployment, parameters, url, traceids):
     """
     Handle deployment
@@ -235,8 +236,9 @@ class MarathonUpdateChannel(Channel):
 
     return headers
 
-  @publishesHint(MarathonDeploymentRequestedEvent, MarathonDeploymentStartedEvent,
-    MarathonDeploymentRequestFailedEvent)
+  @publishesHint(MarathonDeploymentRequestedEvent,
+                 MarathonDeploymentStartedEvent,
+                 MarathonDeploymentRequestFailedEvent)
   def handleUpdate_PatchApp(self, action, parameters, traceids):
     """
     Handle a `patch_app` action
@@ -272,7 +274,8 @@ class MarathonUpdateChannel(Channel):
 
       # Filter by name
       if 'filter' in action:
-        apps = list(filter(lambda x: re.match(action['filter'], x['id']), apps))
+        apps = list(
+            filter(lambda x: re.match(action['filter'], x['id']), apps))
 
       # Shuffle
       if action.get('shuffle', True):
@@ -333,11 +336,15 @@ class MarathonUpdateChannel(Channel):
         if response.status_code < 200 or response.status_code >= 300:
           self.logger.debug("Server responded with: {}".format(response.text))
           self.logger.error(
-              'Unable to update app {} (HTTP response {}: {})'.format(app.get(
-                  'id', '<unknown>'), response.status_code, response.text))
+              'Unable to update app {} (HTTP response {}: {})'.format(
+                  app.get('id', '<unknown>'), response.status_code,
+                  response.text))
           self.eventbus.publish(
               MarathonDeploymentRequestFailedEvent(
-                  app['id'], response.status_code, response.text, traceid=traceids))
+                  app['id'],
+                  response.status_code,
+                  response.text,
+                  traceid=traceids))
           continue
 
         self.logger.debug('App updated successfully')

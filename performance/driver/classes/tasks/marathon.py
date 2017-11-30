@@ -20,7 +20,8 @@ class MarathonDeploymentMonitorTask(Task):
   Base class that subscribes to the event bus and waits for a success event
   """
 
-  @subscribesToHint(MarathonDeploymentSuccessEvent, MarathonDeploymentFailedEvent, TeardownEvent)
+  @subscribesToHint(MarathonDeploymentSuccessEvent,
+                    MarathonDeploymentFailedEvent, TeardownEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
 
@@ -61,21 +62,25 @@ class MarathonDeploymentMonitorTask(Task):
     while self.active:
       try:
         response = requests.get(
-          '{}/v2/deployments'.
-          format(self.url),
-          verify=False,
-          headers=self.getHeaders())
+            '{}/v2/deployments'.format(self.url),
+            verify=False,
+            headers=self.getHeaders())
       except Exception as e:
-        self.logger.error('Exception {} while waiting for deployment to complete: {}'.format(type(e).__name__, str(e)))
+        self.logger.error(
+            'Exception {} while waiting for deployment to complete: {}'.format(
+                type(e).__name__, str(e)))
         break
 
       if response.status_code < 200 or response.status_code >= 300:
-        self.logger.warn('Received unexpected HTTP {} response while waiting for deployment to complete'.format(response.status_code))
+        self.logger.warn(
+            'Received unexpected HTTP {} response while waiting for deployment to complete'.
+            format(response.status_code))
         break
 
       deployments = response.json()
       if not type(deployments) is list:
-        self.logger.warn('Received unexpected deployments response from marathon')
+        self.logger.warn(
+            'Received unexpected deployments response from marathon')
         break
 
       hasDeployments = False

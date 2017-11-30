@@ -88,10 +88,9 @@ class S3Reporter(Reporter):
 
     # Instantiate boto
     s3 = boto3.client(
-      's3',
-      aws_access_key_id=aws_access_key_id,
-      aws_secret_access_key=aws_secret_access_key
-    )
+        's3',
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key)
 
     # Get bucket and filename
     bucket_key = config.get('path', 'results-raw.json')
@@ -101,19 +100,24 @@ class S3Reporter(Reporter):
     self.logger.info('Uploading raw results to {}'.format(bucket_key))
 
     # Upload into the bucket
-    s3.put_object(Bucket=config['bucket'], Key=bucket_key, Body=json.dumps({
-        'time': {
-          'started': self.timeStarted,
-          'completed': datetime.datetime.now().isoformat()
-        },
-        'config': self.getRootConfig().config,
-        'raw': summarizer.raw(),
-        'sum': summarizer.sum(),
-        'indicators': summarizer.indicators(),
-        'meta': self.getMeta()
-      }, sort_keys=True, indent=2),
-      **optional_kwargs
-    )
+    s3.put_object(
+        Bucket=config['bucket'],
+        Key=bucket_key,
+        Body=json.dumps(
+            {
+                'time': {
+                    'started': self.timeStarted,
+                    'completed': datetime.datetime.now().isoformat()
+                },
+                'config': self.getRootConfig().config,
+                'raw': summarizer.raw(),
+                'sum': summarizer.sum(),
+                'indicators': summarizer.indicators(),
+                'meta': self.getMeta()
+            },
+            sort_keys=True,
+            indent=2),
+        **optional_kwargs)
 
     # Update index if needed
     if 'index' in config:
@@ -126,10 +130,7 @@ class S3Reporter(Reporter):
       try:
 
         # Get object
-        res = s3.get_object(
-          Bucket=indexBucket,
-          Key=indexKey
-        )
+        res = s3.get_object(Bucket=indexBucket, Key=indexKey)
 
         # Check response code
         accept = True
@@ -137,7 +138,9 @@ class S3Reporter(Reporter):
           if 'HTTPStatusCode' in res['ResponseMetadata']:
             code = res['ResponseMetadata']['HTTPStatusCode']
             if code < 200 or code >= 300:
-              self.logger.warn('Unable to fetch index: Server responded with {}'.format(code))
+              self.logger.warn(
+                  'Unable to fetch index: Server responded with {}'.format(
+                      code))
               accept = False
 
         # Try to parse body
@@ -167,9 +170,9 @@ class S3Reporter(Reporter):
 
       # Insert item
       dataset_entries.append({
-        'ts': time.time(),
-        'meta': self.getMeta(),
-        'data': bucket_key
+          'ts': time.time(),
+          'meta': self.getMeta(),
+          'data': bucket_key
       })
 
       # Keep the most recent `max_entries`
@@ -179,8 +182,8 @@ class S3Reporter(Reporter):
         dataset_entries = dataset_entries[0:trim_to]
 
       # Update index file
-      s3.put_object(Bucket=indexBucket, Key=indexKey, Body=json.dumps(index_data, sort_keys=True, indent=2),
-        **optional_kwargs
-      )
-
-
+      s3.put_object(
+          Bucket=indexBucket,
+          Key=indexKey,
+          Body=json.dumps(index_data, sort_keys=True, indent=2),
+          **optional_kwargs)

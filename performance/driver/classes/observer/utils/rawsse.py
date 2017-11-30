@@ -10,6 +10,7 @@ import ssl
 from urllib.parse import urlparse
 from socket import socket, AF_INET, SOCK_STREAM
 
+
 class RawSSEDisconnectedError(IOError):
   """
   Exception raised when the connection is interrupted
@@ -17,6 +18,7 @@ class RawSSEDisconnectedError(IOError):
 
   def __init__(self):
     super().__init__("Disconnected")
+
 
 class ChunkedReader:
   """

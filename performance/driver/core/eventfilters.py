@@ -28,7 +28,8 @@ class EventFilterSession:
     self.counterGroups = {}
 
     # Immediately call-back to matched filters
-    for (eventSpec, attribChecks, flags, flagParameters, eid) in self.filter.events:
+    for (eventSpec, attribChecks, flags, flagParameters,
+         eid) in self.filter.events:
       if 'single' in flags:
         if eid in global_single_events:
           callback(global_single_events[eid])
@@ -44,7 +45,8 @@ class EventFilterSession:
     """
     Handle the incoming event
     """
-    for (eventSpec, attribChecks, flags, flagParameters, eid) in self.filter.events:
+    for (eventSpec, attribChecks, flags, flagParameters,
+         eid) in self.filter.events:
 
       # Handle all events or matching events
       if eventSpec != "*" and not isEventMatching(event, eventSpec):

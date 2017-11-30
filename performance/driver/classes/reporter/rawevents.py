@@ -50,10 +50,7 @@ class RawEventsReporter(Reporter):
     filename = config.get('filename', 'events.dump')
 
     # Create missing directory for the files
-    os.makedirs(
-      os.path.abspath(os.path.dirname(filename)),
-      exist_ok=True
-    )
+    os.makedirs(os.path.abspath(os.path.dirname(filename)), exist_ok=True)
 
     self.file = open(filename, 'w')
     self.eventbus.subscribe(self.handleEvent)

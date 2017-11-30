@@ -1,4 +1,3 @@
-
 def parseTimeExpr(timeExpr):
   """
   Convert a time expression (ex. 1s 5m 1us 1ms) to a float seconds value

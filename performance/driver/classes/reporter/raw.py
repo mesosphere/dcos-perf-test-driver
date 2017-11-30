@@ -125,10 +125,7 @@ class RawReporter(Reporter):
     filename = config.get('filename', 'results-raw.json')
 
     # Create missing directory for the files
-    os.makedirs(
-      os.path.abspath(os.path.dirname(filename)),
-      exist_ok=True
-    )
+    os.makedirs(os.path.abspath(os.path.dirname(filename)), exist_ok=True)
 
     # Dump the raw timeseries
     with open(filename, 'w') as f:

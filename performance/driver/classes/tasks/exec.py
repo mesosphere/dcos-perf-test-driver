@@ -83,5 +83,3 @@ class Run(Task):
     for line in sout.decode('utf-8').strip().split('\n'):
       if line:
         self.logger.debug(line)
-
-

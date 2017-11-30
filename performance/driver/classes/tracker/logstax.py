@@ -104,9 +104,7 @@ class LogStaxRule:
       return
 
     # Send value update
-    self.tracker.trackMetric(self.metricName,
-                             value,
-                             self.traceids)
+    self.tracker.trackMetric(self.metricName, value, self.traceids)
 
 
 class LogStaxTracker(Tracker):

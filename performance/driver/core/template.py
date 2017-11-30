@@ -9,6 +9,7 @@ METHOD = re.compile(r'([\w_]+)\((.*)\)')
 
 logger = logging.getLogger("template")
 
+
 class TemplateMethods:
   """
   Exposed methods to the template DSL
@@ -44,8 +45,11 @@ class TemplateMethods:
     try:
       return eval(args, evalArgs)
     except Exception as e:
-      logger.debug("Ignoring evaluation exception in template expression \"{}\": {}".format(args, e))
+      logger.debug(
+          "Ignoring evaluation exception in template expression \"{}\": {}".
+          format(args, e))
       return ""
+
 
 def toTemplate(obj):
   """

@@ -36,10 +36,7 @@ class LogReporter(Reporter):
     filename = config.get('filename', 'trace.log')
 
     # Create missing directory for the files
-    os.makedirs(
-      os.path.abspath(os.path.dirname(filename)),
-      exist_ok=True
-    )
+    os.makedirs(os.path.abspath(os.path.dirname(filename)), exist_ok=True)
 
     self.addTimestamp = config.get('timestamp', False)
     self.file = open(filename, mode)

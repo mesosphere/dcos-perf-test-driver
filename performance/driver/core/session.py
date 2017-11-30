@@ -121,7 +121,8 @@ class Session(EventBusSubscriber):
     for threadId, stack in sys._current_frames().items():
       self.logger.debug("Thread {}".format(threadId))
       for filename, lineno, name, line in traceback.extract_stack(stack):
-        self.logger.debug("  File: {}, line {}, in {}".format(filename, lineno, name))
+        self.logger.debug(
+            "  File: {}, line {}, in {}".format(filename, lineno, name))
         if line:
           self.logger.debug("    {}".format(line.strip()))
 

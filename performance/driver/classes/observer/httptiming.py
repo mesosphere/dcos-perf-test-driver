@@ -92,7 +92,8 @@ class HTTPTimingObserver(Observer):
     # Register to the Start / Teardown events
     self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent, ))
     self.eventbus.subscribe(self.handleStartEvent, events=(StartEvent, ))
-    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
+    self.eventbus.subscribe(
+        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
 
   def handleParameterUpdate(self, event):
     """
@@ -177,15 +178,22 @@ class HTTPTimingObserver(Observer):
             'Measurement completed: request={}, response={}, total={}'.format(
                 times[1] - times[0], times[2] - times[1], times[2] - times[0]))
         self.eventbus.publish(
-            HTTPTimingResultEvent(url, verb, res.status_code, times[1] - times[0],
-                                  times[2] - times[1], times[2] - times[0],
-                                  len(res.text), traceid=self.traceids))
+            HTTPTimingResultEvent(
+                url,
+                verb,
+                res.status_code,
+                times[1] - times[0],
+                times[2] - times[1],
+                times[2] - times[0],
+                len(res.text),
+                traceid=self.traceids))
 
       except requests.exceptions.ConnectionError as e:
         self.logger.error('Unable to connect to {}'.format(url))
 
       except Exception as e:
-        self.logger.error('An unhandled urllib exception occurred: {}'.format(e))
+        self.logger.error(
+            'An unhandled urllib exception occurred: {}'.format(e))
 
       # Wait for next tick
       time.sleep(self.interval)

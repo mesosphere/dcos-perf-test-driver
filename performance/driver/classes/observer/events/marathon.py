@@ -12,6 +12,7 @@ class MarathonStartedEvent(MarathonEvent):
   Marathon is up and accepting HTTP requests
   """
 
+
 class MarathonUnavailableEvent(MarathonEvent):
   """
   Marathon is up and accepting HTTP requests
@@ -33,6 +34,7 @@ class MarathonSSEDisconnectedEvent(MarathonEvent):
   """
   Raw SSE endpoint was disconnected
   """
+
 
 class MarathonSSEConnectedEvent(MarathonEvent):
   """

@@ -131,12 +131,8 @@ class CSVReporter(Reporter):
 
     # Create missing directory for the files
     filename = config.get('filename', 'results.csv')
-    os.makedirs(
-      os.path.abspath(os.path.dirname(filename)),
-      exist_ok=True
-    )
+    os.makedirs(os.path.abspath(os.path.dirname(filename)), exist_ok=True)
 
     # Dump csv file
     config = self.getRenderedConfig()
-    csv.saveTo(
-        filename, config.get('separator', ','))
+    csv.saveTo(filename, config.get('separator', ','))

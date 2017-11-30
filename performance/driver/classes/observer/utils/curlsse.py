@@ -6,6 +6,7 @@ import tempfile
 
 from subprocess import Popen, PIPE
 
+
 class CurlSSEDisconnectedError(IOError):
   """
   Exception raised when the connection is interrupted
@@ -13,6 +14,7 @@ class CurlSSEDisconnectedError(IOError):
 
   def __init__(self):
     super().__init__("Disconnected")
+
 
 class CurlSSE:
   """
@@ -32,9 +34,9 @@ class CurlSSE:
   def __init__(self, url, headers={}):
     self.url = url
     self.headers = {
-      'User-Agent': 'CurlSSE/1.0 (Python3)',
-      'Accept': 'text/event-stream',
-      'Cache-Control': 'no-cache'
+        'User-Agent': 'CurlSSE/1.0 (Python3)',
+        'Accept': 'text/event-stream',
+        'Cache-Control': 'no-cache'
     }
     self.headers.update(headers)
 
@@ -75,7 +77,7 @@ class CurlSSE:
       while self.running:
 
         # Check for data on input
-        r, w, e = select.select([ fd ], [], [], 0)
+        r, w, e = select.select([fd], [], [], 0)
         if fd in r:
 
           # Read chunk
@@ -83,7 +85,7 @@ class CurlSSE:
 
           # Extract lines
           while b'\n' in chunk:
-            (line, chunk) = chunk.split(b'\n',1)
+            (line, chunk) = chunk.split(b'\n', 1)
             line = line.decode('utf-8').strip()
 
             # An empty line sends the event
@@ -107,16 +109,22 @@ class CurlSSE:
         # Check if the curl process has exited
         if not self.proc_subprocess.poll() is None:
           os.close(fd)
-          if self.proc_subprocess.returncode < 0: # Killed
+          if self.proc_subprocess.returncode < 0:  # Killed
             break
-          if self.proc_subprocess.returncode == 0: # Gracefully disconnected
+          if self.proc_subprocess.returncode == 0:  # Gracefully disconnected
             raise CurlSSEDisconnectedError()
-          elif self.proc_subprocess.returncode in (5, 6, 7, 52, 55, 56): # Connection or communication error
-            raise IOError('A network error occurred while trying to connect to the endpoint')
-          elif self.proc_subprocess.returncode in (22,): # HTTP Error
-            raise IOError('An HTTP error occurred while trying to read from the endpoint')
+          elif self.proc_subprocess.returncode in (
+              5, 6, 7, 52, 55, 56):  # Connection or communication error
+            raise IOError(
+                'A network error occurred while trying to connect to the endpoint'
+            )
+          elif self.proc_subprocess.returncode in (22, ):  # HTTP Error
+            raise IOError(
+                'An HTTP error occurred while trying to read from the endpoint'
+            )
           else:
-            raise IOError('An unknown cURL error occurred (code={})'.format(self.proc_subprocess.returncode))
+            raise IOError('An unknown cURL error occurred (code={})'.format(
+                self.proc_subprocess.returncode))
 
         # Sleep for a bit
         time.sleep(0.1)

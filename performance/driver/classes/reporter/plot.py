@@ -656,9 +656,8 @@ class PlotReporter(Reporter):
 
     # Create missing directory for the files
     os.makedirs(
-      os.path.abspath(os.path.dirname(config.get('prefix', 'plot-'))),
-      exist_ok=True
-    )
+        os.path.abspath(os.path.dirname(config.get('prefix', 'plot-'))),
+        exist_ok=True)
 
     if config.get('raw', False):
       self.plot_raw(config, summarizer, reference, refConfig)
