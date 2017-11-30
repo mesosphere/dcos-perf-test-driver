@@ -5,6 +5,7 @@ from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, TeardownEvent, isEventMatching
 from performance.driver.core.eventfilters import EventFilter
 from queue import Queue, Empty
+from threading import Lock
 
 
 class DurationTrackerSession:
@@ -18,14 +19,17 @@ class DurationTrackerSession:
     self.startFilter = tracker.startFilter.start(traceids, self.handleStart)
     self.endFilter = tracker.endFilter.start(traceids, self.handleEnd)
     self.tracker = tracker
-    self.traceids = traceids
+    self.traceids = list(traceids)
+    self.mutex = Lock()
 
   def handleStart(self, event):
-    self.queue.put(event)
+    with self.mutex:
+      self.queue.put(event)
 
   def handleEnd(self, event):
     try:
-      start_event = self.queue.get(False)
+      with self.mutex:
+        start_event = self.queue.get(False)
     except Empty:
       self.logger.warn('Found duration end without a start event!')
       return
@@ -117,5 +121,6 @@ class DurationTracker(Tracker):
       self.traces.append(self.activeTrace)
 
     # Handle this event on the correct trace
-    for trace in self.traces:
+    traces_immutable = list(self.traces)
+    for trace in traces_immutable:
       trace.handle(event)
