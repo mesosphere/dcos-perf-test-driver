@@ -5,6 +5,7 @@ from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, TeardownEvent, isEventMatching
 from performance.driver.core.eventfilters import EventFilter
 from queue import Queue, Empty
+from threading import Lock
 
 
 class CountTrackerSession:
@@ -17,12 +18,14 @@ class CountTrackerSession:
     self.logger = logging.getLogger('CountTrackerSession')
     self.eventFilter = tracker.eventFilter.start(traceids, self.handleEvent)
     self.tracker = tracker
-    self.traceids = traceids
+    self.traceids = list(traceids)
 
     self.counter = 0
+    self.mutex = Lock()
 
   def handleEvent(self, event):
-    self.counter += 1
+    with self.mutex:
+      self.counter += 1
 
   def handle(self, event):
     self.eventFilter.handle(event)
@@ -96,5 +99,6 @@ class CountTracker(Tracker):
       self.traces.append(self.activeTrace)
 
     # Handle this event on the correct trace
-    for trace in self.traces:
+    traces_immutable = list(self.traces)
+    for trace in traces_immutable:
       trace.handle(event)
