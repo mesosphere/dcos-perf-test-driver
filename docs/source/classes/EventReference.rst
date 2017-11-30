@@ -42,11 +42,15 @@ their available attributes.
                          performance.driver.classes.observer.events.marathon.MarathonEvent
                          performance.driver.classes.observer.events.marathon.MarathonGroupChangeFailedEvent
                          performance.driver.classes.observer.events.marathon.MarathonGroupChangeSuccessEvent
+                         performance.driver.classes.observer.events.marathon.MarathonSSEConnectedEvent
+                         performance.driver.classes.observer.events.marathon.MarathonSSEDisconnectedEvent
                          performance.driver.classes.observer.events.marathon.MarathonSSEEvent
                          performance.driver.classes.observer.events.marathon.MarathonStartedEvent
-                         performance.driver.classes.observer.events.marathon.MarathonUpgradeEvent
+                         performance.driver.classes.observer.events.marathon.MarathonUnavailableEvent
+                         performance.driver.classes.observer.events.marathon.MarathonUpdateEvent
                          performance.driver.classes.observer.httptiming.HTTPTimingResultEvent
                          performance.driver.classes.observer.logstax.observer.LogStaxMessageEvent
+                         performance.driver.classes.policy.multistep.CompleteStepImmediatelyEvent
                          performance.driver.core.eventbus.ExitEvent
                          performance.driver.core.events.Event
                          performance.driver.core.events.FlagUpdateEvent
@@ -192,6 +196,14 @@ Event Details
    :members:
    :undoc-members:
 
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonSSEConnectedEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonSSEDisconnectedEvent
+   :members:
+   :undoc-members:
+
 .. autoclass:: performance.driver.classes.observer.events.marathon.MarathonSSEEvent
    :members:
    :undoc-members:
@@ -200,7 +212,11 @@ Event Details
    :members:
    :undoc-members:
 
-.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonUpgradeEvent
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonUnavailableEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.observer.events.marathon.MarathonUpdateEvent
    :members:
    :undoc-members:
 
@@ -209,6 +225,10 @@ Event Details
    :undoc-members:
 
 .. autoclass:: performance.driver.classes.observer.logstax.observer.LogStaxMessageEvent
+   :members:
+   :undoc-members:
+
+.. autoclass:: performance.driver.classes.policy.multistep.CompleteStepImmediatelyEvent
    :members:
    :undoc-members:
 
