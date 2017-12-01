@@ -22,7 +22,8 @@ class JSONNormalizerEncoder(json.JSONEncoder):
 class RawEventsReporter(Reporter):
   """
   The **Raw Events Reporter** is dumping every event in the eventBus to a file
-  that can be used for offline event processing
+  that can be used for offline event processing. You can also use this reporter
+  for debugging the performance driver internals.
 
   ::
 
@@ -32,14 +33,29 @@ class RawEventsReporter(Reporter):
         # Where to dump the events
         filename: "events.dump"
 
-  The log file format has the following syntax, allowing both easy tokenisation
-  and full content processing.
+  The log file is encoded with the following rules::
+
+  1. The events are encoded in plain-text
+  2. Each event is separated with a new line
+  3. Each line contains two columns separated with semicolon
+  4. The first column contains the unix timestamp of the event
+  5. The second column contains the name of the event
+  6. The third column contains the field values for the event encoded as a JSON string.
+
+  For example:
 
   .. code-block:: js
 
     //   Timestamp  //    Name    //      Properties   //
     1500891843.976068;SomeEventName;{"prop":"value", ...}
     ...
+
+  This format allows for simple grepping and more elaborate parsing. For example
+
+  .. code-block:: bash
+
+    cat event.dump | grep ';TickEvent;' | wc -l
+
 
   """
 

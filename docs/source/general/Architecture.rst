@@ -30,6 +30,8 @@ Event Cascading
 
 Since everything in ``dcos-perf-test-driver`` is orchestrated through messages it's important to identify the test case each event belogs into. For this reason the driver is using *Event Cascading* as the means to describe which event was emitted as a response to another.
 
+.. image:: ../_static/event-cascading.png
+
 The *Event Cascading* is implemented by assigning unique IDs (called ``traceids``) to every event and carrying the related event IDs along when an event is emitted as a response (or in relation) to another.
 
 Usually, the *root* event is the ``ParameterUpdateEvent`` that is emitted when a scale test is initiated. Therefore, every other event that takes place in the test is carrying this ID.

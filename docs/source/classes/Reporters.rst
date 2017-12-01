@@ -50,6 +50,13 @@ RawReporter
 
 .. autoclass:: performance.driver.classes.reporter.RawReporter
 
+.. _classref-reporter-RawEventsReporter:
+
+RawEventsReporter
+-----------
+
+.. autoclass:: performance.driver.classes.reporter.RawEventsReporter
+
 .. _classref-reporter-S3Reporter:
 
 S3Reporter
