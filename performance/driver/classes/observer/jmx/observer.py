@@ -2,6 +2,7 @@ import fcntl
 import json
 import os
 import requests
+import select
 import shlex
 import time
 
@@ -10,7 +11,7 @@ from threading import Thread
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString
-from performance.driver.core.events import Event, TeardownEvent
+from performance.driver.core.events import Event, TeardownEvent, ParameterUpdateEvent
 from performance.driver.core.eventfilters import EventFilter
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.classes.channel.cmdline import CmdlineStartedEvent
@@ -33,6 +34,9 @@ class JMXObserver(Observer):
 
     observers:
       - class: observer.JMXObserver
+
+        # [Optional] Re-send measured values on ParameterUpdateEvent
+        resendOnUpdate: yes
 
         # Connection information
         connect:
@@ -82,6 +86,7 @@ class JMXObserver(Observer):
   Such events can be passed down to metrics using the ``JMXTracker`` tracker.
   """
 
+  @subscribesToHint(TeardownEvent, ParameterUpdateEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     config = self.getRenderedConfig()
@@ -101,6 +106,7 @@ class JMXObserver(Observer):
     self.proc = None
     self.processThread = None
     self.targetPid = None
+    self.lastValue = {}
 
     # Register to the Start / Teardown events
     self.eventbus.subscribe(self.handleEvent)
@@ -108,6 +114,11 @@ class JMXObserver(Observer):
         self.handleDeactivateEvent, events=(TeardownEvent, ))
     self.eventbus.subscribe(
         self.handleCmdlineStartedEvent, events=(CmdlineStartedEvent, ))
+
+    # If we should re-send updates on ParameterUpdateEvent, subscribe now
+    if config.get('resendOnUpdate', True):
+      self.eventbus.subscribe(
+          self.handleParameterUpdateEvent, events=(ParameterUpdateEvent, ))
 
     # Create filters
     startEvent = eventsConfig.get('activate', 'CmdlineStartedEvent')
@@ -119,6 +130,16 @@ class JMXObserver(Observer):
                                                    self.handleDeactivateEvent)
 
     self.logger.info('Waiting for `{}` before starting'.format(startEvent))
+
+  def handleParameterUpdateEvent(self, event):
+    """
+    Every time we have a ParameterUpdateEvent re-send all metrics. This way we
+    can cope with cases where ParameterUpdateEvents arrive more frequently than
+    the values change.
+    """
+    if self.lastValue:
+      self.logger.info('Measured {}'.format(self.lastValue))
+      self.eventbus.publish(JMXMeasurement(self.lastValue))
 
   def handleEvent(self, event):
     """
@@ -179,11 +200,11 @@ class JMXObserver(Observer):
     # Handle connection arguments
     if 'port' in self.connectionConfig:
       args += [
-          self.connectionConfig.get('host', '127.0.0.1'),
-          self.connectionConfig['port']
+          str(self.connectionConfig.get('host', '127.0.0.1')),
+          str(self.connectionConfig['port'])
       ]
     elif 'pid_from' in self.connectionConfig:
-      args += ['pid', self.evaluatePid()]
+      args += ['pid', str(self.evaluatePid())]
 
     # Generate metrics
     for metric in self.metricsConfig:
@@ -196,23 +217,51 @@ class JMXObserver(Observer):
       try:
 
         # Open process
+        self.logger.debug('Launching JMX tool using {}'.format(args))
         self.proc = proc = Popen(
             args, stdout=PIPE, stderr=PIPE, preexec_fn=os.setsid)
 
+        # Make read operations non-blocking
+        flag = fcntl.fcntl(proc.stdout.fileno(), fcntl.F_GETFD)
+        fcntl.fcntl(proc.stdout.fileno(), fcntl.F_SETFL, flag | os.O_NONBLOCK)
+
+        flag = fcntl.fcntl(proc.stderr.fileno(), fcntl.F_GETFD)
+        fcntl.fcntl(proc.stderr.fileno(), fcntl.F_SETFL, flag | os.O_NONBLOCK)
+
+        # Stdout/err chunks
+        chunks = ['', '']
+
         # Start reading until the process exits
         while proc.poll() is None:
-          line = proc.stdout.readline().decode('utf-8').strip()
-          if not line:
-            break
-          self.handleMetricLine(line)
 
-        # Drain stderr
-        (_, serr) = proc.communicate()
+          # While process is running, use `select` to wait for an stdout/err
+          # FD event before reading.
+          (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr], [],
+                                                [])
+          # Process stdout chunks
+          if proc.stdout in rlist:
+            block = proc.stdout.read(1024 * 1024)
+            chunks[0] += block.decode('utf-8')
+            while '\n' in chunks[0]:
+              (line, chunks[0]) = chunks[0].split('\n', 1)
+              if line:
+                self.handleMetricLine(line)
+
+          # Process stderr chunks
+          if proc.stderr in rlist:
+            block = proc.stderr.read(1024 * 1024)
+            chunks[1] += block.decode('utf-8')
+            while '\n' in chunks[1]:
+              (line, chunks[1]) = chunks[1].split('\n', 1)
+              if line:
+                self.logger.warn(line)
+
+        # Handle exit codes
         if proc.returncode != 0:
           if not self.active:
             break
-          self.logger.warn('Middleware process exited with error: {}'.format(
-              serr.decode('utf-8').strip()))
+          self.logger.warn('Middleware process exited with code {}'.format(
+              proc.returncode))
           time.sleep(1)
 
       except OSError as e:
@@ -241,10 +290,13 @@ class JMXObserver(Observer):
         # Handle errors
         if type(value) is str:
           if value.endswith("-error>"):
-            self.logger.warn("Measurement of metric {} encountered an error: {}".format(name, value[1:-1]))
+            self.logger.warn(
+                "Measurement of metric {} encountered an error: {}".format(
+                    name, value[1:-1]))
             continue
           if value == "<missing>":
-            self.logger.warn("The MBean or Attribute for metric {} is missing".format(name))
+            self.logger.warn(
+                "The MBean or Attribute for metric {} is missing".format(name))
             continue
 
         # In case we have an expression to evaluate, do it now
@@ -254,11 +306,13 @@ class JMXObserver(Observer):
           try:
             value = eval(evaluate, evalContext)
           except Exception as e:
-            self.logger.error('Error evaluating expression "{}": {}'.format(evaluate, e))
+            self.logger.error(
+                'Error evaluating expression "{}": {}'.format(evaluate, e))
             value = 0
 
         # Store value
         fields[name] = value
+        self.lastValue[name] = value
 
       # If all fields had errors, don't submit anything
       if not fields:
