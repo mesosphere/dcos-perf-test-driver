@@ -80,7 +80,8 @@ class ParameterBatch(EventBusSubscriber):
     Schedule a property update batch that will be triggered when the event
     handling is completed
     """
-    self.paramUpdates.append((name, value))
+    with self.parameterMutex:
+      self.paramUpdates.append((name, value))
     return self.updateTraceid
 
   def setParameters(self, parameters):
