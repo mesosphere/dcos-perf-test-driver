@@ -77,7 +77,9 @@ def pf_plotDiff(axis, summ1, summ2, maxis, mmetric):
   """
   y_diff = summ2[:,1] - summ1[:,1]
   y_delta = np.sqrt( summ1[:,2] ** 2 / summ1[:,3] + summ2[:,2] ** 2 / summ2[:,3] )
-  y_z = y_diff / y_delta
+  with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    y_z = np.nan_to_num(y_diff / y_delta)
   # axis.errorbar(summ2[:,0], y_diff, yerr=y_delta, label="diff")
   axis.set_ylabel('Sigmas')
   p1 = axis.plot(summ2[:,0], y_z)
@@ -117,6 +119,7 @@ def calcDiffSD(summ1, summ2):
 
   # Calculate the Z-score
   with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
     z_score = np.nan_to_num(y_diff / y_sd)
 
   # Return the difference in sigmas
@@ -192,7 +195,6 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
     # Call the plot function on the axis
     lines = plotFn(axarr[x_i, y_i], summ1, summ2, meta_axis, meta_metric)
     if first_lines is None:
-      print(lines)
       first_lines = lines
 
     # Advance to next plot
