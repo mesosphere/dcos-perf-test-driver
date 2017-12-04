@@ -53,7 +53,7 @@ RawReporter
 .. _classref-reporter-RawEventsReporter:
 
 RawEventsReporter
------------
+-----------------
 
 .. autoclass:: performance.driver.classes.reporter.RawEventsReporter
 
