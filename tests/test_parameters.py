@@ -24,7 +24,7 @@ class TestParameterBatch(unittest.TestCase):
           {"name": "bax"}
         ]
       }, None)
-    self.eventbus = EventBus()
+    self.eventbus = EventBus(threadCount=1)
     self.parameters = ParameterBatch(self.eventbus, self.config)
 
     self.eventbus.start()
@@ -60,6 +60,10 @@ class TestParameterBatch(unittest.TestCase):
     # Dispatch a TriggerUpdateEvent, that will trigger the property
     # updates that will eventually trigger only one parameter update
     self.eventbus.publish(TriggerUpdateEvent())
+    self.eventbus.flush()
+
+    # The events won't be published until the policy calls the .flush event
+    self.parameters.flush()
     self.eventbus.flush()
 
     # Check if we are called only once
@@ -104,6 +108,10 @@ class TestParameterBatch(unittest.TestCase):
     self.eventbus.publish(TriggerUpdateEvent())
     self.eventbus.flush()
 
+    # The events won't be published until the policy calls the .flush event
+    self.parameters.flush()
+    self.eventbus.flush()
+
     # Check if we are called only once
     self.assertEqual(len(subscriber.mock_calls), 1)
 
@@ -135,6 +143,10 @@ class TestParameterBatch(unittest.TestCase):
     # Dispatch a TriggerUpdateEvent, that will trigger the property
     # updates that will eventually trigger only one parameter update
     self.eventbus.publish(TriggerUpdateEvent())
+    self.eventbus.flush()
+
+    # The events won't be published until the policy calls the .flush event
+    self.parameters.flush()
     self.eventbus.flush()
 
     # Check if we are called only once
