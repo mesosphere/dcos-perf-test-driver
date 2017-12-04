@@ -1,8 +1,10 @@
 import logging
+import threading
+import queue
 
 from performance.driver.core.config import Configurable
 from performance.driver.core.eventbus import EventBusSubscriber
-from performance.driver.core import events
+from performance.driver.core.events import TeardownEvent
 from performance.driver.core import fsm
 
 
@@ -42,10 +44,52 @@ class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
     self.parameterBatch = parameterBatch
 
     # Receive events from the bus
-    eventbus.subscribe(self.handleEvent)
+    self.active = True
+    self.eventQueue = queue.Queue()
+    self.thread = threading.Thread(target=self.handlerThread)
 
     if not 'End' in self.states:
       raise TypeError('A policy FSM must contain an \'End\' state')
+
+    # Start thread ans subscribe to event handlers
+    self.thread.start()
+    eventbus.subscribe(self.handleEventSync)
+    eventbus.subscribe(self.handleTeardown, events=(TeardownEvent, ))
+
+  def handleTeardown(self, event):
+    """
+    Stop event handler thread at teardown
+    """
+    self.active = False
+    self.eventQueue.put(None)
+    self.thread.join()
+
+  def handlerThread(self):
+    """
+    A dedicated thread that passes events received from the event bus to
+    the FSM, in order to satisfy single-threaded safety of the implementation
+    """
+    self.logger.debug('Policy event thread started')
+    while self.active:
+      event = self.eventQueue.get()
+
+      # None event exits the loop
+      if event is None:
+        break
+
+      # Handle the event synchronously in the FSM
+      self.handleEvent(event)
+
+      # Flush any parameter update(s) that occurred during the op handling
+      self.parameterBatch.flush()
+
+    self.logger.debug('Policy event thread exited')
+
+  def handleEventSync(self, event):
+    """
+    Enqueues events that are going to be handled by the dedicated thread
+    """
+    self.eventQueue.put(event)
 
   def setStatus(self, value):
     """
