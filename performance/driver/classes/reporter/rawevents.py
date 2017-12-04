@@ -132,7 +132,7 @@ class RawEventsReporter(Reporter):
     # (We have been reporting all this time, now it's time to stop)
 
     # Stop thread
-    self.logger.debug("Stopping reporting thread")
+    self.logger.info("Waiting for event reporting thread to complete")
     self.active = False
     self.queue.put(None)
 
