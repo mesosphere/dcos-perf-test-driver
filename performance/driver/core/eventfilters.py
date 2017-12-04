@@ -12,6 +12,80 @@ REPLACE_DICT = re.compile(r"\.\'(.*?)\'")
 
 global_single_events = {}
 
+def tokenizeExpression(expression):
+  """
+  Tokenize expression
+  """
+
+  # Find all the events to match against
+  matches = DSL_TOKENS.findall(expression)
+  if not matches:
+    raise ValueError(
+        'The given expression "{}" is not a valid event filter DSL'.format(
+            expression))
+
+  # Process event matches
+  events = []
+  for (event, exprAttrib, flags) in matches:
+
+    # Calculate event id
+    eid = event + ':' + exprAttrib + ':' + flags
+
+    # Process sub-tokens
+    flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
+
+    # Flag parameters
+    flagParameters = {}
+    for i in range(0, len(flags)):
+      flag = flags[i]
+      if '(' in flag:
+        (flag, params) = flag.split('(')
+        if not params.endswith(')'):
+          raise ValueError(
+              'Mismatched closing parenthesis in flag {}'.format(flags[i]))
+        flags[i] = flag
+        flagParameters[flag] = params[:-1]
+
+    # Compile attribute selectors
+    attrib = []
+    if exprAttrib:
+      for (left, op, right) in DSL_ATTRIB.findall(exprAttrib):
+
+        # Expand .'xx' to ['xxx']
+        left = REPLACE_DICT.sub(lambda x: '["{}"]'.format(x.group(1)), left)
+
+        # Shorthand some ops
+        if op == "=":
+          op = "=="
+
+        # Handle loose regex match
+        if op == "~=":
+          attrib.append(
+              eval('lambda event: not regex.search(str(event.{})) is None'.
+                   format(left), {'regex': re.compile(right)}))
+
+        # Handle exact regex match
+        elif op == "~==":
+          attrib.append(
+              eval('lambda event: not regex.match(str(event.{})) is None'.
+                   format(left), {'regex': re.compile(right)}))
+
+        # Handle `in` operator
+        elif op == "<~":
+          attrib.append(lambda event: right in list(getattr(event, left)))
+
+        # Handle operator match
+        else:
+          if not right.isnumeric() and not right[0] in ('"', "'"):
+            right = '"{}"'.format(right.replace('"', '\\"'))
+          attrib.append(
+              eval('lambda event: event.{} {} {}'.format(left, op, right)))
+
+    # Collect flags
+    events.append((event, attrib, flags, flagParameters, eid))
+
+  # Return events
+  return events
 
 class EventFilterSession:
   """
@@ -238,73 +312,7 @@ class EventFilter:
 
   def __init__(self, expression):
     self.expression = expression
-
-    # Find all the events to match against
-    matches = DSL_TOKENS.findall(expression)
-    if not matches:
-      raise ValueError(
-          'The given expression "{}" is not a valid event filter DSL'.format(
-              expression))
-
-    # Process event matches
-    self.events = []
-    for (event, exprAttrib, flags) in matches:
-
-      # Calculate event id
-      eid = event + ':' + exprAttrib + ':' + flags
-
-      # Process sub-tokens
-      flags = list(map(lambda x: x.lower(), DSL_FLAGS.findall(str(flags))))
-
-      # Flag parameters
-      flagParameters = {}
-      for i in range(0, len(flags)):
-        flag = flags[i]
-        if '(' in flag:
-          (flag, params) = flag.split('(')
-          if not params.endswith(')'):
-            raise ValueError(
-                'Mismatched closing parenthesis in flag {}'.format(flags[i]))
-          flags[i] = flag
-          flagParameters[flag] = params[:-1]
-
-      # Compile attribute selectors
-      attrib = []
-      if exprAttrib:
-        for (left, op, right) in DSL_ATTRIB.findall(exprAttrib):
-
-          # Expand .'xx' to ['xxx']
-          left = REPLACE_DICT.sub(lambda x: '["{}"]'.format(x.group(1)), left)
-
-          # Shorthand some ops
-          if op == "=":
-            op = "=="
-
-          # Handle loose regex match
-          if op == "~=":
-            attrib.append(
-                eval('lambda event: not regex.search(str(event.{})) is None'.
-                     format(left), {'regex': re.compile(right)}))
-
-          # Handle exact regex match
-          elif op == "~==":
-            attrib.append(
-                eval('lambda event: not regex.match(str(event.{})) is None'.
-                     format(left), {'regex': re.compile(right)}))
-
-          # Handle `in` operator
-          elif op == "<~":
-            attrib.append(lambda event: right in list(getattr(event, left)))
-
-          # Handle operator match
-          else:
-            if not right.isnumeric() and not right[0] in ('"', "'"):
-              right = '"{}"'.format(right.replace('"', '\\"'))
-            attrib.append(
-                eval('lambda event: event.{} {} {}'.format(left, op, right)))
-
-      # Collect flags
-      self.events.append((event, attrib, flags, flagParameters, eid))
+    self.events = tokenizeExpression(expression)
 
   def start(self, traceids, callback):
     """
