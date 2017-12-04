@@ -1,8 +1,11 @@
 import os
 import json
+import queue
 
+from threading import Thread
 from requests.structures import CaseInsensitiveDict
 from performance.driver.core.classes import Reporter
+from performance.driver.core.events import TickEvent, TeardownEvent
 
 
 class JSONNormalizerEncoder(json.JSONEncoder):
@@ -29,6 +32,11 @@ class RawEventsReporter(Reporter):
 
     reporters:
       - class: reporter.RawEventsReporter
+
+        # [Optional] Set to `yes` to track TickEvents
+        # Note that including tick events might introduce a lot of noise to
+        # your data and/or increase the reporting impact.
+        tickEvents: no
 
         # Where to dump the events
         filename: "events.dump"
@@ -63,28 +71,72 @@ class RawEventsReporter(Reporter):
     super().__init__(*args)
 
     config = self.getRenderedConfig()
-    filename = config.get('filename', 'events.dump')
+    self.filename = config.get('filename', 'events.dump')
 
     # Create missing directory for the files
-    os.makedirs(os.path.abspath(os.path.dirname(filename)), exist_ok=True)
+    os.makedirs(os.path.abspath(os.path.dirname(self.filename)), exist_ok=True)
 
-    self.file = open(filename, 'w')
-    self.eventbus.subscribe(self.handleEvent)
+    self.tickEvents = config.get('tickEvents', False)
+    self.queue = queue.Queue()
+    self.thread = Thread(target=self.reportingThread)
+    self.active = True
+
+    # Start reporter thread
+    self.logger.debug("Starting reporting thread")
+    self.thread.start()
+
+    # Subscribe to all events, as the last subscriber
+    self.eventbus.subscribe(self.handleEvent, order=10)
+
+  def reportingThread(self):
+    """
+    A dedicated thread that writes down the events to the file
+    """
+    with open(self.filename, 'w') as file:
+      while self.active:
+
+        # Pop next event from the queue
+        event = self.queue.get()
+
+        # None event exits the thread
+        if event is None:
+          break
+
+        # Write down the event to file
+        file.write("{:f};{};{}\n".format(
+            event.ts,
+            type(event).__name__,
+            json.dumps(event.__dict__, cls=JSONNormalizerEncoder)))
+
+    self.logger.debug("Reporting thread exited")
 
   def handleEvent(self, event):
     """
     Serialize and dump event
     """
 
-    self.file.write("{:f};{};{}\n".format(
-        event.ts,
-        type(event).__name__,
-        json.dumps(event.__dict__, cls=JSONNormalizerEncoder)))
+    # Ignore tick events if not explicitly configured
+    if type(event) is TickEvent and not self.tickEvents:
+      return
+
+    # Otherwise put the event in the queue for processing
+    # by the thread.
+    self.queue.put(event)
 
   def dump(self, summarizer):
     """
-    Complete the dump
+    Implementation requirement from the Reporter base class.
+    This method is called when the tests have finished.
     """
 
-    # Just close the file
-    self.file.close()
+    # (We have been reporting all this time, now it's time to stop)
+
+    # Stop thread
+    self.logger.debug("Stopping reporting thread")
+    self.active = False
+    self.queue.put(None)
+
+    # Join
+    self.thread.join()
+    self.thread = None
+
