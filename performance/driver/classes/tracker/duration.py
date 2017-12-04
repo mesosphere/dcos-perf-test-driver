@@ -103,7 +103,7 @@ class DurationTracker(Tracker):
     the time of the first event and the time of the lsat event
     """
 
-    # A terminal events terminates an active trace
+    # A terminal event terminates an active trace
     eventType = type(event)
     if eventType in (RestartEvent, TeardownEvent):
       for trace in self.traces:
@@ -120,7 +120,8 @@ class DurationTracker(Tracker):
       self.activeTrace = DurationTrackerSession(self, event.traceids)
       self.traces.append(self.activeTrace)
 
-    # Handle this event on the correct trace
-    traces_immutable = list(self.traces)
-    for trace in traces_immutable:
-      trace.handle(event)
+    # Fast, modification-friendly iteration over traces
+    i = 0
+    while i < len(self.traces):
+      self.traces[i].handle(event)
+      i += 1
