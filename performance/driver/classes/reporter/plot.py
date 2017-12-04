@@ -258,6 +258,7 @@ class PlotReporter(Reporter):
               x1,
               v,
               yerr=values[:, 1],
+              mfc=dat[0].get_color(),
               ecolor=dat[0].get_color(),
               capsize=5,
               fmt='.')
@@ -287,7 +288,12 @@ class PlotReporter(Reporter):
         # Plot the error bars if we have them
         if not np.all(values[:, 1] == 0):
           ax.errorbar(
-              x1, v, yerr=values[:, 1], ecolor=dat[0].get_color(), capsize=5)
+              x1,
+              v,
+              yerr=values[:, 1],
+              mfc=dat[0].get_color(),
+              ecolor=dat[0].get_color(),
+              capsize=5)
 
         # Safely bail if something went wrong while processing the reference
         try:
