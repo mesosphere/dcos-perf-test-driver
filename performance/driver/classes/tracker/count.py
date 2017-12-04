@@ -98,7 +98,8 @@ class CountTracker(Tracker):
       self.activeTrace = CountTrackerSession(self, event.traceids)
       self.traces.append(self.activeTrace)
 
-    # Handle this event on the correct trace
-    traces_immutable = list(self.traces)
-    for trace in traces_immutable:
-      trace.handle(event)
+    # Fast, modification-friendly iteration over traces
+    i = 0
+    while i < len(self.traces):
+      self.traces[i].handle(event)
+      i += 1
