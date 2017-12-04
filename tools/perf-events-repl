@@ -1,0 +1,142 @@
+#!/usr/bin/env python
+
+import numpy as np
+import json
+import code
+import sys
+import datetime
+
+from performance.driver.core.eventfilters import tokenizeExpression
+
+# Require an argument
+if len(sys.argv) < 2:
+  print("ERROR: Please specify the raw event dump to load")
+  sys.exit(1)
+
+class Event:
+  """
+  User-friendly abstraction to the event information
+  """
+
+  def __init__(self, num, ts, name, fields):
+    """
+    Constructor
+    """
+    self._num = num
+    self._date = datetime.datetime.fromtimestamp(float(ts))
+    self.ts = ts
+    self.event = name
+    for key, value in fields.items():
+      setattr(self, key, value)
+
+  def __str__(self):
+    return self.event
+
+  def __repr__(self):
+    return "{}{{{}}}".format(self.event, self._num)
+
+class EventList(list):
+
+  def __init__(self, events):
+    super().__init__(events)
+    self.traces = EventTracesDict(events)
+    self.names = EventNamesDict(events)
+
+  def __repr__(self):
+    return " - " + "\n - ".join(map(lambda x: repr(x), self))
+
+  def filter(self, expression):
+    tokens = tokenizeExpression(expression)
+    collected = []
+    for ev in self:
+      match = True
+      for name, attrib, flags, flagParameters, eid in tokens:
+        if ev.event != name:
+          match = False
+          break
+
+        for attr in attrib:
+          if not attr(ev):
+            match = False
+            break
+        if not match:
+          break
+      if match:
+        collected.append(ev)
+
+    return EventList(collected)
+
+  def __getattribute__(self, name):
+    """
+    Return a list of attributes on attribute access
+    """
+    try:
+      return super().__getattribute__(name)
+    except AttributeError:
+      ans = []
+      for e in self:
+        if hasattr(e, name):
+          ans.append(getattr(e, name))
+        else:
+          ans.append(None)
+
+      if len(ans):
+        if type(ans[0]) in (int, float):
+          ans = np.array(ans)
+      return ans
+
+class EventTracesDict(dict):
+  def __init__(self, events):
+    for event in events:
+      for traceid in event.traceids:
+        if not traceid in self:
+          self[traceid] = []
+        self[traceid].append(event)
+
+class EventNamesDict(dict):
+  def __init__(self, events):
+    for event in events:
+      if not event.event in self:
+        self[event.event] = []
+      self[event.event].append(event)
+
+# Load in memory
+print("Loading raw events from {}".format(sys.argv[1]))
+rawevents = []
+i = 0
+with open(sys.argv[1], 'r') as f:
+  for line in f:
+    (ts, name, fields) = line.strip().split(';', 2)
+    fields = json.loads(fields)
+    i += 1
+    event = Event(i, ts, name, fields)
+
+    # Collect event
+    rawevents.append(event)
+
+# Create high-level interface
+events = EventList(rawevents)
+
+# Start interactive console
+code.interact(
+  banner="""
+  .--.            .--.
+ ( (`\\\\."--``--".//`) )   DC/OS Performance Test Driver - Debugging Panther
+  '-.   __   __    .-'
+   /   /__\\ /__\\   \\      1. I have loaded {}
+  |    \\ 0/ \\ 0/    |     2. Check `events`
+  \\     `/   \\`     /
+   `-.  /-""\"-\\  .-`
+     /  '.___.'  \\
+     \\     I     /
+      `;--'`'--;`
+        '.___.'
+""".format(sys.argv[1]),
+  local={
+    "events": events,
+
+    # Frequently used modules
+    "np": np,
+    "json": json
+  }
+)
