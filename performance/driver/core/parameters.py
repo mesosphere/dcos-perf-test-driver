@@ -41,7 +41,6 @@ class ParameterBatch(EventBusSubscriber):
     Property updates can occurr any time during an event handling process,
     so we are waiting until the policy is ready to trigger a parameter update.
     """
-
     # Compose a 'diff' batch and 'new' parameter space
     batch = {}
     parameters = dict(self.parameters)
@@ -54,16 +53,14 @@ class ParameterBatch(EventBusSubscriber):
     while not self.flagUpdates.empty():
       (flagName, flagValue) = self.flagUpdates.get()
       self.eventbus.publish(
-          FlagUpdateEvent(
-              flagName, flagValue, traceid=self.previousTraceId))
+          FlagUpdateEvent(flagName, flagValue, traceid=self.previousTraceId))
 
     # Then dispatch parameter updates
     if batch:
       self.logger.info('Setting axis to {}'.format(json.dumps(parameters)))
       self.eventbus.publish(
           ParameterUpdateEvent(
-              parameters, self.parameters, batch,
-              traceid=self.updateTraceid))
+              parameters, self.parameters, batch, traceid=self.updateTraceid))
 
       self.parameters = parameters
       self.previousTraceId = self.updateTraceid

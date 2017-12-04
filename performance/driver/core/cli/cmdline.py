@@ -64,8 +64,8 @@ def parse_cmdline(args=None):
       default=None,
       dest='clock_ms',
       type=float,
-      help='Change the internal clock frequency in milliseconds between frames' +
-      '(default 33.3)')
+      help='Change the internal clock frequency in milliseconds between frames'
+      + '(default 33.3)')
 
   # The remaining part is the configuration and it's arguments
   parser.add_argument(

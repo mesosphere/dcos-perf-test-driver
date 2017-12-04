@@ -93,8 +93,12 @@ class MarathonPollerObserver(Observer):
     self.retries = config.get('retries', 3)
 
     eventsConfig = config.get('events', {})
-    self.startEventSession = EventFilter(eventsConfig.get('start', 'StartEvent')).start(None, self.handleStartEvent)
-    self.stopEventSession = EventFilter(eventsConfig.get('stop', 'TeardownEvent')).start(None, self.handleStopEvent)
+    self.startEventSession = EventFilter(
+        eventsConfig.get('start', 'StartEvent')).start(None,
+                                                       self.handleStartEvent)
+    self.stopEventSession = EventFilter(
+        eventsConfig.get('stop', 'TeardownEvent')).start(
+            None, self.handleStopEvent)
 
     self.retriesLeft = self.retries
     self.requestTraceIDs = {}

@@ -260,8 +260,8 @@ class JMXObserver(Observer):
         if proc.returncode != 0:
           if not self.active:
             break
-          self.logger.warn('Middleware process exited with code {}'.format(
-              proc.returncode))
+          self.logger.warn(
+              'Middleware process exited with code {}'.format(proc.returncode))
           time.sleep(1)
 
       except OSError as e:

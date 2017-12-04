@@ -293,7 +293,10 @@ class CmdlineChannel(Channel):
     self.eventbus.publish(CmdlineStartedEvent(proc.pid))
 
     # Launch a thread to monitor it's output
-    thread = threading.Thread(target=self.monitor, args=(args[0], proc, stdin))
+    thread = threading.Thread(
+        target=self.monitor,
+        name='cmdline-monitor',
+        args=(args[0], proc, stdin))
     thread.start()
 
     # Keep track of the active task

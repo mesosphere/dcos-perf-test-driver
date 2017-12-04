@@ -156,15 +156,11 @@ class MarathonDeployChannel(Channel):
                     traceid=traceids))
 
         except Exception as e:
-          self.logger.error(
-              'Unable to deploy {} "{}" ({})'.format(
-                  deploymentType, inst_id, e))
+          self.logger.error('Unable to deploy {} "{}" ({})'.format(
+              deploymentType, inst_id, e))
           self.eventbus.publish(
               MarathonDeploymentRequestFailedEvent(
-                  inst_id,
-                  -1,
-                  str(e),
-                  traceid=traceids))
+                  inst_id, -1, str(e), traceid=traceids))
 
       except json.decoder.JSONDecodeError as e:
         self.logger.error(
@@ -349,7 +345,8 @@ class MarathonUpdateChannel(Channel):
               headers=self.getHeaders(),
               hooks=dict(response=ack_response))
           if response.status_code < 200 or response.status_code >= 300:
-            self.logger.debug("Server responded with: {}".format(response.text))
+            self.logger.debug(
+                "Server responded with: {}".format(response.text))
             self.logger.error(
                 'Unable to update app {} (HTTP response {}: {})'.format(
                     app.get('id', '<unknown>'), response.status_code,
@@ -363,13 +360,11 @@ class MarathonUpdateChannel(Channel):
             continue
 
         except Exception as e:
-          self.logger.error('Unable to update app {} ({})'.format(app['id'], e))
+          self.logger.error(
+              'Unable to update app {} ({})'.format(app['id'], e))
           self.eventbus.publish(
               MarathonDeploymentRequestFailedEvent(
-                  app['id'],
-                  -1,
-                  str(e),
-                  traceid=traceids))
+                  app['id'], -1, str(e), traceid=traceids))
           continue
 
         self.logger.debug('App updated successfully')

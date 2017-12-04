@@ -12,6 +12,7 @@ REPLACE_DICT = re.compile(r"\.\'(.*?)\'")
 
 global_single_events = {}
 
+
 def tokenizeExpression(expression):
   """
   Tokenize expression
@@ -86,6 +87,7 @@ def tokenizeExpression(expression):
 
   # Return events
   return events
+
 
 class EventFilterSession:
   """

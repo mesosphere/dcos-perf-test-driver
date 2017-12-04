@@ -139,4 +139,3 @@ class RawEventsReporter(Reporter):
     # Join
     self.thread.join()
     self.thread = None
-
