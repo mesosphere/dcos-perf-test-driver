@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 import numpy as np
+from matplotlib import pyplot
 import json
 import code
 import sys
 import datetime
+import atexit
+import os
 
 from performance.driver.core.eventfilters import tokenizeExpression
 
@@ -13,6 +16,13 @@ if len(sys.argv) < 2:
   print("ERROR: Please specify the raw event dump to load")
   sys.exit(1)
 
+class ExecHelper:
+  def __call__(self, file, *args, **kw):
+    with open(file, 'r') as f:
+      exec(f.read())
+
+  def __repr__(self):
+    return "x('filename.py') - Loads and executes the given python script"
 
 class Event:
   """
@@ -30,25 +40,22 @@ class Event:
     for key, value in fields.items():
       setattr(self, key, value)
 
-  def __str__(self):
-    return self.event
-
   def __repr__(self):
     return "{}{{{}}}".format(self.event, self._num)
 
+class BulletList(list):
+  def __repr__(self):
+    if not len(self):
+      return "(Empty)"
+    return " - " + "\n - ".join(map(lambda x: str(x), self))
 
-class EventList(list):
+class EventList(BulletList):
 
   def __init__(self, events, traces=True):
     super().__init__(events)
     self.traces = EventTracesList(events) if traces else None
     self.byname = EventNamesDict(events)
-    self.names = list(self.byname.keys())
-
-  def __repr__(self):
-    if not len(self):
-      return "(Empty)"
-    return " - " + "\n - ".join(map(lambda x: repr(x), self))
+    self.names = BulletList(sorted(list(self.byname.keys())))
 
   def filter(self, expression):
     tokens = tokenizeExpression(expression)
@@ -199,6 +206,23 @@ with open(sys.argv[1], 'r') as f:
 # Create high-level interface
 events = EventList(rawevents)
 
+# Fancy readline support.
+try:
+  import readline
+  history_file = os.path.expanduser('~/.dcos-events-repl.history')
+  if not os.path.exists(os.path.dirname(history_file)):
+    os.makedirs(os.path.dirname(history_file))
+  atexit.register(lambda: readline.write_history_file(history_file))
+  if os.path.exists(history_file):
+    readline.read_history_file(history_file)
+  import rlcompleter
+  if(sys.platform == 'darwin'):
+    readline.parse_and_bind ("bind ^I rl_complete")
+  else:
+    readline.parse_and_bind("tab: complete")
+except ImportError as e:
+  pass
+
 # Start interactive console
 code.interact(
   banner="""
@@ -216,9 +240,11 @@ code.interact(
 """.format(sys.argv[1]),
   local={
     "events": events,
+    "x": ExecHelper(),
 
     # Frequently used modules
     "np": np,
+    "plt": pyplot,
     "json": json
   }
 )
