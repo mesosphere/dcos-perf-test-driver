@@ -107,8 +107,17 @@ def dcos_perf_test_driver(args=None):
     if hasMissing:
       return 1
 
+    # Calculate fps
+    fps = 30
+    if cmdline.clock_fps != None:
+      fps = cmdline.clock_fps
+      logger.info("Setting internal clock to {} fps".format(fps))
+    elif cmdline.clock_ms != None:
+      fps = 1000 / cmdline.clock_ms
+      logger.info("Setting internal clock to {} fps".format(fps))
+
     # Start a test session
-    session = Session(config, cmdline.workers)
+    session = Session(config, cmdline.workers, fps)
 
     # Before we start the tests we need to make sure that all the event
     # subscribers are listening for valid events. Otherwise we are going to

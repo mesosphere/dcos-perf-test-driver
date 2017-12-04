@@ -16,10 +16,10 @@ from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class Session(EventBusSubscriber):
   @subscribesToHint(RunTaskEvent)
-  def __init__(self, config, workers=8):
+  def __init__(self, config, workers=8, fps=30):
     """
     """
-    super().__init__(EventBus(threadCount=workers))
+    super().__init__(EventBus(clockFrequency=fps, threadCount=workers))
     self.logger = logging.getLogger('Session')
     self.config = config
     self.prevSigHandler = None

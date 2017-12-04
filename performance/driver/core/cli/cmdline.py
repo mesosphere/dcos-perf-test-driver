@@ -51,6 +51,22 @@ def parse_cmdline(args=None):
       help='The number of workers to allocate on the thread pool ' +
       '(default 8)')
 
+  parser.add_argument(
+      '--clock-fps',
+      default=None,
+      dest='clock_fps',
+      type=int,
+      help='Change the internal clock frequency in frames per second' +
+      '(default 30)')
+
+  parser.add_argument(
+      '--clock-ms',
+      default=None,
+      dest='clock_ms',
+      type=float,
+      help='Change the internal clock frequency in milliseconds between frames' +
+      '(default 33.3)')
+
   # The remaining part is the configuration and it's arguments
   parser.add_argument(
       'config', nargs='*', help='The configuration script to use.')
