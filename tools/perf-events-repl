@@ -13,6 +13,7 @@ if len(sys.argv) < 2:
   print("ERROR: Please specify the raw event dump to load")
   sys.exit(1)
 
+
 class Event:
   """
   User-friendly abstraction to the event information
@@ -35,31 +36,36 @@ class Event:
   def __repr__(self):
     return "{}{{{}}}".format(self.event, self._num)
 
+
 class EventList(list):
 
-  def __init__(self, events):
+  def __init__(self, events, traces=True):
     super().__init__(events)
-    self.traces = EventTracesDict(events)
-    self.names = EventNamesDict(events)
+    self.traces = EventTracesList(events) if traces else None
+    self.byname = EventNamesDict(events)
+    self.names = list(self.byname.keys())
 
   def __repr__(self):
+    if not len(self):
+      return "(Empty)"
     return " - " + "\n - ".join(map(lambda x: repr(x), self))
 
   def filter(self, expression):
     tokens = tokenizeExpression(expression)
     collected = []
     for ev in self:
-      match = True
+      foundEvent = None
       for name, attrib, flags, flagParameters, eid in tokens:
-        if ev.event != name:
-          match = False
+        if ev.event == name:
+          foundEvent = (attrib, flags, flagParameters, eid)
           break
+      if foundEvent is None:
+        continue
 
-        for attr in attrib:
-          if not attr(ev):
-            match = False
-            break
-        if not match:
+      match = True
+      for attr in foundEvent[0]:
+        if not attr(ev):
+          match = False
           break
       if match:
         collected.append(ev)
@@ -85,13 +91,89 @@ class EventList(list):
           ans = np.array(ans)
       return ans
 
-class EventTracesDict(dict):
+
+class EventsSharingTrace(EventList):
   def __init__(self, events):
+    self.traceids = []
     for event in events:
       for traceid in event.traceids:
-        if not traceid in self:
-          self[traceid] = []
-        self[traceid].append(event)
+        if not traceid in self.traceids:
+          self.traceids.append(traceid)
+    super().__init__(sorted(events, key=lambda x: x.ts), traces=False)
+
+
+class EventTracesList(list):
+  def __init__(self, events):
+    # Group together events that share the same trace codes
+    lookup = {}
+
+    for event in events:
+      batch = None
+      for traceid in event.traceids:
+        if traceid in lookup:
+          batch = lookup[traceid]
+          break
+      if batch is None:
+        batch = [event]
+        for traceid in event.traceids:
+          lookup[traceid] = batch
+      else:
+        batch.append(event)
+
+    super().__init__(list(map(lambda x: EventsSharingTrace(x), lookup.values())))
+
+  def __repr__(self):
+    if not len(self):
+      return "(Empty)"
+    ans = ""
+    for batch in self:
+      ans += "\n\n---[ {} ]---\n".format(', '.join(batch.traceids))
+      ans += repr(batch)
+    return ans
+
+  def __getattribute__(self, name):
+    """
+    Return the given attribute from the events from the traces
+    """
+    try:
+      return super().__getattribute__(name)
+    except AttributeError:
+      ans = []
+      for batch in self:
+        evts = []
+        for e in batch:
+          evts.append(getattr(e, name))
+
+        if len(evts):
+          if type(evts[0]) in (int, float):
+            evts = np.array(evts)
+        ans.append(evts)
+
+      if len(ans) and type(ans[0]) is np.ndarray:
+        ans = np.array(ans)
+      return ans
+
+class EventTracesDict(dict):
+  def __init__(self, events):
+    super().__init__()
+
+    # Group together events that share the same trace codes
+
+
+    # Find out root traces
+    for event in events:
+      if event.event == 'ParameterUpdateEvent':
+        for traceid in event.traceids:
+          if not traceid in self:
+            self[traceid] = []
+          self[traceid].append(event)
+
+    # Put events in root traces
+    for event in events:
+      for traceid in event.traceids:
+        if traceid in self:
+          self[traceid].append(event)
+
 
 class EventNamesDict(dict):
   def __init__(self, events):
