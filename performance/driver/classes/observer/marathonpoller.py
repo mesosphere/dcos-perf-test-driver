@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import threading
 
 from .marathonevents import *
 
@@ -8,6 +9,7 @@ from performance.driver.core.classes import Observer
 from performance.driver.core.events import TickEvent, TeardownEvent, StartEvent
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.core.utils import dictDiff
+from performance.driver.core.eventfilters import EventFilter
 
 from performance.driver.classes.channel.marathon import MarathonDeploymentStartedEvent
 
@@ -90,6 +92,10 @@ class MarathonPollerObserver(Observer):
     self.failureTimeout = config.get('failureTimeout', 0)
     self.retries = config.get('retries', 3)
 
+    eventsConfig = config.get('events', {})
+    self.startEventSession = EventFilter(eventsConfig.get('start', 'StartEvent')).start(None, self.handleStartEvent)
+    self.stopEventSession = EventFilter(eventsConfig.get('stop', 'TeardownEvent')).start(None, self.handleStopEvent)
+
     self.retriesLeft = self.retries
     self.requestTraceIDs = {}
     self.requestedDeployments = set()
@@ -102,16 +108,49 @@ class MarathonPollerObserver(Observer):
     # Keep track of outgoing deployment requests
     self.eventbus.subscribe(
         self.handleRequest, events=(MarathonDeploymentStartedEvent, ))
-    self.eventbus.subscribe(self.handleTick, events=(TickEvent, ))
+    self.eventbus.subscribe(self.handleEvent)
 
-  def handleTick(self, event):
+    # Start thread
+    self.thread = None
+    self.active = False
+
+  def handleEvent(self, event):
     """
-    Handle a clock tick
+    Pass down event to start/stop sessions
     """
-    self.pollDelta += event.delta
-    if self.pollDelta >= self.pollInterval:
-      self.pollDelta = 0
+    self.startEventSession.handle(event)
+    self.stopEventSession.handle(event)
+
+  def handleStartEvent(self, event):
+    """
+    Handle request to start polling
+    """
+    if not self.thread is None:
+      return
+
+    # Start polling thread
+    self.active = True
+    self.thread = threading.Thread(target=self.pollerThread)
+    self.thread.start()
+
+  def handleStopEvent(self, event):
+    """
+    Handle request to stop polling
+    """
+    if self.thread is None:
+      return
+
+    # Stop polling thread
+    self.active = False
+    self.thread.join()
+
+  def pollerThread(self):
+    """
+    The poller thread polls the marathon endpoint at fixed intervals
+    """
+    while self.active:
       self.pollGroupsEndpoint()
+      time.sleep(self.pollInterval)
 
   def reset(self):
     """
