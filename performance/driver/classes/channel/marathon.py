@@ -131,26 +131,39 @@ class MarathonDeployChannel(Channel):
             MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
 
         # Callback to acknowledge request
-        def ack_response(request, *args, **kwargs):
-          self.eventbus.publish(
-              MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
+        def ack_response(response, *args, **kwargs):
+          if response.status_code >= 200 and response.status_code < 300:
+            self.eventbus.publish(
+                MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
 
         # Create a request
-        response = requests.post(
-            url,
-            json=body,
-            verify=False,
-            headers=self.getHeaders(),
-            hooks=dict(response=ack_response))
-        if response.status_code < 200 or response.status_code >= 300:
+        try:
+          response = requests.post(
+              url,
+              json=body,
+              verify=False,
+              headers=self.getHeaders(),
+              hooks=dict(response=ack_response))
+          if response.status_code < 200 or response.status_code >= 300:
+            self.logger.error(
+                'Unable to deploy {} "{}" (HTTP response {})'.format(
+                    deploymentType, inst_id, response.status_code))
+            self.eventbus.publish(
+                MarathonDeploymentRequestFailedEvent(
+                    inst_id,
+                    response.status_code,
+                    response.text,
+                    traceid=traceids))
+
+        except Exception as e:
           self.logger.error(
-              'Unable to deploy {} "{}" (HTTP response {})'.format(
-                  deploymentType, inst_id, response.status_code))
+              'Unable to deploy {} "{}" ({})'.format(
+                  deploymentType, inst_id, e))
           self.eventbus.publish(
               MarathonDeploymentRequestFailedEvent(
                   inst_id,
-                  response.status_code,
-                  response.text,
+                  -1,
+                  str(e),
                   traceid=traceids))
 
       except json.decoder.JSONDecodeError as e:
@@ -321,29 +334,41 @@ class MarathonUpdateChannel(Channel):
             MarathonDeploymentRequestedEvent(app['id'], traceid=traceids))
 
         # Callback to acknowledge request
-        def ack_response(request, *args, **kwargs):
-          self.eventbus.publish(
-              MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
+        def ack_response(response, *args, **kwargs):
+          if response.status_code >= 200 and response.status_code < 300:
+            self.eventbus.publish(
+                MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
 
         # Update the specified application
         self.logger.debug('Executing update with body {}'.format(app))
-        response = requests.put(
-            '{}/v2/apps{}'.format(url, app['id']),
-            json=app,
-            verify=False,
-            headers=self.getHeaders(),
-            hooks=dict(response=ack_response))
-        if response.status_code < 200 or response.status_code >= 300:
-          self.logger.debug("Server responded with: {}".format(response.text))
-          self.logger.error(
-              'Unable to update app {} (HTTP response {}: {})'.format(
-                  app.get('id', '<unknown>'), response.status_code,
-                  response.text))
+        try:
+          response = requests.put(
+              '{}/v2/apps{}'.format(url, app['id']),
+              json=app,
+              verify=False,
+              headers=self.getHeaders(),
+              hooks=dict(response=ack_response))
+          if response.status_code < 200 or response.status_code >= 300:
+            self.logger.debug("Server responded with: {}".format(response.text))
+            self.logger.error(
+                'Unable to update app {} (HTTP response {}: {})'.format(
+                    app.get('id', '<unknown>'), response.status_code,
+                    response.text))
+            self.eventbus.publish(
+                MarathonDeploymentRequestFailedEvent(
+                    app['id'],
+                    response.status_code,
+                    response.text,
+                    traceid=traceids))
+            continue
+
+        except Exception as e:
+          self.logger.error('Unable to update app {} ({})'.format(app['id'], e))
           self.eventbus.publish(
               MarathonDeploymentRequestFailedEvent(
                   app['id'],
-                  response.status_code,
-                  response.text,
+                  -1,
+                  str(e),
                   traceid=traceids))
           continue
 
