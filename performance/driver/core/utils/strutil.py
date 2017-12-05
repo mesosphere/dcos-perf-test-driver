@@ -2,6 +2,9 @@ def parseTimeExpr(timeExpr):
   """
   Convert a time expression (ex. 1s 5m 1us 1ms) to a float seconds value
   """
+  if not timeExpr:
+    return None
+
   scale = 1
   if timeExpr.endswith('us'):
     scale = 1 / 1000000

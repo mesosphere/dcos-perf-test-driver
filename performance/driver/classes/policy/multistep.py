@@ -14,6 +14,7 @@ except ImportError:
 from performance.driver.core.events import isEventMatching, RunTaskEvent, Event
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.eventfilters import EventFilter
+from performance.driver.core.utils.strutil import parseTimeExpr
 
 
 class CompleteStepImmediatelyEvent(Event):
@@ -117,6 +118,15 @@ class MultiStepPolicy(PolicyFSM):
               # before considering the value ready to advance. Note that this
               # can be a python expression
               events: ""
+
+              # [Optional] If the step was not advanced by itself in the given
+              # time, marked is a timed out and continue with the next
+              timeout: 10s
+
+              # [Optional] What flag to set on the run that advanced due to a
+              # timeout. Set this to `OK` to make timeout a legit action or
+              # `FAILED` to make timeout a critical failure.
+              timeout_status: TIMEOUT
 
 
   This policy is first computing all possible combinations of the parameter
@@ -380,7 +390,7 @@ class MultiStepPolicy(PolicyFSM):
       # 2) For the advance event to arrive or for a timeout to occur
       self.postValueCompleted = True
       self.advanceEventsRemaining = 0
-      self.timeRemains = 0
+      self.timeRemains = None
 
       # If we have a post-value task, mark it's flag as incompleted
       if self.step.postValueTask:
@@ -420,13 +430,12 @@ class MultiStepPolicy(PolicyFSM):
       Check if completion flags are met
       """
 
-      # Bail if all flags are not completed
-      if self.timeRemains:
-        return
-      if not self.postValueCompleted:
-        return
-      if self.advanceEventsRemaining > 0:
-        return
+      # Bail if all flags are not set
+      if (self.timeRemains is None) or (self.timeRemains > 0):
+        if not self.postValueCompleted:
+          return
+        if self.advanceEventsRemaining > 0:
+          return
 
       # If everything is done, advance to next value
       self.goto(MultiStepPolicy.NextStepValue)
@@ -442,10 +451,15 @@ class MultiStepPolicy(PolicyFSM):
       """
       Every tick, check if the timeout has expired
       """
+      if self.timeRemains is None:
+        return
+
       if self.timeRemains > 0:
         self.timeRemains -= event.delta
         if self.timeRemains <= 0:
           self.timeRemains = 0
+          self.logger.warn('Step timed out after {} seconds'.format(self.step.advanceTimeout))
+          self.setStatus(self.step.advanceTimeoutStatus)
           self.handleCompletion()
 
     def onRunTaskCompletedEvent(self, event):
@@ -530,7 +544,6 @@ class PolicyStepState:
 
     # Extract config
     self.name = config.get('name', 'Unnamed Step')
-    self.advanceTimeout = config.get('advanceTimeout', None)
 
     # Extract event spec
     events = config.get('events', {})
@@ -559,6 +572,8 @@ class PolicyStepState:
     # Extract custom advance conditions
     advanceCondition = config.get('advance_condition', {})
     self.advanceEventsExpr = advanceCondition.get('events', 1)
+    self.advanceTimeout = parseTimeExpr(advanceCondition.get('timeout', None))
+    self.advanceTimeoutStatus = advanceCondition.get('timeout_status', 'TIMEOUT')
 
     # Generate value matrix
     self.staticParameters = {}
