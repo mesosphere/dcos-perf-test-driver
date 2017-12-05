@@ -331,7 +331,7 @@ class JMXObserver(Observer):
     """
     self.logger.info('Starting jmx middleware')
     self.active = True
-    self.processThread = Thread(target=self.startProcessThread)
+    self.processThread = Thread(target=self.startProcessThread, name="process-io-jmx")
     self.processThread.start()
 
   def handleDeactivateEvent(self, event):

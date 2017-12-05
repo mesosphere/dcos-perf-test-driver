@@ -134,7 +134,7 @@ class MarathonPollerObserver(Observer):
 
     # Start polling thread
     self.active = True
-    self.thread = threading.Thread(target=self.pollerThread)
+    self.thread = threading.Thread(target=self.pollerThread, name="marathonpoller-poller")
     self.thread.start()
 
   def handleStopEvent(self, event):

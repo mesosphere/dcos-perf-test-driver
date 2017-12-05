@@ -46,7 +46,7 @@ class PolicyFSM(fsm.FSM, Configurable, EventBusSubscriber):
     # Receive events from the bus
     self.active = True
     self.eventQueue = queue.Queue()
-    self.thread = threading.Thread(target=self.handlerThread)
+    self.thread = threading.Thread(target=self.handlerThread, name="policy-event-drain")
 
     if not 'End' in self.states:
       raise TypeError('A policy FSM must contain an \'End\' state')

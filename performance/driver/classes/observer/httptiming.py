@@ -107,7 +107,7 @@ class HTTPTimingObserver(Observer):
     """
     self.logger.debug('Starting polling timer')
     self.active = True
-    self.clockThread = Thread(target=self.pollThreadHandler)
+    self.clockThread = Thread(target=self.pollThreadHandler, name="http-timing")
     self.clockThread.start()
 
   def handleTeardownEvent(self, event):

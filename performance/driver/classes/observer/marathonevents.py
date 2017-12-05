@@ -143,12 +143,14 @@ class MarathonEventsObserver(Observer):
 
     # Start the event reader thread
     self.eventReceiverThread = threading.Thread(
-        target=self.eventReceiverHandler)
+        target=self.eventReceiverHandler,
+        name="marathonevents-drain")
     self.eventReceiverThread.start()
 
     # Start the event emmiter thread
     self.eventEmitterThread = threading.Thread(
-        target=self.eventEmitterThreadHandler)
+        target=self.eventEmitterThreadHandler,
+        name="marathonevents-emitter")
     self.eventEmitterThread.start()
 
   def allTraceIDs(self):

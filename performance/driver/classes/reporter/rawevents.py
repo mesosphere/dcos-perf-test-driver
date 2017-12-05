@@ -78,7 +78,7 @@ class RawEventsReporter(Reporter):
 
     self.tickEvents = config.get('tickEvents', False)
     self.queue = queue.Queue()
-    self.thread = Thread(target=self.reportingThread)
+    self.thread = Thread(target=self.reportingThread, name="rawevents-reporter")
     self.active = True
 
     # Start reporter thread

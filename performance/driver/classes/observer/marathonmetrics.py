@@ -81,7 +81,7 @@ class MarathonMetricsObserver(Observer):
     Start main thread at start
     """
     self.pollingActive = True
-    self.pollingThread = threading.Thread(target=self.pollingThreadTarget)
+    self.pollingThread = threading.Thread(target=self.pollingThreadTarget, name="marathonmetrics-poller")
     self.pollingThread.start()
 
   def handleParameterUpdateEvent(self, event):
