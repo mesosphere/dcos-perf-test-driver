@@ -237,7 +237,7 @@ class JMXObserver(Observer):
           # While process is running, use `select` to wait for an stdout/err
           # FD event before reading.
           (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr], [],
-                                                [])
+                                                [], 1.0)
           # Process stdout chunks
           if proc.stdout in rlist:
             block = proc.stdout.read(1024 * 1024)
