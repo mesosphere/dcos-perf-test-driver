@@ -4,9 +4,6 @@ import time
 from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, TeardownEvent, isEventMatching
 from performance.driver.core.eventfilters import EventFilter
-from queue import Queue, Empty
-from threading import Lock
-
 
 class DurationTrackerSession:
   """
@@ -14,28 +11,38 @@ class DurationTrackerSession:
   """
 
   def __init__(self, tracker, traceids):
-    self.queue = Queue()
     self.logger = logging.getLogger('DurationTrackerSession')
     self.startFilter = tracker.startFilter.start(traceids, self.handleStart)
     self.endFilter = tracker.endFilter.start(traceids, self.handleEnd)
     self.tracker = tracker
     self.traceids = list(traceids)
-    self.mutex = Lock()
+    self.startEvent = None
+    self.endEvent = None
+    self.fired = False
 
   def handleStart(self, event):
-    with self.mutex:
-      self.queue.put(event)
+    if not self.startEvent is None:
+      self.logger.warn('Multiple start events for the same trace detected')
+    self.startEvent = event
+    self.checkEvents()
 
   def handleEnd(self, event):
-    try:
-      with self.mutex:
-        start_event = self.queue.get(False)
-    except Empty:
-      self.logger.warn('Found duration end without a start event!')
+    if not self.endEvent is None:
+      self.logger.warn('Multiple end events for the same trace detected')
+    self.endEvent = event
+    self.checkEvents()
+
+  def checkEvents(self):
+    if self.fired:
       return
+    if self.endEvent is None:
+      return
+    if self.startEvent is None:
+      return
+    self.fired = True
 
     # Track metric
-    self.tracker.trackMetric(self.tracker.metric, event.ts - start_event.ts,
+    self.tracker.trackMetric(self.tracker.metric, self.endEvent.ts - self.startEvent.ts,
                              self.traceids)
 
   def handle(self, event):
@@ -46,7 +53,7 @@ class DurationTrackerSession:
     self.startFilter.finalize()
     self.endFilter.finalize()
 
-    if not self.queue.empty():
+    if self.endEvent is None or self.startEvent is None:
       self.logger.warn('Incomplete traces were present for metric {}'.format(
           self.tracker.metric))
 
