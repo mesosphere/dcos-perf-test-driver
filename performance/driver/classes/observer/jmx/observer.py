@@ -107,6 +107,7 @@ class JMXObserver(Observer):
     self.processThread = None
     self.targetPid = None
     self.lastValue = {}
+    self.exitPipe = os.pipe()
 
     # Register to the Start / Teardown events
     self.eventbus.subscribe(self.handleEvent)
@@ -233,11 +234,17 @@ class JMXObserver(Observer):
 
         # Start reading until the process exits
         while proc.poll() is None:
+          xpipe = self.exitPipe[0]
+          (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr, xpipe],
+                                                [], [], 1.0)
 
-          # While process is running, use `select` to wait for an stdout/err
-          # FD event before reading.
-          (rlist, wlist, xlist) = select.select([proc.stdout, proc.stderr], [],
-                                                [], 1.0)
+          # When we were signaled by the exit pipe, kill process, drain buffers
+          # and exit
+          if xpipe in rlist:
+            proc.terminate()
+            proc.communicate()
+            break
+
           # Process stdout chunks
           if proc.stdout in rlist:
             block = proc.stdout.read(1024 * 1024)
@@ -263,6 +270,9 @@ class JMXObserver(Observer):
           self.logger.warn(
               'Middleware process exited with code {}'.format(proc.returncode))
           time.sleep(1)
+
+        # Undefine proc
+        self.proc = None
 
       except OSError as e:
         self.logger.error(
@@ -341,7 +351,7 @@ class JMXObserver(Observer):
     self.logger.info('Stopping jmx middleware')
     self.active = False
     if self.proc:
-      self.proc.terminate()
+      os.write(self.exitPipe[1], b"exit\n")
     if self.processThread:
       self.processThread.join()
       self.processThread = None
