@@ -121,6 +121,24 @@ class MultiStepPolicy(PolicyFSM):
 
   This policy is first computing all possible combinations of the parameter
   matrix given and is then running the tests for every one.
+
+  .. important::
+    The ``MultiStepPolicy`` is respecting the event tracing principle. This means
+    that all the events in the ``events`` section will be matched only if they
+    derive from the same step of a policy action.
+
+    If the events you are listening for do not belong on a trace initiated by
+    the current step, use the `:notrace` indicator.
+
+    For example, let's say that policy sets the number of instances to 3, that
+    triggers a deployment that eventually triggers a ``DeploymentCompletedEvent``
+    when completed. In this case you can listen for
+    ``advance: DeploymentCompletedEvent`` events.
+
+    However, if you are advancing at clock ticks, they are not part of a trace
+    initiated by the policy and therefore you must use:
+    ```advance: TickEvent:notrace``
+
   """
 
   class Start(State):
