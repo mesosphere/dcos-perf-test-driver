@@ -464,8 +464,7 @@ class HTTPChannel(Channel):
                             req.url,
                             renderedBody,
                             req.headers,
-                            traceid=req.traceids),
-          sync=True)
+                            traceid=req.traceids))
       self.logger.debug('Placing a {} request to {}'.format(req.verb, req.url))
       try:
 

@@ -1,7 +1,7 @@
 import logging
 import time
 
-from threading import Thread, Lock, Condition
+from threading import Thread, Lock
 from queue import Queue
 
 from .events import Event, TickEvent, isEventMatching
@@ -62,41 +62,13 @@ class EventBus:
       if subscriber[1] == callback:
         self.subscribers.remove(subscriber)
 
-  def publish(self, event: Event, sync=False):
+  def publish(self, event: Event):
     """
     Publish an event to all subscribers
     """
-
-    # If we are requested to perform a synchronous broadcast, we need to
-    # wait until the event is consumed. So create a condition variable
-    # and wait for the signal to be handled.
-    cond = None
-    if sync:
-      cond = Condition()
-
     if not type(event) is TickEvent:
       self.logger.debug('Publishing \'{}\''.format(str(event)))
-    self.queue.put((event, cond))
-
-    # Wait for condition variable, if requested
-    if sync:
-      self.logger.debug(
-          'Waiting for condition of event \'{}\''.format(str(event)))
-
-      # Keep track of locked conditions
-      with self.activeBlockedSyncLock:
-        self.activeBlockedSyncs.append(cond)
-
-      # Wait
-      with cond:
-        cond.wait()
-
-      # Remove lock from the list
-      with self.activeBlockedSyncLock:
-        if cond in self.activeBlockedSyncs:
-          self.activeBlockedSyncs.remove(cond)
-
-      self.logger.debug('Condition met for event \'{}\''.format(str(event)))
+    self.queue.put(event)
 
   def start(self):
     """
@@ -116,7 +88,7 @@ class EventBus:
     self.active = True
     self.lastTickMs = time.time()
     if self.clockInterval:
-      self.clockThread = Thread(target=self._clockthread)
+      self.clockThread = Thread(target=self._clockthread, name="eventbus-clock")
       self.clockThread.start()
 
   def stop(self):
@@ -124,13 +96,6 @@ class EventBus:
     Gracefully stop the event bus thread loop
     """
     self.logger.debug('Stopping event bus')
-
-    self.logger.debug('Syncing responses to all locked broadcasts')
-    with self.activeBlockedSyncLock:
-      for cond in self.activeBlockedSyncs:
-        with cond:
-          cond.notify()
-      self.activeBlockedSyncs = []
 
     self.logger.debug('Cancelling next tick event')
     self.active = False
@@ -142,7 +107,7 @@ class EventBus:
 
     self.logger.debug('Posting the ExitEvent')
     for i in range(0, self.threadCount):
-      self.queue.put((ExitEvent(), None))
+      self.queue.put(ExitEvent())
 
     self.logger.debug('Waiting for thread pool to exit')
     for thread in self.threads:
@@ -178,7 +143,7 @@ class EventBus:
     """
     self.logger.debug('Event bus thread started')
     while True:
-      (event, cond) = self.queue.get()
+      event = self.queue.get()
       if type(event) is ExitEvent:
         self.queue.task_done()
         break
@@ -199,12 +164,6 @@ class EventBus:
           self.logger.error(
               'Exception while dispatching event {}'.format(event.event))
           self.logger.exception(e)
-
-      # Signal condition variable (if any)
-      if cond:
-        self.logger.debug('Notifying condition for \'{}\''.format(str(event)))
-        with cond:
-          cond.notify()
 
       # Mark task as done
       self.queue.task_done()

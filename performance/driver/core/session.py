@@ -116,22 +116,32 @@ class Session(EventBusSubscriber):
     # Restore signal handler
     signal.signal(signal.SIGINT, self.prevSigHandler)
 
+    def threadName(threadId):
+      inst = threading._active.get(threadId)
+      if inst is None:
+        return "#{}".format(threadId)
+      else:
+        return inst.name
+
     # Debug traces
-    code = []
+    lines = []
     for threadId, stack in sys._current_frames().items():
-      self.logger.debug("Thread {}".format(threadId))
+      lines.append("")
+      lines.append("Thread {}".format(threadName(threadId)))
       for filename, lineno, name, line in traceback.extract_stack(stack):
-        self.logger.debug(
+        lines.append(
             "  File: {}, line {}, in {}".format(filename, lineno, name))
         if line:
-          self.logger.debug("    {}".format(line.strip()))
+          lines.append("    {}".format(line.strip()))
+    self.logger.debug("\n".join(lines))
 
     # Dispatch the interrupt signal that will make all policies to terminate
     # as soon as possible. This interrupt will be injected in-frame, meaning
     # that since the `run` thread is blocked in the policy wait loop, we will
     # resume from that point onwards
     self.interrupted = True
-    self.eventbus.publish(InterruptEvent(), sync=True)
+    self.eventbus.publish(InterruptEvent())
+    self.eventbus.flush()
 
   @publishesHint(StartEvent, StalledEvent, RestartEvent, TeardownEvent,
                  RunTaskEvent)
@@ -161,7 +171,8 @@ class Session(EventBusSubscriber):
     self.logger.debug('All policies are ready')
 
     # Dispatch the start event
-    self.eventbus.publish(StartEvent(), sync=True)
+    self.eventbus.publish(StartEvent())
+    self.eventbus.flush()
 
     # Repeat tests more than once
     while not self.interrupted and (runs > 0):
@@ -210,9 +221,11 @@ class Session(EventBusSubscriber):
           policy.start()
 
         # Dispatch the restart event
-        self.eventbus.publish(RestartEvent(), sync=True)
+        self.eventbus.publish(RestartEvent())
+        self.eventbus.flush()
 
     # Teardown
-    self.eventbus.publish(TeardownEvent(), sync=True)
+    self.eventbus.publish(TeardownEvent())
+    self.eventbus.flush()
     self.eventbus.publish(RunTaskEvent('teardown'))
     self.eventbus.stop()
