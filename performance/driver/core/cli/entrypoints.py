@@ -21,8 +21,9 @@ def dcos_perf_test_driver(args=None):
   # Setup logging
   coloredlogs.install(
       level='DEBUG' if cmdline.verbose else 'INFO',
+      milliseconds=True,
       fmt='%(levelname)7s %(asctime)s' +
-      (' %(threadName)s'
+      (',%(msecs)03d %(threadName)s'
        if cmdline.verbose else '') + ' %(name)s: %(message)s',
       field_styles={
           'hostname': {
