@@ -127,14 +127,9 @@ class MarathonDeployChannel(Channel):
 
         # Notify deployment
         inst_id = body['id']
+        self.logger.info('Deploying {} "{}"'.format(deploymentType, inst_id))
         self.eventbus.publish(
             MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
-
-        # Callback to acknowledge request
-        def ack_response(response, *args, **kwargs):
-          if response.status_code >= 200 and response.status_code < 300:
-            self.eventbus.publish(
-                MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
 
         # Create a request
         try:
@@ -142,8 +137,7 @@ class MarathonDeployChannel(Channel):
               url,
               json=body,
               verify=False,
-              headers=self.getHeaders(),
-              hooks=dict(response=ack_response))
+              headers=self.getHeaders())
           if response.status_code < 200 or response.status_code >= 300:
             self.logger.error(
                 'Unable to deploy {} "{}" (HTTP response {})'.format(
@@ -154,6 +148,9 @@ class MarathonDeployChannel(Channel):
                     response.status_code,
                     response.text,
                     traceid=traceids))
+          else:
+            self.eventbus.publish(
+                MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
 
         except Exception as e:
           self.logger.error('Unable to deploy {} "{}" ({})'.format(
@@ -329,12 +326,6 @@ class MarathonUpdateChannel(Channel):
         self.eventbus.publish(
             MarathonDeploymentRequestedEvent(app['id'], traceid=traceids))
 
-        # Callback to acknowledge request
-        def ack_response(response, *args, **kwargs):
-          if response.status_code >= 200 and response.status_code < 300:
-            self.eventbus.publish(
-                MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
-
         # Update the specified application
         self.logger.debug('Executing update with body {}'.format(app))
         try:
@@ -357,7 +348,9 @@ class MarathonUpdateChannel(Channel):
                     response.status_code,
                     response.text,
                     traceid=traceids))
-            continue
+          else:
+            self.eventbus.publish(
+                MarathonDeploymentStartedEvent(app['id'], traceid=traceids))
 
         except Exception as e:
           self.logger.error(
