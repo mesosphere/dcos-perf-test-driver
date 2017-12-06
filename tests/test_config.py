@@ -255,7 +255,7 @@ class TestFSM(unittest.TestCase):
       })
 
     # Check if metrics are of proper type
-    self.assertEqual(list(general.metrics.keys()), ['fooz', 'barz'])
+    self.assertEqual(set(general.metrics.keys()), {'fooz', 'barz'})
     self.assertEqual(type(general.metrics['fooz']), MetricConfig)
     self.assertEqual(type(general.metrics['barz']), MetricConfig)
 
