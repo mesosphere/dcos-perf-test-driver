@@ -18,7 +18,7 @@ class CountTrackerSession:
     self.logger = logging.getLogger('CountTrackerSession')
     self.eventFilter = tracker.eventFilter.start(traceids, self.handleEvent)
     self.tracker = tracker
-    self.traceids = list(traceids)
+    self.traceids = set(traceids)
 
     self.counter = 0
     self.mutex = Lock()
@@ -67,6 +67,7 @@ class CountTracker(Tracker):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.traces = []
+    self.traceIndex = {}
     self.activeTrace = None
 
     config = self.getRenderedConfig()
@@ -88,6 +89,7 @@ class CountTracker(Tracker):
         trace.finalize()
 
       self.traces = []
+      self.traceIndex = {}
       self.activeTrace = None
       return
 
@@ -98,8 +100,16 @@ class CountTracker(Tracker):
       self.activeTrace = CountTrackerSession(self, event.traceids)
       self.traces.append(self.activeTrace)
 
-    # Fast, modification-friendly iteration over traces
-    i = 0
-    while i < len(self.traces):
-      self.traces[i].handle(event)
-      i += 1
+      for trace in event.traceids:
+        self.traceIndex[trace] = self.activeTrace
+
+    # Update relevant traces
+    handled = []
+    for id in event.traceids:
+      if not id in self.traceIndex:
+        continue
+      trace = self.traceIndex[id]
+      if trace in handled:
+        continue
+      trace.handle(event)
+      handled.append(trace)

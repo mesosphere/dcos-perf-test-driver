@@ -15,7 +15,7 @@ class DurationTrackerSession:
     self.startFilter = tracker.startFilter.start(traceids, self.handleStart)
     self.endFilter = tracker.endFilter.start(traceids, self.handleEnd)
     self.tracker = tracker
-    self.traceids = list(traceids)
+    self.traceids = set(traceids)
     self.startEvent = None
     self.endEvent = None
     self.fired = False
@@ -54,7 +54,7 @@ class DurationTrackerSession:
     self.endFilter.finalize()
 
     if self.endEvent is None or self.startEvent is None:
-      self.logger.warn('Incomplete traces were present for metric {}'.format(
+      self.logger.warn('Incomplete duration traces for {}'.format(
           self.tracker.metric))
 
 
@@ -95,6 +95,7 @@ class DurationTracker(Tracker):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.traces = []
+    self.traceIndex = {}
     self.activeTrace = None
 
     config = self.getRenderedConfig()
@@ -117,6 +118,7 @@ class DurationTracker(Tracker):
         trace.finalize()
 
       self.traces = []
+      self.traceIndex = {}
       self.activeTrace = None
       return
 
@@ -127,8 +129,16 @@ class DurationTracker(Tracker):
       self.activeTrace = DurationTrackerSession(self, event.traceids)
       self.traces.append(self.activeTrace)
 
-    # Fast, modification-friendly iteration over traces
-    i = 0
-    while i < len(self.traces):
-      self.traces[i].handle(event)
-      i += 1
+      for trace in event.traceids:
+        self.traceIndex[trace] = self.activeTrace
+
+    # Update relevant traces
+    handled = []
+    for id in event.traceids:
+      if not id in self.traceIndex:
+        continue
+      trace = self.traceIndex[id]
+      if trace in handled:
+        continue
+      trace.handle(event)
+      handled.append(trace)
