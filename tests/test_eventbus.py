@@ -39,6 +39,25 @@ class TestEventBus(unittest.TestCase):
     self.assertEqual(eventbus.threads, [])
     self.assertEqual(len(newThreads), 0)
 
+  def test_event(self):
+    """
+    Test if event construction works as expected
+    """
+    event = Event(traceid=['foo', 'bar'])
+    self.assertIn('foo', event.traceids)
+    self.assertIn('bar', event.traceids)
+
+    event = Event(traceid={'foo', 'bar'})
+    self.assertIn('foo', event.traceids)
+    self.assertIn('bar', event.traceids)
+
+    event = Event(traceid=('foo', 'bar'))
+    self.assertIn('foo', event.traceids)
+    self.assertIn('bar', event.traceids)
+
+    event = Event(traceid='foo')
+    self.assertIn('foo', event.traceids)
+
   def test_publish(self):
     """
     Test if we can publish events to the bus
@@ -50,7 +69,7 @@ class TestEventBus(unittest.TestCase):
     eventbus.publish(pubEvent)
 
     # Pop the event from the queue, since the event loop is not running
-    (event, cond) = eventbus.queue.get()
+    event = eventbus.queue.get()
     self.assertEqual(event, pubEvent)
 
   def test_subscribe(self):
@@ -130,70 +149,6 @@ class TestEventBus(unittest.TestCase):
         call.subscriber2(pubEvent),
         call.subscriber1(pubEvent)
       ])
-
-  def test_subscribe_sync(self):
-    """
-    Test if the synchronous publish works
-    """
-    eventbus = EventBus(clockFrequency=0)
-    eventbus.start()
-
-    # Some test events
-    class TestEvent(Event):
-      pass
-
-    # Create first subscriber (fast)
-    subscriberFirst = Mock()
-    eventbus.subscribe(subscriberFirst)
-
-    # A subscriber that takes some time to complete
-    subscriberSlow = Mock()
-    def subscriberSlowHandler(event):
-      time.sleep(2)
-      subscriberSlow(event)
-    eventbus.subscribe(subscriberSlowHandler)
-
-    # Create last subscriber (slow)
-    subscriberSecond = Mock()
-    eventbus.subscribe(subscriberSecond)
-
-    # Dispatch an event from another thread, because the call is blocking
-    firstEvent = TestEvent()
-    threadExitFlag = [False]
-    def syncedThread():
-      eventbus.publish(firstEvent, sync=True)
-      threadExitFlag[0] = True
-    thread = threading.Thread(target=syncedThread)
-    thread.start()
-
-    # Wait some time to verify that the thread is blocked
-    time.sleep(0.1)
-
-    # The subscribers should be blocked
-    self.assertEqual(subscriberFirst.mock_calls, [
-        call(firstEvent)
-      ])
-    self.assertEqual(subscriberSlow.mock_calls, [
-      ])
-    self.assertEqual(subscriberSecond.mock_calls, [
-      ])
-    self.assertEqual(threadExitFlag[0], False)
-
-    # Stop forces synced events to exit
-    eventbus.stop()
-
-    # Now everything should be called
-    self.assertEqual(subscriberFirst.mock_calls, [
-        call(firstEvent)
-      ])
-    self.assertEqual(subscriberSlow.mock_calls, [
-        call(firstEvent)
-      ])
-    self.assertEqual(subscriberSecond.mock_calls, [
-        call(firstEvent)
-      ])
-    self.assertEqual(threadExitFlag[0], True)
-
 
   def test_subscribe_events(self):
     """

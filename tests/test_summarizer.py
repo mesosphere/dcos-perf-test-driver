@@ -59,7 +59,7 @@ class TestSummarizer(unittest.TestCase):
 
     # We should have one empty axis
     self.assertEqual(len(self.summarizer.axes), 1)
-    self.assertEqual(list(self.summarizer.axisLookup.keys())[1:], ["f1b2"]) # [0]: The unique event ID
+    self.assertIn('f1b2', list(self.summarizer.axisLookup.keys())) # [0]: The unique event ID
     self.assertEqual(len(self.summarizer.axes[0].timeseries["baz"].values), 0)
 
     # Try to trace an metric without a trace ID
@@ -93,7 +93,7 @@ class TestSummarizer(unittest.TestCase):
 
     # We should have one empty axis
     self.assertEqual(len(self.summarizer.axes), 1)
-    self.assertEqual(list(self.summarizer.axisLookup.keys())[1:], ["f1b2"]) # [0]: The unique event ID
+    self.assertIn('f1b2', list(self.summarizer.axisLookup.keys())) # [0]: The unique event ID
     self.assertEqual(len(self.summarizer.axes[0].timeseries["baz"].values), 0)
 
     # Track a metric on this axis
@@ -128,7 +128,7 @@ class TestSummarizer(unittest.TestCase):
 
     # We should have one empty axis
     self.assertEqual(len(self.summarizer.axes), 1)
-    self.assertEqual(list(self.summarizer.axisLookup.keys())[1:], ["f1b2"]) # [0]: The unique event ID
+    self.assertIn('f1b2', list(self.summarizer.axisLookup.keys())) # [0]: The unique event ID
     self.assertEqual(len(self.summarizer.axes[0].timeseries["baz"].values), 0)
 
     # Track a metric on this axis
@@ -191,7 +191,7 @@ class TestSummarizer(unittest.TestCase):
 
     # We should have one empty axis
     self.assertEqual(len(self.summarizer.axes), 1)
-    self.assertEqual(list(self.summarizer.axisLookup.keys())[1:], ["f1b2"]) # [0]: The unique event ID
+    self.assertIn('f1b2', list(self.summarizer.axisLookup.keys())) # [0]: The unique event ID
     self.assertEqual(len(self.summarizer.axes[0].timeseries["baz"].values), 0)
 
     # Track a metric on this axis
