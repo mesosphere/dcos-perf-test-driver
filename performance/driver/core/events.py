@@ -61,15 +61,13 @@ class Event:
     self.ts = time.time()
 
     # Allocate a unique trace ID for this event
-    self.traceids = [uuid.uuid4().hex]
+    self.traceids = set([uuid.uuid4().hex])
 
     # Enrich with the given trace IDs
-    if type(traceid) is tuple:
-      self.traceids += list(traceid)
-    elif type(traceid) is list:
-      self.traceids += traceid
+    if type(traceid) in (tuple, list, set):
+      self.traceids.update(set(traceid))
     elif not traceid is None:
-      self.traceids += [traceid]
+      self.traceids.add(traceid)
 
   def hasTrace(self, traceid):
     """
@@ -81,7 +79,10 @@ class Event:
     """
     Check if at least one of the given trace ids are in the traceids
     """
-    return any(map(lambda traceid: traceid in self.traceids, traceids))
+    for trace in traceids:
+      if trace in self.traceids:
+        return True
+    return False
 
   def __str__(self):
     """

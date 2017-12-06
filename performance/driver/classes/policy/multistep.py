@@ -381,9 +381,9 @@ class MultiStepPolicy(PolicyFSM):
 
       # Make tracing sessions aware of the trace id
       if self.step.endEventSession:
-        self.step.endEventSession.traceids.append(self.traceid)
+        self.step.endEventSession.traceids.add(self.traceid)
       if self.step.failEventSession:
-        self.step.failEventSession.traceids.append(self.traceid)
+        self.step.failEventSession.traceids.add(self.traceid)
 
       # We are waiting for 2 things
       # 1) For the postValue task to complete

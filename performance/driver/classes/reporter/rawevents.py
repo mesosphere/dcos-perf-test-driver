@@ -16,7 +16,9 @@ class JSONNormalizerEncoder(json.JSONEncoder):
   def default(self, obj):
 
     # CaseInsensitiveDict needs to become a dict
-    if type(obj) is CaseInsensitiveDict:
+    if type(obj) is set:
+      obj = list(obj)
+    elif type(obj) is CaseInsensitiveDict:
       obj = dict(obj.items())
 
     return json.JSONEncoder.encode(self, obj)

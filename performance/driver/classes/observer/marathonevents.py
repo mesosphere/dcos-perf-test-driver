@@ -163,7 +163,7 @@ class MarathonEventsObserver(Observer):
       for key, ids in self.instanceTraceIDs.items():
         traceids.update(ids)
 
-    return list(traceids)
+    return traceids
 
   def getTraceIDs(self, ids):
     """
@@ -176,7 +176,7 @@ class MarathonEventsObserver(Observer):
         if id in self.instanceTraceIDs:
           traceids.update(self.instanceTraceIDs[id])
 
-    return list(traceids)
+    return traceids
 
   def getStepsAffectedIDs(self, steps):
     """

@@ -107,7 +107,7 @@ class Summarizer(EventBusSubscriber):
         # If the check axis does not track the trace id of the event,
         # extend it to support it
         if not event.hasTraces(checkAxis.traceids):
-          checkAxis.traceids += event.traceids
+          checkAxis.traceids.update(event.traceids)
 
         # Break the correct axis
         axis = checkAxis

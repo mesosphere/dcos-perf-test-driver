@@ -75,7 +75,7 @@ class MarathonLogsObserver(LogStaxObserver):
         if id in self.instanceTraceIDs:
           traceids.update(self.instanceTraceIDs[id])
 
-    return list(traceids)
+    return traceids
 
   def getRenderedConfig(self, macros={}):
     """

@@ -323,7 +323,7 @@ class EventFilter:
 
     # Make sure trace IDs is always a list
     if type(traceids) is str:
-      traceids = [traceids]
+      traceids = set(traceids)
 
     return EventFilterSession(self, traceids, callback)
 

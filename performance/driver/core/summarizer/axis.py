@@ -15,7 +15,7 @@ class SummarizerAxis:
   def __init__(self, config, parameters, traceids):
     self.config = config
     self.parameters = SummarizerAxisParameters(parameters)
-    self.traceids = list(traceids)
+    self.traceids = set(traceids)
     self.flags = {}
 
     # Generate timeseries classes
