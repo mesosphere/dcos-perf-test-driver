@@ -333,8 +333,7 @@ class MarathonUpdateChannel(Channel):
               '{}/v2/apps{}'.format(url, app['id']),
               json=app,
               verify=False,
-              headers=self.getHeaders(),
-              hooks=dict(response=ack_response))
+              headers=self.getHeaders())
           if response.status_code < 200 or response.status_code >= 300:
             self.logger.debug(
                 "Server responded with: {}".format(response.text))
