@@ -1,42 +1,107 @@
+.. _architecture:
 
 Architecture
 ============
 
+The *DC/OS Performance Test Driver* is design to be modular and extensible in order
+to adapt to the needs of every interested party.
+
+It is composed of a set of individual components that all plug on a shared event
+bus and communicate to each other purely through messages.
+
 .. image:: ../_static/arch-diagram.png
 
-The *DC/OS Performance Test Driver* is design to be modular and easily extensible
-in order to allow adaption to the needs of every party.
+According to their main function they are separated in the following types:
 
-For this reason the driver is composed of a set of individual components tha communicate with eachother through messages.
+* A **Policy** controls the evolution of the test
+* A **Channel** applies the changes that occurred to the parameters by the policy
+  to the application being tested
+* An **Observer** monitors the application being tested and broadcasts useful
+  events to the event bus
+* A **Tracker** is listening for events in the event bus and extracts or calculates
+  useful values from them
+* A **Summarizer** collects the values calculated by the tracker, groups them by
+  test case and calculates the min/max/average or other summarization values
 
-According to their task, the following components are available:
+You may want to read the :ref:`concepts` section on the reasoning behind this
+separation or the :ref:`example` section to see how they work in action.
 
-* The **Policy** is the stateful component that drives the evolution of the test. It sets the parameters for the test and is waiting for synchronisation events to continue with the tests.
+.. _architecture-instantiate:
 
-* All the parameter changes induced by the policies are batched together into a single parameter change event.
+Instantiating Components
+------------------------
 
-* A **Channel** is stateless and it's applying the parameter changes into the application being tested. For example, the :ref:`classref-channel-CmdlineChannel` is re-launching the application with a different set of command-line arguments.
+Since there are no cross-component dependencies they can be instantiated
+and plugged into the bus when needed. Only a static argument configuration would
+be required that is going to configure it's behavior.
 
-* An **Observer** is also stateless and it's monitoring the application being tested. It's sole functionality is to emit interesting events in the message bus. Such events can be used by the *Policy* to synchronise it's state, or by a *Tracker* to measure a metric.
+If we were to write it in a python code we would have written something like so:
 
-* A **Tracker** is listening for events in the EventBus and is measuring the values for arbitrary metrics.
+.. code-block:: python
 
-* All the results collected by the *Trackers* are summarised into an in-memory representation by the **Summarizer** class.
+  bus.plug(
+    HttpChannel(
+      url="http://127.0.0.1:8080/some/api",
+      method="POST",
+      body='{"hello": "rest"}'
+    )
+  )
 
-* When the tests are completed, the Summarizer state is sent to a **Reporter** in order to log or report the results.
+
+But since all the components are instantiated in the same way we can can
+completely avoid using code and express the same thing in a YAML block like so:
+
+::
+
+  - class: HttpChannel
+    url: http://127.0.0.1:8080/some/api
+    method: POST
+    body: |
+      {
+        "hello": "rest"
+      }
+
+
+That's why the *DC/OS Performance Test Driver* is using YAML files for it's
+configuration.
+
+.. _architecture-event-cascading:
 
 Event Cascading
 ---------------
 
-Since everything in ``dcos-perf-test-driver`` is orchestrated through messages it's important to identify the test case each event belogs into. For this reason the driver is using *Event Cascading* as the means to describe which event was emitted as a response to another.
+Since everything in the *DC/OS Performance Test Driver*  is orchestrated through
+messages it's important to identify the test case each event belogs into. For
+this reason the driver is using *Event Cascading* as the means to describe which
+event was emitted as a response to another.
+
+Take the following diagram for example:
 
 .. image:: ../_static/event-cascading.png
 
-The *Event Cascading* is implemented by assigning unique IDs (called ``traceids``) to every event and carrying the related event IDs along when an event is emitted as a response (or in relation) to another.
+The *Event Cascading* is implemented by assigning unique IDs (called
+``traceids``) to every event and carrying the related event IDs along when an
+event is emitted as a response (or in relation) to another.
 
-Usually, the *root* event is the ``ParameterUpdateEvent`` that is emitted when a scale test is initiated. Therefore, every other event that takes place in the test is carrying this ID.
+Usually, the *root* event is the ``ParameterUpdateEvent`` that is emitted when a
+test case is initiated and the parameter values are defined. Every other event
+that takes place in the test is carrying this ID.
 
-If you are implementing your own class it's important to follow the event cascading principle.
+.. warning::
+  If you are seeing unexpected results or behaviors it's most probable that you
+  have not taken into account the event tracing.
+
+.. important::
+  If you are a component developer you should always carry along the correct
+  traceids when you are publishing events. As a rule of thumb you should take
+  care of the following two cases:
+
+  1. Actions that are triggered by an event should always publish events that
+     carry along the traceids from the originating event.
+
+  2. Actions that are not part of an event chain should publish events that carry
+     along the traceids from the latest ``ParameterUpateEvent`` observed.
+
 
 Processing the metrics
 ----------------------

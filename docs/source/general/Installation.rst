@@ -16,4 +16,4 @@ If the installation was successful, the ``dcos-perf-test-driver`` binary should
 be now available.
 
 Continue to :ref:`cmdline` for more information regarding the command-line
-interface or to :ref:`tutorial` to get more familiar with the tool.
+interface or to the :ref:`example` to get more familiar with the tool.

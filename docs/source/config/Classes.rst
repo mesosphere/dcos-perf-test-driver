@@ -51,6 +51,51 @@ Channels apply the changes of the parameters to the application being tested.
 
 The ``class`` parameter points to a class from within the ``performance.driver.classess`` package to load. Every class has it's own configuration parameters check :ref:`classref` for more details.
 
+.. _statements-channels-triggers:
+
+Channel Triggers
+^^^^^^^^^^^^^^^^
+
+By default a channel is triggered when any of the macros used on it's expression is modified.
+For example, the following channel will be triggered when the parameter ``param1`` changes:
+
+::
+
+  channels:
+    - class: channel.SomeClass
+      param1: "{{param1}}"
+      param2: value2
+      ...
+
+There are two properties you can use in order to modify this behaviour:
+
+The **parameters** property override the parameter heuristics and provide an
+explicit list of the parameters that should be considered. In the following
+example the channel will be triggered only if ``param2`` changes:
+
+::
+
+  channels:
+    - class: channel.SomeClass
+      parameters: [param2]
+      param1: "{{param1}}"
+      param2: value2
+      ...
+
+The **trigger** property defines the triggering behavior and it can take
+the following values:
+
+* ``always`` : Trigger every time a parameter changes, regardless if it exists
+  in the *parameters* list or in the macros or not
+
+* ``matching`` (Default): Trigger every time a parameter listed in the
+  *parameters* list or in the macros changes
+
+* ``changed``: Trigger every time a parameter listed in the
+  *parameters* list or in the macros changes **and** the new value is different
+  than the previous one. This is particularly useful if you are working with
+  multiple axes.
+
 .. _statements-observers:
 
 observers

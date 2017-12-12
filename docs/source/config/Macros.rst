@@ -2,8 +2,8 @@
 
 .. _macros:
 
-Using Macros
-============
+Macros
+======
 
 The ``dcos-perf-test-driver`` implements a minimal template engine that can be
 used to provide parametric configuration to your test. For example, if you are

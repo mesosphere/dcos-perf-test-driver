@@ -54,31 +54,42 @@ The following table summarises the task triggers available in the driver.
 |                   |            |                                             |
 +-------------------+------------+---------------------------------------------+
 
+.. _classref-tasks-AuthEE:
 
 auth.AuthEE
 -----------
 
 .. autoclass:: performance.driver.classes.tasks.auth.AuthEE
 
+.. _classref-tasks-AuthOpen:
+
 auth.AuthOpen
 -------------
 
 .. autoclass:: performance.driver.classes.tasks.auth.AuthOpen
+
+.. _classref-tasks-Request:
 
 http.Request
 -------------
 
 .. autoclass:: performance.driver.classes.tasks.http.Request
 
+.. _classref-tasks-RemoveAllApps:
+
 marathon.RemoveAllApps
 ----------------------
 
 .. autoclass:: performance.driver.classes.tasks.marathon.RemoveAllApps
 
+.. _classref-tasks-RemoveMatchingApps:
+
 marathon.RemoveMatchingApps
 ---------------------------
 
 .. autoclass:: performance.driver.classes.tasks.marathon.RemoveMatchingApps
+
+.. _classref-tasks-RemoveGroup:
 
 marathon.RemoveGroup
 --------------------

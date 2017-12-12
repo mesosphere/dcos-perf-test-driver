@@ -5,7 +5,7 @@
 Configuration Example
 =====================
 
-The following example demonstrates a full configuration example
+The following configuration example accompanies the :ref:`example` test case in the documentation. Refer to it for mroe details.
 
 ::
 
@@ -18,42 +18,37 @@ The following example demonstrates a full configuration example
     repeat: 5
 
     # The title of the scale test
-    title: "1 App / N Instances Test on Local Mesos Simulator"
+    title: "Scale Tests"
 
     # Define the parameters this policy will be updating
     parameters:
-      - name: instances
-        uuid: 4a003e85e8bb4a95a340eec1727cfd0d
-        units: count
-        desc: The number of instances per application deployment
+      - name: deploymentRate
+        units: depl/s
+        desc: The number of deployments per second
 
     # Define the metrics we are measuring
     metrics:
-      - name: deploymentTime
-        uuid: cfac77fceb244862aedd89066441c416
-        desc: The time from the HTTP request completion till the deployment success
-        summarize: [mean, min, max]
+      - name: responseTime
         units: sec
+        desc: The time for an HTTP request to complete
+        summarize: [mean_err]
 
     # Introduce some indicators that will be used to extract
     # the outcome of the test as a single scalar value
     indicators:
 
-      # Calculate `meanDeploymentTime` by calculating the normalizing average
-      # of all the `deploymentTime` mean values, normalized against the number
-      # of instances
-      - name: meanDeploymentTime
+      # Calculate `meanResponseTime` by calculating the normalizing average
+      # of all the `responseTime` mean values, normalized against the current
+      # deploymentRate
+      - name: meanResponseTime
         class: indicator.NormalizedMeanMetricIndicator
-        metric: deploymentTime.mean
-        parameter: instances
+        metric: responseTime.mean_err
+        normalizeto: deploymentRate
 
   #################################################
   # Macro Values
   #################################################
   define:
-
-    # Define `marathon_repo_dir` that is required by other fragments
-    marathon_repo_dir: /workdir/marathon
 
     # Define `marathon_url` that is required by other fragments
     marathon_url: http://127.0.0.1:8080
@@ -62,6 +57,9 @@ The following example demonstrates a full configuration example
   # Test Metadata
   #################################################
   meta:
+
+    # All these values will be included in the test results but
+    # do not participate in the actual test
     test: 1-app-n-instances
     env: local
     config: simulator
@@ -71,91 +69,80 @@ The following example demonstrates a full configuration example
   #################################################
   policies:
 
-    # Explore a multi-variable parameter space as scale test task
-    - class: policy.MultivariableExplorerPolicy
+    # We are using a multi-step policy due to it's configuration
+    # flexibility, even though our tests have only one step.
+    - class: policy.MultiStepPolicy
+      steps:
 
-      # The following rules describe the permutation matrix
-      matrix:
-        instances:
-          type: discrete
-          values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+        # Explore deploymentRate from 100 to 1000 with interval 50
+        - name: Stress-Testing Marathon
+          values:
+            - parameter: deploymentRate
+              min: 100
+              max : 1000
+              step: 50
 
-      # The event binding configuration
-      events:
+          # Advance when the deployment is successful
+          events:
+            advance: MarathonDeploymentSuccessEvent:notrace
 
-        # Wait until marathin is started before continuing with the tests
-        start: MarathonStartedEvent
-
-        # Signal the status of the following events
-        signal:
-          OK: MarathonDeploymentSuccessEvent
-          FAILURE: MarathonDeploymentFailedEvent
-
-        # Wait for the given number of events (evaluated at run-time)
-        signalEventCount: 1
+          # Advance only when we have received <deploymentRate> events
+          advance_condition:
+            events: "deploymentRate"
 
   #################################################
   # Channel configuration
   #################################################
   channels:
 
-    # Perform an HTTP request for every `instance` parameter change
+    # Perform an HTTP request for every `deploymentRate` parameter change
     - class: channel.HTTPChannel
-      url: "{{marathon_url}}/v2/apps"
+      url: {{marathon_url}}/v2/apps
       verb: POST
+      repeat: "{{deploymentRate}}"
       body: |
         {
-          "cmd": "sleep 1200",
-          "cpus": 0.005,
-          "mem": 32,
-          "disk": 0,
-          "instances": {{instances}},
           "id": "/scale-instances/{{uuid()}}",
+          "cmd": "sleep 1200",
+          "cpus": 0.1,
+          "mem": 64,
+          "disk": 0,
+          "instances": 0,
           "backoffFactor": 1.0,
           "backoffSeconds": 0
         }
-
-    # We are using a dummy command-line channel in order to launch marathon
-    # through scala, using mesos-simulator.
-    - class: channel.CmdlineChannel
-      cmdline: sbt "project mesos-simulation" "run --master 127.0.0.1:5050"
-      cwd: "{{marathon_repo_dir}}"
-
-      # By specifying `atstart` we are opting out from the parameter-driven
-      # launc, rather we are launching this app at start and then forget about it
-      atstart: yes
-
 
   #################################################
   # Observer configuration
   #################################################
   observers:
 
-    # The events observer is subscribing to the
-    - class: observer.MarathonEventsObserver
-      url: "{{marathon_url}}/v2/events"
+    # We are measuring the HTTP response time of the /v2/groups endpoint
+    - class: observer.HTTPTimingObserver
+      url: {{marathon_url}}/v2/groups
+      interval: 1
 
-    # The metrics observer samples the /metrics endpoint and emmits their
-    # value updates to the event bus.
-    - class: observer.MarathonMetricsObserver
-      url: "{{marathon_url}}/metrics"
+    # We also need to listen for marathon deployment success events in order
+    # to advance to the next test values, so we also need a marathon poller
+    - class: observer.MarathonPollerObserver
+      url: "{{marathon_url}}"
 
   #################################################
   # Tracker configuration
   #################################################
   trackers:
 
-    # Track deploymentTime as the duration between an `HTTPResponseEndEvent`
-    # and an `MarathonDeploymentSuccessEvent`
-    - class: tracker.DurationTracker
-      metric: deploymentTime
-      events:
-        start: HTTPResponseEndEvent
-        end: MarathonDeploymentSuccessEvent
+    # Track the `responseTime`, by extracting the `responseTime` from the
+    # HTTP measurement result event
+    - class: tracker.EventAttributeTracker
+      event: HTTPTimingResultEvent
+      extract:
+        - metric: responseTime
+          attrib: responseTime
 
 
   #################################################
-  # Global test configuration
+  # Result reporters
   #################################################
   reporters:
 
@@ -169,7 +156,6 @@ The following example demonstrates a full configuration example
 
     # Create plots as images to results/plot-*.png
     - class: reporter.PlotReporter
-      xscale: log2
       prefix: results/plot-
 
   #################################################

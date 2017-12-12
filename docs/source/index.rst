@@ -30,10 +30,11 @@ it's simple to configure it to match your needs.
    :caption: Contents:
 
    general/Installation
-   general/Usage
-   general/Tutorial
-   general/Recipes
+   general/Concepts
    general/Architecture
+   general/Example
+   general/Usage
+   general/Cookbook
    config/Readme
    classes/Readme
 
