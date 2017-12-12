@@ -305,9 +305,6 @@ class MarathonPollerObserver(Observer):
       # Create virtual group deployments
       for grp in diff_groups:
         self.eventbus.publish(
-            MarathonDeploymentSuccessEvent(
-                None, [grp], traceid=self.requestTraceIDs.get(grp, None)))
-        self.eventbus.publish(
             MarathonGroupChangeSuccessEvent(
                 None, grp, traceid=self.requestTraceIDs.get(grp, None)))
         self.cleanupInstanceDeployment(grp)

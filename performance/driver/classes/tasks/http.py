@@ -39,6 +39,10 @@ class Request(Task):
         # [Optional] The HTTP Verb to use (Defaults to 'GET')
         verb: POST
 
+        # [Optional] How many times to repeat the same HTTP request
+        # Note that in this case you can use the {{_i}} macro
+        repeat: 10
+
         # [Optional] The HTTP headers to send
         headers:
           Accept: text/plain

@@ -7,7 +7,30 @@ from performance.driver.core.classes import Indicator
 class NormalizedMeanMetricIndicator(Indicator):
   """
   Calculates the average of the metrics of all runs, normalized by the given
-  value of parameters
+  value of parameters.
+
+  ::
+
+    # Note that this needs to be defined in the global `config` section
+    config:
+
+      indicators:
+        - class: indicator.NormalizedMeanMetricIndicator
+
+          # The name of this indicator
+          name: someIndicator
+
+          # The metric and summarizer to use in <metric>.<summarizer>
+          # format
+          metric: someMetric.someSummarizer
+
+          # Normalize each test case measurement to the specified parameter
+          normalizeto: normalizeAgainst
+
+          # [Optional] You could also use a python expression. The parameters
+          # and the global definitions are available as global variables
+          normalizeto: 0.8 * normalizeAgainst
+
   """
 
   def calculate(self, axes):
@@ -61,6 +84,30 @@ class NormalizedMinMetricIndicator(Indicator):
   """
   Calculates the minimum of the metrics of all runs, normalized by the given
   value of parameters
+
+  ::
+
+    # Note that this needs to be defined in the global `config` section
+    config:
+
+      indicators:
+        - class: indicator.NormalizedMeanMetricIndicator
+
+          # The name of this indicator
+          name: someIndicator
+
+          # The metric and summarizer to use in <metric>.<summarizer>
+          # format
+          metric: someMetric.someSummarizer
+
+          # Normalize each test case measurement to the specified parameter
+          normalizeto: normalizeAgainst
+
+          # [Optional] You could also use a python expression. The parameters
+          # and the global definitions are available as global variables
+          normalizeto: 0.8 * normalizeAgainst
+
+
   """
 
   def calculate(self, axes):
@@ -107,6 +154,30 @@ class NormalizedMaxMetricIndicator(Indicator):
   """
   Calculates the minimum of the metrics of all runs, normalized by the given
   value of parameters
+
+  ::
+
+    # Note that this needs to be defined in the global `config` section
+    config:
+
+      indicators:
+        - class: indicator.NormalizedMeanMetricIndicator
+
+          # The name of this indicator
+          name: someIndicator
+
+          # The metric and summarizer to use in <metric>.<summarizer>
+          # format
+          metric: someMetric.someSummarizer
+
+          # Normalize each test case measurement to the specified parameter
+          normalizeto: normalizeAgainst
+
+          # [Optional] You could also use a python expression. The parameters
+          # and the global definitions are available as global variables
+          normalizeto: 0.8 * normalizeAgainst
+
+
   """
 
   def calculate(self, axes):

@@ -119,6 +119,7 @@ class HTTPTimingObserver(Observer):
     self.clockThread.join()
     self.clockThread = None
 
+  @publishesHint(HTTPTimingResultEvent)
   def pollThreadHandler(self):
     """
     A thread that keeps polling the given url until it responds

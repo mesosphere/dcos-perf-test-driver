@@ -43,6 +43,7 @@ class RawEventsReporter(Reporter):
         # Where to dump the events
         filename: "events.dump"
 
+
   The log file is encoded with the following rules::
 
   1. The events are encoded in plain-text
@@ -59,6 +60,7 @@ class RawEventsReporter(Reporter):
     //   Timestamp  //    Name    //      Properties   //
     1500891843.976068;SomeEventName;{"prop":"value", ...}
     ...
+
 
   This format allows for simple grepping and more elaborate parsing. For example
 

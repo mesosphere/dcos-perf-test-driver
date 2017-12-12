@@ -561,7 +561,7 @@ class PolicyStepState:
     self.startTask = tasks.get('start', None)
     self.endTask = tasks.get('end', None)
     self.preValueTask = tasks.get('pre_value', None)
-    self.postValueTask = tasks.get('post_value', None)
+    self.postValueTask = tasks.get('post_value', 'intertest')
 
     # Extract custom end conditions
     endCondition = config.get('end_condition', {})

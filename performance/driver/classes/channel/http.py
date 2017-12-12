@@ -297,7 +297,7 @@ class HTTPRequestState:
 
 class HTTPChannel(Channel):
   """
-  The *HTTP Channel* performs an HTTP Requests when a property is changed.
+  The *HTTP Channel* performs an HTTP Requests when a parameter changes.
 
   ::
 
@@ -402,8 +402,6 @@ class HTTPChannel(Channel):
                            pool_connections=100, pool_maxsize=100))
 
     # Receive parameter updates and clean-up on teardown
-    self.eventbus.subscribe(
-        self.handleParameterUpdate, events=(ParameterUpdateEvent, ))
     self.eventbus.subscribe(self.handleTeardown, events=(TeardownEvent, ))
 
   @publishesHint(HTTPFirstRequestEndEvent, HTTPLastRequestEndEvent,
@@ -506,6 +504,8 @@ class HTTPChannel(Channel):
       # Check for repetitions
       req.completedCounter += 1
       if req.completedCounter < req.repeat:
+
+        self.logger.debug("Completed {} out of {} requests".format(req.completedCounter, req.repeat))
 
         # Register an event listener if we have an `repeatAfter` parameter
         if not req.repeatAfter is None:
