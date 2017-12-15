@@ -3,6 +3,7 @@ import itertools
 import os
 import select
 import tempfile
+import logging
 
 from subprocess import Popen, PIPE
 
@@ -32,6 +33,7 @@ class CurlSSE:
   """
 
   def __init__(self, url, headers={}):
+    self.logger = logging.getLogger('CurlSSE')
     self.url = url
     self.headers = {
         'User-Agent': 'CurlSSE/1.0 (Python3)',
@@ -52,10 +54,12 @@ class CurlSSE:
     (fd, fname) = tempfile.mkstemp()
 
     # Start
+    self.logger.debug("cURL will save events to {}".format(fname))
     self.running = True
 
     # Start curl as a separate process that logs it's output into a file
     # This way marathon can never complain about 'slow consumer'.
+    self.logger.debug("Starting curl")
     self.proc_subprocess = Popen(
       ['curl', '-N', '-L', '-f', '-s', '--compressed', '-o', fname, '-k'] + \
       list(
@@ -108,6 +112,9 @@ class CurlSSE:
 
         # Check if the curl process has exited
         if not self.proc_subprocess.poll() is None:
+          self.logger.debug("curl exited with returncode={}".format(
+            self.proc_subprocess.returncode
+          ))
           os.close(fd)
           if self.proc_subprocess.returncode < 0:  # Killed
             break
