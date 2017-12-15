@@ -4,6 +4,7 @@ import json
 import time
 
 from .utils import CurlSSE, CurlSSEDisconnectedError
+from .utils import RawSSE, RawSSEDisconnectedError
 
 from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
@@ -29,6 +30,10 @@ class MarathonEventsObserver(Observer):
 
         # The URL to the marathon SSE endpoint
         url: "{{marathon_url}}/v2/events"
+
+        # [Optional] Use an external curl process for receiving the events
+        # instead of the built-in raw SSE client
+        curl: no
 
         # [Optional] Additional headers to send
         headers:
@@ -65,8 +70,10 @@ class MarathonEventsObserver(Observer):
                     StartEvent)
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.urlTpl = TemplateString(self.getConfig('url'))
-    self.headersTpl = TemplateDict(self.getConfig('headers', {}))
+    config = self.getRenderedConfig()
+    self.urlTpl = config.get['url']
+    self.headersTpl = config.get('headers', {})
+    self.useCurl = config.get('curl', False)
     self.eventReceiverThread = None
     self.eventEmitterThread = None
     self.eventQueue = Queue()
@@ -397,7 +404,15 @@ class MarathonEventsObserver(Observer):
       # ...
       #
       try:
-        self.activeSse = CurlSSE(url, headers=headers)
+
+        # If we were instructed to use the external CURL create a CurlSSE
+        # instance, otherwise use the default RawSSE
+        if self.useCurl:
+          self.activeSse = CurlSSE(url, headers=headers)
+        else:
+          self.activeSse = RawSSE(url, headers=headers)
+
+        # Handle events from the stream
         with self.activeSse as rawsse:
           try:
             for event in rawsse:
@@ -434,7 +449,8 @@ class MarathonEventsObserver(Observer):
               self.logger.error(
                   'Unable to connect to the remote host. Retrying in 1 sec.')
               time.sleep(1)
-            elif isinstance(e, CurlSSEDisconnectedError):
+            elif isinstance(e, CurlSSEDisconnectedError) or \
+                 isinstance(e, RawSSEDisconnectedError):
               self.logger.error(
                   'Marathon closed the SSE endpoint. Trying to connect again in 1 sec.'
               )
