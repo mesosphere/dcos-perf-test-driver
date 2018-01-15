@@ -249,7 +249,7 @@ class MarathonPollerObserver(Observer):
       url = '{}/v2/groups?embed=group.groups&embed=group.apps&embed=group.pods&embed=group.apps.deployments'.format(
           self.url)
       self.logger.debug('Requesting {}'.format(url))
-      res = requests.get(url, headers=headers)
+      res = requests.get(url, headers=headers, verify=False)
 
       # Handle HTTP response
       if res.status_code < 200 or res.status_code >= 300:
