@@ -483,6 +483,9 @@ class MultiStepPolicy(PolicyFSM):
       if self.advanceEventsRemaining > 0:
         self.logger.info('Waiting for {} more advance events'.format(
             self.advanceEventsRemaining))
+        return
+
+      # If we are done, handle completion
       self.handleCompletion()
 
     def onEvent(self, event):
