@@ -45,6 +45,7 @@ class DurationTrackerSession:
     if self.endQueue.empty():
       return
 
+    retryEvents = []
     while not self.endQueue.empty():
       endEvent = self.endQueue.get()
       startEvent = None
@@ -58,20 +59,10 @@ class DurationTrackerSession:
           self.consumedEvents.add(startEvent)
           break
 
-      # If we haven't found a start event, pick one from the queue
+      # If we haven't found a start event, keep this event and retry later
       if startEvent is None:
-
-        # Make sure we don't pick an event that is already handled
-        # in the explicit lookup stage above
-        while not self.startQueue.empty():
-          startEvent = self.startQueue.get()
-          if not startEvent in self.consumedEvents:
-            break
-
-      # Check if nothing was found till now
-      if startEvent is None:
-        self.logger.warn('Unable to find a start event for end event {}'.format(endEvent.event))
-        break
+        retryEvents.append(endEvent)
+        continue
 
       # Remove start traces
       for traceid in startEvent.traceids:
@@ -82,6 +73,56 @@ class DurationTrackerSession:
       self.tracker.trackMetric(self.tracker.metric, endEvent.ts - startEvent.ts,
                                self.traceids)
 
+    # Put back all retry events in the queue
+    for event in retryEvents:
+      self.endQueue.put(event)
+
+  def finalizeLingeringEvents(self):
+    """
+    This method is called when there were left-over events in the `endQueue`
+    after the end of the run. This means that the end events that we received
+    do not inherit the traceIDs from the start events.
+
+    In some situations this might be accepted, therefore in this method we are
+    going to try and re-construct the sequence of these events and try to
+    extract the correct metrics.
+    """
+
+    # Drain start events queue in the `startEvents` list
+    startEvents = []
+    while not self.startQueue.empty():
+      event = self.startQueue.get()
+      if event in self.consumedEvents:
+        continue
+      startEvents.append(event)
+
+    # Drain end events queue in the `endEvents` list
+    endEvents = []
+    while not self.endQueue.empty():
+      event = self.endQueue.get()
+      endEvents.append(event)
+
+    # Sort both lists by timestamp
+    startEvents = sorted(startEvents, key=lambda e: e.ts)
+    endEvents = sorted(endEvents, key=lambda e: e.ts)
+
+    # While we have start-end events in the queue, start collecting duration
+    # metrics from them.
+    while startEvents and endEvents:
+      startEvent = startEvents.pop(0)
+      endEvent = endEvents.pop(0)
+
+      # Track metric
+      self.tracker.trackMetric(self.tracker.metric, endEvent.ts - startEvent.ts,
+                               self.traceids)
+
+    # If there are still left-over traces, warn
+    if startEvents:
+      self.logger.warn('Incomplete duration traces for {} ({} without end)'.format(
+          self.tracker.metric, len(startEvents)))
+    if endEvents:
+      self.logger.warn('Incomplete duration traces for {} ({} without start)'.format(
+          self.tracker.metric, len(endEvents)))
 
   def handle(self, event):
     self.startFilter.handle(event)
@@ -90,18 +131,11 @@ class DurationTrackerSession:
   def finalize(self):
     self.startFilter.finalize()
     self.endFilter.finalize()
+    self.finalizeLingeringEvents()
 
     # We are done, clear unused structures
     self.consumedEvents = set()
-    while not self.startQueue.empty():
-      try:
-        self.startQueue.get_nowait()
-      except queue.Empty:
-        break
-
-    if self.startLookup or not self.endQueue.empty() > 0:
-      self.logger.warn('Incomplete duration traces for {}'.format(
-          self.tracker.metric))
+    self.startLookup = {}
 
 
 class DurationTracker(Tracker):
