@@ -1,5 +1,6 @@
 import logging
 import time
+import queue
 
 from performance.driver.core.classes import Tracker
 from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, TeardownEvent, isEventMatching
@@ -16,34 +17,71 @@ class DurationTrackerSession:
     self.endFilter = tracker.endFilter.start(traceids, self.handleEnd)
     self.tracker = tracker
     self.traceids = set(traceids)
-    self.startEvent = None
-    self.endEvent = None
+    self.startLookup = {}
+    self.endQueue = queue.Queue()
+    self.startQueue = queue.Queue()
+    self.consumedEvents = set()
     self.fired = False
 
   def handleStart(self, event):
-    if not self.startEvent is None:
-      self.logger.warn('Multiple start events for the same trace detected')
-    self.startEvent = event
+
+    # Update traceid-specific lookup table
+    for traceid in event.traceids:
+      if not traceid in self.traceids:
+        self.startLookup[traceid] = event
+
+    # And also track the events in the order they appear,
+    # in case the events used do not provide
+    self.startQueue.put(event)
     self.checkEvents()
 
   def handleEnd(self, event):
-    if not self.endEvent is None:
-      self.logger.warn('Multiple end events for the same trace detected')
-    self.endEvent = event
+    self.endQueue.put(event)
     self.checkEvents()
 
   def checkEvents(self):
-    if self.fired:
+    if not self.startLookup:
       return
-    if self.endEvent is None:
+    if self.endQueue.empty():
       return
-    if self.startEvent is None:
-      return
-    self.fired = True
 
-    # Track metric
-    self.tracker.trackMetric(self.tracker.metric, self.endEvent.ts - self.startEvent.ts,
-                             self.traceids)
+    while not self.endQueue.empty():
+      endEvent = self.endQueue.get()
+      startEvent = None
+
+      # Try to find a most-specific start event, starting from the latest
+      # trace ID and advancing to the first trace ID, since trace IDs are
+      # appended when specialized.
+      for traceid in endEvent.traceids:
+        if traceid in self.startLookup:
+          startEvent = self.startLookup[traceid]
+          self.consumedEvents.add(startEvent)
+          break
+
+      # If we haven't found a start event, pick one from the queue
+      if startEvent is None:
+
+        # Make sure we don't pick an event that is already handled
+        # in the explicit lookup stage above
+        while not self.startQueue.empty():
+          startEvent = self.startQueue.get()
+          if not startEvent in self.consumedEvents:
+            break
+
+      # Check if nothing was found till now
+      if startEvent is None:
+        self.logger.warn('Unable to find a start event for end event {}'.format(endEvent.event))
+        break
+
+      # Remove start traces
+      for traceid in startEvent.traceids:
+        if traceid in self.startLookup:
+          del self.startLookup[traceid]
+
+      # Track metric
+      self.tracker.trackMetric(self.tracker.metric, endEvent.ts - startEvent.ts,
+                               self.traceids)
+
 
   def handle(self, event):
     self.startFilter.handle(event)
@@ -53,7 +91,15 @@ class DurationTrackerSession:
     self.startFilter.finalize()
     self.endFilter.finalize()
 
-    if self.endEvent is None or self.startEvent is None:
+    # We are done, clear unused structures
+    self.consumedEvents = set()
+    while not self.startQueue.empty():
+      try:
+        self.startQueue.get_nowait()
+      except queue.Empty:
+        break
+
+    if self.startLookup or not self.endQueue.empty() > 0:
       self.logger.warn('Incomplete duration traces for {}'.format(
           self.tracker.metric))
 
