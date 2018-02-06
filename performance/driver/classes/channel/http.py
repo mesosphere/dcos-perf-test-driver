@@ -263,6 +263,18 @@ class HTTPRequestState:
     self.lastRequestTs = 0
     self.active = True
 
+  def getUrl(self):
+    """
+    Dynamically compose URL, by appending some template variables (if any)
+    """
+
+    # Compile the parameters to request
+    parameters = {'i': self.completedCounter}
+    parameters.update(self.eventParameters)
+
+    # Render url
+    return self.channel.getRenderedConfig(parameters).get('url')
+
   def getBody(self):
     """
     Dynamically compose body, by applying some template variables (if any)
@@ -416,11 +428,15 @@ class HTTPChannel(Channel):
                         format(req.verb, req.url))
       return
 
+    self.logger.info('Performing {} {} request(s) to {}'.format(
+      req.repeat, req.verb, req.getUrl()))
+
     # Make sure to process loops in a single stack frame
     while req.active:
 
       # Render body
       renderedBody = req.getBody()
+      reqUrl = req.getUrl()
 
       # Helper function that handles `repeatAfter` events before scheduling
       # a new request
@@ -443,7 +459,7 @@ class HTTPChannel(Channel):
                           HTTPFirstRequestEndEvent, HTTPLastRequestEndEvent,
                           HTTPRequestEndEvent)(
                               req.verb,
-                              req.url,
+                              reqUrl,
                               renderedBody,
                               req.headers,
                               traceid=req.traceids))
@@ -451,7 +467,7 @@ class HTTPChannel(Channel):
             pickFirstLast(req.completedCounter, req.repeat,
                           HTTPFirstResponseStartEvent,
                           HTTPLastResponseStartEvent, HTTPResponseStartEvent)(
-                              req.url, traceid=req.traceids))
+                              reqUrl, traceid=req.traceids))
 
       # Place request
       self.eventbus.publish(
@@ -459,17 +475,17 @@ class HTTPChannel(Channel):
                         HTTPFirstRequestStartEvent, HTTPLastRequestStartEvent,
                         HTTPRequestStartEvent)(
                             req.verb,
-                            req.url,
+                            reqUrl,
                             renderedBody,
                             req.headers,
                             traceid=req.traceids))
-      self.logger.debug('Placing a {} request to {}'.format(req.verb, req.url))
+      self.logger.debug('Placing a {} request to {}'.format(req.verb, reqUrl))
       try:
 
         # Send request (and trap errors)
         req.activeRequest = self.session.request(
             req.verb,
-            req.url,
+            reqUrl,
             verify=False,
             data=renderedBody,
             headers=req.headers,
@@ -480,14 +496,14 @@ class HTTPChannel(Channel):
             200) or (req.activeRequest.status_code >= 300):
           self.logger.warn(
               'HTTP {} Request to {} returned status code of {}'.format(
-                  req.verb, req.url, req.activeRequest.status_code))
+                  req.verb, reqUrl, req.activeRequest.status_code))
 
         # Process response
         self.eventbus.publish(
             pickFirstLast(req.completedCounter, req.repeat,
                           HTTPFirstResponseEndEvent, HTTPLastResponseEndEvent,
                           HTTPResponseEndEvent)(
-                              req.url,
+                              reqUrl,
                               req.activeRequest.text,
                               req.activeRequest.headers,
                               traceid=req.traceids))
@@ -499,7 +515,7 @@ class HTTPChannel(Channel):
             pickFirstLast(req.completedCounter, req.repeat,
                           HTTPFirstResponseErrorEvent,
                           HTTPLastResponseErrorEvent, HTTPResponseErrorEvent)(
-                              req.url, "", {}, e, traceid=req.traceids))
+                              reqUrl, "", {}, e, traceid=req.traceids))
 
       # Check for repetitions
       req.completedCounter += 1
@@ -523,6 +539,9 @@ class HTTPChannel(Channel):
         continue
 
       else:
+
+        self.logger.info('Completed {} {} request(s) to {}'.format(
+          req.repeat, req.verb, req.getUrl()))
 
         # Remoe the active reuqest when we are done
         with self.requestStateMutex:
