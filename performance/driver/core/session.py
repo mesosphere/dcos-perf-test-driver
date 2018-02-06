@@ -26,6 +26,7 @@ class Session(EventBusSubscriber):
     self.parameters = ParameterBatch(self.eventbus, config.general())
     self.summarizer = Summarizer(self.eventbus, config.general())
     self.interrupted = False
+    self.setupEvent = threading.Event()
 
     # Subscribe to event task
     self.eventbus.subscribe(self.handleRunTaskEvent, events=(RunTaskEvent, ))
@@ -99,10 +100,15 @@ class Session(EventBusSubscriber):
                             format(type(task).__name__, event.task))
           self.logger.exception(e)
           self.eventbus.publish(RunTaskCompletedEvent(event, e))
+          if event.task == 'setup':
+            self.setupEvent.set()
+
           return False
 
     # Notify monitors that the task has completed
     self.eventbus.publish(RunTaskCompletedEvent(event))
+    if event.task == 'setup':
+      self.setupEvent.set()
     return True
 
   @publishesHint(InterruptEvent)
@@ -162,6 +168,7 @@ class Session(EventBusSubscriber):
 
     # Start setup tasks
     self.eventbus.publish(RunTaskEvent('setup'))
+    self.setupEvent.wait()
 
     # Start all policies, effectively starting the tests
     self.logger.info('Starting tests ({} run(s))'.format(runs))
