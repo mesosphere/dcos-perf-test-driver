@@ -71,8 +71,6 @@ class MarathonEventsObserver(Observer):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     config = self.getRenderedConfig()
-    self.urlTpl = config.get['url']
-    self.headersTpl = config.get('headers', {})
     self.useCurl = config.get('curl', False)
     self.eventReceiverThread = None
     self.eventEmitterThread = None
@@ -349,8 +347,9 @@ class MarathonEventsObserver(Observer):
     """
     # Render URL
     definitions = self.getDefinitions()
-    url = self.urlTpl.apply(definitions)
-    headers = self.headersTpl.apply(definitions)
+    config = self.getRenderedConfig();
+    url = config.get('url')
+    headers = config.get('headers', {})
 
     # Wait til endpoint responds
     while self.running:
@@ -370,7 +369,7 @@ class MarathonEventsObserver(Observer):
       #
       # Poll the endpoint until it responds
       #
-      self.logger.debug('Checking if {} is alive'.format(url))
+      self.logger.info('Checking if {} is alive'.format(url))
       if is_accessible(url, headers=headers, status_code=[200, 405, 400]):
         break
 
