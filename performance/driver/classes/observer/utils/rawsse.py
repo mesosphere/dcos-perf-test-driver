@@ -111,10 +111,15 @@ class RawSSE:
     if self.url.scheme == 'https':
       self.socket = self.sslctx.wrap_socket(self.socket)
 
+    # Prepare path, including GET query if any
+    url = self.url.path
+    if self.url.query:
+      url = "{}?{}".format(url, self.url.query)
+
     # Connect and send an HTTP/1.1 - compliant request
     self.socket.connect((server, int(port)))
     req = [
-        'GET {} HTTP/1.1'.format(self.url.path),
+        'GET {} HTTP/1.1'.format(url),
         'Host: {}'.format(self.url.netloc),
       ] \
       + list(map(lambda x: '{}: {}'.format(*x), self.headers.items())) \
