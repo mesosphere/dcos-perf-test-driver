@@ -35,7 +35,7 @@ setup(
     'pycparser>=2.17',
     'pyOpenSSL>=17.0.0',
     'pyparsing>=2.2.0',
-    'python-dateutil<=2.7.0',
+    'python-dateutil<2.7.0',
     'pytz>=2017.2',
     'PyYAML>=3.12',
     'requests>=2.17.3',
