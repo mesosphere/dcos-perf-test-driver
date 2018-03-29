@@ -251,7 +251,7 @@ class MarathonEventsObserver(Observer):
       if useEventTimestamp and 'timestamp' in eventData:
         utc_time = datetime.strptime(eventData["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
         eventTs = (utc_time - datetime(1970, 1, 1)).total_seconds()
-        self.logger.debug('Using event ts={}, instead of ts={}'.format(eventTs, event.ts))
+        self.logger.debug('Using event ts={}, instead of ts={}'.format(eventTs, eventInst.ts))
         eventInst.ts = eventTs
 
       # Publish event & Release pointer
