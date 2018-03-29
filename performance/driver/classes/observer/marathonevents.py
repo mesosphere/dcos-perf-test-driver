@@ -1,11 +1,12 @@
-import threading
-import requests
 import json
+import requests
+import threading
 import time
 
 from .utils import CurlSSE, CurlSSEDisconnectedError
 from .utils import RawSSE, RawSSEDisconnectedError
 
+from datetime import datetime
 from performance.driver.core.classes import Observer
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.events import LogLineEvent, TeardownEvent, StartEvent
@@ -34,6 +35,10 @@ class MarathonEventsObserver(Observer):
         # [Optional] Use an external curl process for receiving the events
         # instead of the built-in raw SSE client
         curl: no
+
+        # [Optional] Use the timestamp from the event. If set to no, the time
+        # the event is arrived to the perf-driver is used
+        useEventTimestamp: no
 
         # [Optional] Additional headers to send
         headers:
@@ -219,6 +224,8 @@ class MarathonEventsObserver(Observer):
     This event is draining the receiver queue and is forwarding the events
     to the internal event bus
     """
+    config = self.getRenderedConfig();
+    useEventTimestamp = config.get("useEventTimestamp", True)
 
     while self.running:
       (eventName, eventData) = self.eventQueue.get()
@@ -235,9 +242,21 @@ class MarathonEventsObserver(Observer):
         self.eventQueue.task_done()
         continue
 
+
       # Dispatch raw event
       self.logger.debug('Received event {}: {}'.format(eventName, eventData))
-      self.eventbus.publish(MarathonSSEEvent(eventName, eventData))
+      eventInst = MarathonSSEEvent(eventName, eventData)
+
+      # If we should use the timestamp from the event, replace ts
+      if useEventTimestamp and 'timestamp' in eventData:
+        utc_time = datetime.strptime(eventData["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        eventTs = (utc_time - datetime(1970, 1, 1)).total_seconds()
+        self.logger.debug('Using event ts={}, instead of ts={}'.format(eventTs, event.ts))
+        eventInst.ts = eventTs
+
+      # Publish event & Release pointer
+      self.eventbus.publish(eventInst)
+      eventInst = None
 
       #
       # group_change_success
