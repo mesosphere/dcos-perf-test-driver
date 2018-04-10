@@ -16,6 +16,38 @@ class LogStaxMessageEvent(Event):
     self.tags = message.tags
     self.fields = message.fields
 
+def createEventFilterFn(eventSpec):
+  """
+  Creates a function that returns `None` if the passed event does not match
+  the specifications, or the log line if it passes.
+  """
+
+  def filterFn(event):
+    # Check if name matches
+    if not isEventMatching(event, eventSpec['name']):
+      return None
+
+    # Check if kind matches
+    if 'kind' in eventSpec:
+      kinds = eventSpec['kind']
+      if type(kinds) is str:
+        kinds = [kinds]
+      try:
+        if not event.kind in kinds:
+          return None
+      except AttributeError:
+        return None
+
+    # Return the field
+    if 'field' in eventSpec:
+      return getattr(event, eventSpec['field'])
+    else:
+      try:
+        return event.field
+      except AttributeError:
+        return None
+
+  return filterFn
 
 class LogStaxObserver(Observer):
   """
@@ -123,11 +155,10 @@ class LogStaxObserver(Observer):
     self.events = []
     for event in config.get('events', [{
         'name': 'LogLineEvent',
+        'kind': ['stdout', 'stderr'],
         'field': 'line'
     }]):
-      self.events.append(
-        lambda e: getattr(e, event['field']) if isEventMatching(e, event['name']) else None
-      )
+      self.events.append(createEventFilterFn(event))
 
     # Stop thread at teardown
     self.eventbus.subscribe(self.handleAnyEvent)
