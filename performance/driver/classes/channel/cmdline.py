@@ -89,6 +89,12 @@ class CmdlineChannel(Channel):
         # in a shell.
         shell: no
 
+        # [Optional] Change the `kind` of log messages emitted by this channel
+        # instead of using the default 'stdout' / 'stderr'
+        kind:
+          stdout: custom_out
+          stderr: custom_err
+
   When a parameter is changed, the channel will kill the process and re-launch
   it with the new command-line.
 
@@ -133,6 +139,14 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
 
+    # Get some options
+    config = self.getRenderedConfig()
+    self.kindMap = config.get('kind', {})
+    if not 'stdout' in self.kindMap:
+      self.kindMap['stdout'] = 'stdout'
+    if not 'stderr' in self.kindMap:
+      self.kindMap['stderr'] = 'stderr'
+
   @publishesHint(LogLineEvent, CmdlineExitEvent, CmdlineExitZeroEvent,
                  CmdlineExitNonzeroEvent)
   def monitor(self, sourceName, proc, stdin=None):
@@ -168,7 +182,8 @@ class CmdlineChannel(Channel):
             (line, lines[0]) = lines[0].split('\n', 1)
             self.eventbus.publish(
                 LogLineEvent(
-                    line, sourceName, 'stdin', traceid=self.lastTraceId))
+                    line, sourceName, self.kindMap['stdout'],
+                    traceid=self.lastTraceId))
 
         if proc.stderr in rlist:
           block = proc.stderr.read(1024 * 1024)
@@ -177,7 +192,8 @@ class CmdlineChannel(Channel):
             (line, lines[1]) = lines[1].split('\n', 1)
             self.eventbus.publish(
                 LogLineEvent(
-                    line, sourceName, 'stdout', traceid=self.lastTraceId))
+                    line, sourceName, self.kindMap['stderr'],
+                    traceid=self.lastTraceId))
 
       else:
 
@@ -190,7 +206,8 @@ class CmdlineChannel(Channel):
             if line.strip():
               self.eventbus.publish(
                   LogLineEvent(
-                      line, sourceName, 'stdin', traceid=self.lastTraceId))
+                      line, sourceName, self.kindMap['stdout'],
+                      traceid=self.lastTraceId))
 
         block = proc.stderr.read()
         if block:
@@ -199,7 +216,8 @@ class CmdlineChannel(Channel):
             if line.strip():
               self.eventbus.publish(
                   LogLineEvent(
-                      line, sourceName, 'stdout', traceid=self.lastTraceId))
+                      line, sourceName, self.kindMap['stderr'],
+                      traceid=self.lastTraceId))
 
         # Break loop
         break
