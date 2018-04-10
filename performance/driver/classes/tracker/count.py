@@ -13,19 +13,25 @@ class CountTrackerSession:
   A tracking session
   """
 
-  def __init__(self, tracker, traceids):
+  def __init__(self, tracker, event, stepExpression):
     self.queue = Queue()
     self.logger = logging.getLogger('CountTrackerSession')
-    self.eventFilter = tracker.eventFilter.start(traceids, self.handleEvent)
+    self.eventFilter = tracker.eventFilter.start(event.traceids, self.handleEvent)
     self.tracker = tracker
-    self.traceids = set(traceids)
+    self.traceids = set(event.traceids)
+    self.stepExpression = stepExpression
+    self.eventParameters = event.parameters
 
     self.counter = 0
     self.mutex = Lock()
 
   def handleEvent(self, event):
+    env = {'event': event}
+    env.update(self.tracker.getDefinitions())
+    env.update(self.eventParameters)
+
     with self.mutex:
-      self.counter += 1
+      self.counter += eval(self.stepExpression, env)
 
   def handle(self, event):
     self.eventFilter.handle(event)
@@ -53,6 +59,9 @@ class CountTracker(Tracker):
         # (This can be a filter expression)
         events: SomeEvent
 
+        # [Optional] The increment step (this can be a python expression)
+        step: 1
+
   This tracker always operates within a tracking session, initiated by a
   ``ParameterUpdateEvent`` and terminated by the next ``ParameterUpdateEvent``,
   or the completion of the test.
@@ -73,6 +82,7 @@ class CountTracker(Tracker):
     config = self.getRenderedConfig()
     self.eventFilter = EventFilter(config['events'])
     self.metric = config['metric']
+    self.stepExpression = config.get('step', '1')
 
     self.eventbus.subscribe(self.handleEvent)
 
@@ -97,7 +107,7 @@ class CountTracker(Tracker):
     if type(event) is ParameterUpdateEvent:
 
       # Start a new session tracker
-      self.activeTrace = CountTrackerSession(self, event.traceids)
+      self.activeTrace = CountTrackerSession(self, event, self.stepExpression)
       self.traces.append(self.activeTrace)
 
       for trace in event.traceids:
