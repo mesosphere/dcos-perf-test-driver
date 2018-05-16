@@ -23,6 +23,7 @@ class Dataset:
     self.raw = contents['raw']
     self.axes = list(self.raw[0]['parameters'].keys())
     self.metrics = list(self.raw[0]['values'].keys())
+    self.meta = contents.get('meta', {})
 
   def dataPairs(self, axis, metric):
     """
@@ -71,7 +72,7 @@ class Dataset:
         return conf
     return default
 
-def pf_plotDiff(axis, summ1, summ2, maxis, mmetric):
+def pf_plotDiff(axis, summ1, summ2, points1, points2, maxis, mmetric):
   """
   Difference between the two plots
   """
@@ -87,17 +88,53 @@ def pf_plotDiff(axis, summ1, summ2, maxis, mmetric):
   axis.set_title(mmetric['name'])
   return ((p1[0], p2[0]), ('Difference (sigmas)', 'Zero'))
 
-def pf_plotSumm(axis, summ1, summ2, maxis, mmetric):
+def pf_plotSumm(axis, summ1, summ2, points1, points2,  maxis, mmetric):
   """
   Metric configuration
   """
-  p1 = axis.errorbar(summ1[:,0], summ1[:,1], yerr=summ1[:,2])
-  p2 = axis.errorbar(summ2[:,0], summ2[:,1], yerr=summ2[:,2])
+  c1 = '#14c684'
+  c2 = '#f9a328'
+  axis.grid(b=True, color='#dadde2', linestyle='dotted')
+  l1 = axis.plot(summ1[:,0], summ1[:,1], '-', linewidth=2, color=c1)
+  l2 = axis.plot(summ2[:,0], summ2[:,1], '-', linewidth=2, color=c2)
+  p1 = axis.errorbar(summ1[:,0], summ1[:,1], yerr=summ1[:,2], capsize=5, fmt='.',
+    mfc=l1[0].get_color(), color=l1[0].get_color(), ecolor=l1[0].get_color())
+  p2 = axis.errorbar(summ2[:,0], summ2[:,1], yerr=summ2[:,2], capsize=5, fmt='.',
+    mfc=l2[0].get_color(), color=l2[0].get_color(), ecolor=l2[0].get_color())
   axis.set_ylabel(mmetric['units'])
   axis.set_title(mmetric['name'])
+  axis.margins(0.05, 0.1)
+  axis.patch.set_visible(False)
+  return ((l1[0], l2[0]), ('Input', 'Reference'))
+
+def pf_plotScatter(axis, summ1, summ2, points1, points2,  maxis, mmetric):
+  """
+  Metric configuration
+  """
+  c1 = '#14c684'
+  c2 = '#f9a328'
+  axis.grid(b=True, color='#dadde2', linestyle='dotted')
+  # l1 = axis.plot(summ1[:,0], summ1[:,1], '-', linewidth=2, color=c1)
+  # l2 = axis.plot(summ2[:,0], summ2[:,1], '-', linewidth=2, color=c2)
+  # p1 = axis.errorbar(summ1[:,0], summ1[:,1], yerr=summ1[:,2], capsize=5, fmt='.',
+  #   mfc=l1[0].get_color(), color=l1[0].get_color(), ecolor=l1[0].get_color())
+  # p2 = axis.errorbar(summ2[:,0], summ2[:,1], yerr=summ2[:,2], capsize=5, fmt='.',
+  #   mfc=l2[0].get_color(), color=l2[0].get_color(), ecolor=l2[0].get_color())
+
+  # Calculate a horizontal spread
+  x1 = np.arange(0,len(points1[:,0])*2,2)
+  x2 = np.arange(1,len(points2[:,0])*2+1,2)
+
+  p2 = axis.scatter(x2, points2[:,1], s=2, color=c2)
+  p1 = axis.scatter(x1, points1[:,1], s=2, color=c1)
+
+  axis.set_ylabel(mmetric['units'])
+  axis.set_title(mmetric['name'])
+  axis.margins(0.05, 0.1)
+  axis.patch.set_visible(False)
   return ((p1, p2), ('Input', 'Reference'))
 
-def pf_plotQQ(axis, summ1, summ2, maxis, mmetric):
+def pf_plotQQ(axis, summ1, summ2, points1, points2, maxis, mmetric):
   """
   Metric configuration
   """
@@ -115,12 +152,12 @@ def calcDiffSD(summ1, summ2):
   Calculate the standard deviation of the difference of the samples
   """
   y_diff = np.abs(summ2[:,1] - summ1[:,1])
-  y_sd = np.sqrt( summ1[:,2] ** 2 / summ1[:,3] + summ2[:,2] ** 2 / summ2[:,3] )
+  y_sd_by_n = np.sqrt( summ1[:,2] ** 2 / summ1[:,3] + summ2[:,2] ** 2 / summ2[:,3] )
 
   # Calculate the Z-score
   with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    z_score = np.nan_to_num(y_diff / y_sd)
+    z_score = np.nan_to_num(y_diff / y_sd_by_n)
 
   # Return the difference in sigmas
   return np.sum(z_score) / len(z_score)
@@ -151,18 +188,25 @@ def calcDiffOfMetrics(datasets1, datasets2, axis, metrics):
 
   return ans
 
-def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
+def displayPlot(datasets1, datasets2, axis, metrics, plotFn, plotFile):
   """
   Plots something
   """
   import matplotlib.pyplot as plt
   from matplotlib.ticker import NullFormatter  # useful for `logit` scale
 
+  usingQt4 = False
+  if plotFile is None:
+    try:
+      plt.switch_backend('Qt4Agg')
+    except ImportError:
+      usingQt4 = False
+
   # Generate plot figures
   row_plots = 2
   y = math.ceil(len(metrics) / row_plots)
   x = min(len(metrics), row_plots)
-  fig, axarr = plt.subplots(x, y, sharex=True)
+  fig, axarr = plt.subplots(x, y, facecolor='#FFFFFF', figsize=(20, 10), dpi=72)
   x_i = 0
   y_i = 0
 
@@ -175,6 +219,8 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
   # In case we have only one plot axarr will become scalar value
   if x == 1 and y == 1:
     axarr = np.array([np.array([axarr])])
+  elif y == 1:
+    axarr = np.array([np.array(axarr)]).transpose()
 
   # Combine the metrics of all datasets
   for metric in metrics:
@@ -193,7 +239,7 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
     meta_metric = datasets1[0].metricConfig(metric, {"name": metric, "units": ""})
 
     # Call the plot function on the axis
-    lines = plotFn(axarr[x_i, y_i], summ1, summ2, meta_axis, meta_metric)
+    lines = plotFn(axarr[x_i, y_i], summ1, summ2, points1, points2, meta_axis, meta_metric)
     if first_lines is None:
       first_lines = lines
 
@@ -206,9 +252,18 @@ def displayPlot(datasets1, datasets2, axis, metrics, plotFn):
   # Show legend
   fig.legend(first_lines[0], first_lines[1], 'lower right')
   plt.gca().yaxis.set_minor_formatter(NullFormatter())
-  plt.subplots_adjust(top=0.92, bottom=0.08, left=0.10, right=0.95, hspace=0.25,
-                      wspace=0.35)
-  plt.show()
+  plt.subplots_adjust(top=0.95, bottom=0.12, left=0.04, right=0.98, hspace=0.25,
+                      wspace=0.25)
+
+  if usingQt4:
+    figM = plt.get_current_fig_manager()
+    figM.window.showMaximized()
+
+  if plotFile is None:
+    plt.show()
+  else:
+    plt.savefig(plotFile, dpi=144)
+
 
 def normalizeAndMergeDatapoint(pairList):
   """
@@ -292,6 +347,8 @@ def summarizeDatapoints(pairs):
   bin_mean = [np.mean(values[:,1]) for values in bin_values]
   bin_sd = [np.std(values[:,1]) for values in bin_values]
 
+  bin_err = np.array(bin_sd) * 1.96 / np.sqrt(np.array(bin_count))
+
   # Compose and return
   return np.array(
     list(zip(bins, bin_mean, bin_sd, bin_count))
@@ -350,6 +407,9 @@ if __name__ == '__main__':
 
   parser.add_argument('-P', '--plot', action='store_true', dest='plot',
                       help='View results as plots')
+
+  parser.add_argument('--plot-file', default=None, type=str, dest='plot_file',
+                      help='Dump the plot to the given file instead of displaying')
 
   parser.add_argument('-w', '--weight', action='append', dest='weights',
                       help='Specify metric contribution between 1.0 (full) and 0.0 (none)')
@@ -429,7 +489,10 @@ if __name__ == '__main__':
     if not args.json:
       print("{:30s} {:<10.3f} {:<10.2f} {} {:<10.3f}".format(name, score, weight, accounted, weighted_score))
 
-  value /= total
+  if total == 0:
+    value = 0
+  else:
+    value /= total
 
   if not args.json:
 
@@ -447,10 +510,19 @@ if __name__ == '__main__':
 
   # Check for debug condition
   if args.plot:
+
+    # If we have a plot file, calculate the two PNG filenames
+    plot_file_diff = None
+    plot_file_summ = None
+    if args.plot_file != None:
+      plot_file_diff = "{}-diff.png".format(args.plot_file)
+      plot_file_summ = "{}-summ.png".format(args.plot_file)
+
+    # Display/Save the plots
     displayPlot(dataset_input, dataset_reference, dataset_input[0].axes[0],
-                dataset_input[0].metrics, pf_plotDiff)
+                dataset_input[0].metrics, pf_plotDiff, plot_file_diff)
     displayPlot(dataset_input, dataset_reference, dataset_input[0].axes[0],
-                dataset_input[0].metrics, pf_plotSumm)
+                dataset_input[0].metrics, pf_plotSumm, plot_file_summ)
 
   # Check if score is within threshold
   if value >= args.threshold:
