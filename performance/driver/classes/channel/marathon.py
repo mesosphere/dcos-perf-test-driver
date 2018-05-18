@@ -202,6 +202,7 @@ class MarathonDeployChannel(Channel):
             else:
               self.eventbus.publish(
                   MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
+              break
 
           except Exception as e:
             self.logger.error('Unable to deploy {} "{}" ({})'.format(
