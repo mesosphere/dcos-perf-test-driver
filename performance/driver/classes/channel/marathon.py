@@ -2,11 +2,13 @@ import re
 import json
 import random
 import requests
+import time
 
 from performance.driver.core.events import ParameterUpdateEvent, Event
 from performance.driver.core.classes import Channel
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.reflection import subscribesToHint, publishesHint
+from performance.driver.core.utils import parseTimeExpr
 from threading import Thread
 
 # NOTE: We are not using the deployment ID as the means of tracking the
@@ -42,10 +44,22 @@ class MarathonDeployChannel(Channel):
   ::
 
     channels:
-      - class: channel.MarathonUpdateChannel
+      - class: channel.MarathonDeployChannel
 
         # The base url to marathon
         url: "{{marathon_url}}"
+
+        # [Optional] Retry deployments with default configuration
+        retry: yes
+
+        # [Optional] Retry with detailed configuration
+        retry:
+
+          # [Optional] How many times to re-try
+          tries: 10
+
+          # [Optional] How long to wait between retries
+          interval: 1s
 
         # One or more deployments to perform
         deploy:
@@ -62,6 +76,9 @@ class MarathonDeployChannel(Channel):
             # [Optional] Repeat this deployment for the given number of times
             # (This can be a python expression)
             repeat: "instances * 2"
+
+            # [Optional] How many deployments to perform in parallel
+            burst: 1
 
   """
 
@@ -98,6 +115,15 @@ class MarathonDeployChannel(Channel):
       self.logger.error('Unknown deployment type {}'.format(deploymentType))
       return
 
+    # Get retry configuration
+    retry_tries = 10
+    retry_interval = 1
+    retry = self.getConfig('retry', True)
+    if type(retry) is dict:
+      retry_tries = retry.get('tries', 10)
+      retry_interval = parseTimeExpr(retry.get('interval', '1'))
+      retry = True
+
     # Evaluate repeat
     evalDict = dict(self.getDefinitions())
     evalDict.update(parameters)
@@ -131,33 +157,80 @@ class MarathonDeployChannel(Channel):
         self.eventbus.publish(
             MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
 
-        # Create a request
-        try:
-          response = requests.post(
-              url,
-              json=body,
-              verify=False,
-              headers=self.getHeaders())
-          if response.status_code < 200 or response.status_code >= 300:
-            self.logger.error(
-                'Unable to deploy {} "{}" (HTTP response {})'.format(
-                    deploymentType, inst_id, response.status_code))
-            self.eventbus.publish(
-                MarathonDeploymentRequestFailedEvent(
-                    inst_id,
-                    response.status_code,
-                    response.text,
-                    traceid=traceids))
-          else:
-            self.eventbus.publish(
-                MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
+        # Guard this with a retry loop
+        try_counter = retry_tries
+        while True:
 
-        except Exception as e:
-          self.logger.error('Unable to deploy {} "{}" ({})'.format(
-              deploymentType, inst_id, e))
-          self.eventbus.publish(
-              MarathonDeploymentRequestFailedEvent(
-                  inst_id, -1, str(e), traceid=traceids))
+          # Create a request
+          try:
+            response = requests.post(
+                url,
+                json=body,
+                verify=False,
+                headers=self.getHeaders())
+            if response.status_code < 200 or response.status_code >= 300:
+              self.logger.error(
+                  'Unable to deploy {} "{}" (HTTP response {})'.format(
+                      deploymentType, inst_id, response.status_code))
+
+              # If we are within the retry loop, try again
+              if retry:
+                try_counter -= 1
+                if try_counter <= 0:
+                  self.logger.error("No more retries left. Failing deployment")
+                  self.eventbus.publish(
+                      MarathonDeploymentRequestFailedEvent(
+                          inst_id,
+                          response.status_code,
+                          response.text,
+                          traceid=traceids))
+                  break
+
+                else:
+                  self.logger.error(
+                    "Retrying in {} sec ({} retries left)".format(
+                      retry_interval, try_counter))
+                  time.sleep(retry_interval)
+
+              else:
+                self.eventbus.publish(
+                    MarathonDeploymentRequestFailedEvent(
+                        inst_id,
+                        response.status_code,
+                        response.text,
+                        traceid=traceids))
+            else:
+              self.eventbus.publish(
+                  MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
+
+          except Exception as e:
+            self.logger.error('Unable to deploy {} "{}" ({})'.format(
+                deploymentType, inst_id, e))
+
+            # If we are within the retry loop, try again
+            if retry:
+              try_counter -= 1
+              if try_counter <= 0:
+                self.logger.error("No more retries left. Failing deployment")
+                self.eventbus.publish(
+                    MarathonDeploymentRequestFailedEvent(
+                        inst_id, -1, str(e), traceid=traceids))
+                break
+
+              else:
+                self.logger.error(
+                  "Retrying in {} sec ({} retries left)".format(
+                    retry_interval, try_counter))
+                time.sleep(retry_interval)
+
+            else:
+              self.eventbus.publish(
+                  MarathonDeploymentRequestFailedEvent(
+                      inst_id, -1, str(e), traceid=traceids))
+
+          # If we are not using retry, exit now
+          if not retry:
+            break
 
       except json.decoder.JSONDecodeError as e:
         self.logger.error(
