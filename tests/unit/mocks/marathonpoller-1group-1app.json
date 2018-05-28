@@ -1,0 +1,678 @@
+{
+  "id": "/",
+  "dependencies": [],
+  "version": "2018-01-15T12:09:53.629Z",
+  "apps": [],
+  "groups": [
+    {
+      "id": "/scale-instances",
+      "dependencies": [],
+      "version": "2018-01-15T12:09:53.629Z",
+      "apps": [
+        {
+          "id": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+          "backoffFactor": 1,
+          "backoffSeconds": 0,
+          "cmd": "sleep infinity",
+          "cpus": 0.005,
+          "disk": 0,
+          "executor": "",
+          "instances": 50,
+          "labels": {},
+          "maxLaunchDelaySeconds": 3600,
+          "mem": 32,
+          "gpus": 0,
+          "networks": [
+            {
+              "mode": "host"
+            }
+          ],
+          "portDefinitions": [
+            {
+              "port": 10000,
+              "name": "default",
+              "protocol": "tcp"
+            }
+          ],
+          "requirePorts": false,
+          "upgradeStrategy": {
+            "maximumOverCapacity": 1,
+            "minimumHealthCapacity": 1
+          },
+          "version": "2018-01-15T12:09:53.629Z",
+          "versionInfo": {
+            "lastScalingAt": "2018-01-15T12:09:53.629Z",
+            "lastConfigChangeAt": "2018-01-15T12:09:53.629Z"
+          },
+          "killSelection": "YOUNGEST_FIRST",
+          "unreachableStrategy": {
+            "inactiveAfterSeconds": 0,
+            "expungeAfterSeconds": 0
+          },
+          "tasksStaged": 36,
+          "tasksRunning": 0,
+          "tasksHealthy": 0,
+          "tasksUnhealthy": 0,
+          "deployments": [
+            {
+              "id": "9392e65f-cc5f-4c30-b05c-0d86797d384a"
+            }
+          ],
+          "tasks": [
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe9205b9-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                13669
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.667Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe922cca-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                15716
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.668Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe91dea8-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                23302
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.666Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe927aed-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                6494
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.671Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe9253db-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                11786
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.669Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe933e42-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                12560
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.675Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe944fb9-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                23072
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.682Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe92f020-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                27362
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.673Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe93b375-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                5336
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.678Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe91b797-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                24591
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.665Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe964b96-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                1604
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.696Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe96c0c9-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                29580
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.698Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe96e7da-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                15360
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.699Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe93da86-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                9341
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.679Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe9428a8-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                10236
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.681Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe956130-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                15830
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.690Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe9699b8-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                29818
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.697Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe936553-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                6586
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.676Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe95fd73-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                5173
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.693Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe931731-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                26984
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.674Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe95d662-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                16900
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.692Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe92c90f-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                24462
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.672Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe92a1fe-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                15990
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.671Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe949ddb-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                21137
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.684Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe940197-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                9373
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.680Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe95130e-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                22696
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.687Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe953a1f-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                3134
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.689Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe958841-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                21378
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.691Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe9672a7-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                15714
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.697Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe927aec-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                19257
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.670Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe94ebfd-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                5995
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.686Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe94c4ec-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                10461
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.685Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe964b95-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                14626
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.695Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe938c64-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                21118
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.677Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe962484-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                19036
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.694Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            },
+            {
+              "appId": "/scale-instances/6f88b064406f4025a709c173b8d8bbb3",
+              "healthCheckResults": [],
+              "host": "10.0.2.205",
+              "id": "scale-instances_6f88b064406f4025a709c173b8d8bbb3.fe9476ca-f9ec-11e7-8e02-a67ec17ad8e3",
+              "ipAddresses": [],
+              "ports": [
+                15737
+              ],
+              "servicePorts": [],
+              "slaveId": "3cd21b20-e1a6-4f42-a630-bce3e18b9013-S1",
+              "state": "TASK_STAGING",
+              "stagedAt": "2018-01-15T12:09:53.683Z",
+              "version": "2018-01-15T12:09:53.629Z",
+              "localVolumes": []
+            }
+          ],
+          "taskStats": {
+            "startedAfterLastScaling": {
+              "stats": {
+                "counts": {
+                  "staged": 36,
+                  "running": 0,
+                  "healthy": 0,
+                  "unhealthy": 0
+                }
+              }
+            },
+            "withLatestConfig": {
+              "stats": {
+                "counts": {
+                  "staged": 36,
+                  "running": 0,
+                  "healthy": 0,
+                  "unhealthy": 0
+                }
+              }
+            },
+            "totalSummary": {
+              "stats": {
+                "counts": {
+                  "staged": 36,
+                  "running": 0,
+                  "healthy": 0,
+                  "unhealthy": 0
+                }
+              }
+            }
+          }
+        }
+      ],
+      "groups": [],
+      "pods": []
+    }
+  ],
+  "pods": []
+}
