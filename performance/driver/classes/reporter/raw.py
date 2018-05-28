@@ -1,7 +1,10 @@
 import os
 import json
 import datetime
+
 from performance.driver.core.classes import Reporter
+from performance.driver.core.eventfilters import EventFilter
+from performance.driver.core.events import StartEvent, ParameterUpdateEvent
 
 
 class RawReporter(Reporter):
@@ -16,6 +19,18 @@ class RawReporter(Reporter):
 
         # Where to dump the results
         filename: "results-raw.json"
+
+        # [Optional] Include event traces
+        events:
+
+          # [Optional] Include events that pass through the given expression
+          include: FilterExpression
+
+          # [Optional] Exclude events that pass through the given expression
+          exclude: FilterExpression
+
+          # [Optional] Group the events to their traces
+          traces: yes
 
   The JSON structure of the data included is the following:
 
@@ -115,6 +130,67 @@ class RawReporter(Reporter):
     super().__init__(*args, **kwargs)
     self.timeStarted = datetime.datetime.now().isoformat()
 
+    # Do some delayed-initialization when the system is ready
+    self.eventbus.subscribe(self.handleStartEvent, order=10,
+      events=(StartEvent, ))
+
+    # Event-tracing configuration
+    self.includeFilter = None
+    self.excludeFilter = None
+    self.eventTraces = {}
+
+  def handleStartEvent(self, event):
+    """
+    Start tracing, if requested
+    """
+
+    # Check the config and subscribe
+    config = self.getRenderedConfig()
+    if 'events' in config:
+
+      # Get events config
+      eventsConfig = config.get('events')
+      if not type(eventsConfig) is dict:
+        eventsConfig = {}
+
+      # Config include/exclude filter
+      includeExpr = eventsConfig.get('include', '*')
+      self.logger.info("Events collected: {}".format(includeExpr))
+      self.includeFilter = EventFilter(includeExpr).start(None, self.handleInclude)
+      if 'exclude' in eventsConfig:
+        # TODO: When we have negation on the EventFilter fix this
+        raise ValueError('Exclude filter is currently not supported')
+
+      # Start subscription to all events
+      self.eventbus.subscribe(self.handleEvent, order=10)
+
+  def handleInclude(self, event):
+    """
+    Handle events passing through the include filter
+    """
+
+    # TODO: When we have negation on the EventFilter handle negative matches
+
+    # Locate the tracing bin where to place this event
+    for i in event.traceids:
+      if i in self.eventTraces:
+        if not event in self.eventTraces[i]:
+          self.eventTraces[i].add(event)
+        return
+
+  def handleEvent(self, event):
+    """
+    Handle incoming event
+    """
+
+    # A ParameterUpdate event starts a new trace
+    if type(event) is ParameterUpdateEvent:
+      trace = min(filter(lambda x: type(x) is int, event.traceids))
+      self.eventTraces[trace] = set([event])
+
+    # Every other event passes through the include filter
+    self.includeFilter.handle(event)
+
   def dump(self, summarizer):
     """
     Dump summarizer values to the csv file
@@ -127,20 +203,41 @@ class RawReporter(Reporter):
     # Create missing directory for the files
     os.makedirs(os.path.abspath(os.path.dirname(filename)), exist_ok=True)
 
-    # Dump the raw timeseries
+    # Prepare results object
+    results = {
+      'time': {
+        'started': self.timeStarted,
+        'completed': datetime.datetime.now().isoformat()
+      },
+      'config': self.getRootConfig().config,
+      'raw': summarizer.raw(),
+      'sum': summarizer.sum(),
+      'indicators': summarizer.indicators(),
+      'meta': self.getMeta()
+    }
+
+    # Collect results
+    if self.eventTraces:
+      traces = []
+      for traceEvents in self.eventTraces.values():
+        root = next(filter(
+          lambda x: type(x) is ParameterUpdateEvent, traceEvents))
+        events = []
+
+        # Serialize events
+        for event in traceEvents:
+          events.append(event.toDict())
+
+        # Compose trace record
+        traces.append({
+            'parameters': root.parameters,
+            'events': events
+          })
+
+      # Put traces on the result
+      results['events'] = traces
+
+    # Dump the results
+    self.logger.info("Saving raw results on {}".format(filename))
     with open(filename, 'w') as f:
-      f.write(
-          json.dumps(
-              {
-                  'time': {
-                      'started': self.timeStarted,
-                      'completed': datetime.datetime.now().isoformat()
-                  },
-                  'config': self.getRootConfig().config,
-                  'raw': summarizer.raw(),
-                  'sum': summarizer.sum(),
-                  'indicators': summarizer.indicators(),
-                  'meta': self.getMeta()
-              },
-              sort_keys=True,
-              indent=2))
+      f.write(json.dumps(results, sort_keys=True, indent=2))

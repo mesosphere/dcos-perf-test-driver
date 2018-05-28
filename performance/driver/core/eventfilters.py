@@ -18,6 +18,19 @@ def tokenizeExpression(expression):
   Tokenize expression
   """
 
+  # The test boolean value all test conditions should be test against
+  # (This helps us implement the negation opeartion below)
+  testTrue = True
+
+  # In case the expression is a negation pop it now
+  if expression.startswith(':not('):
+    if not expression.endswith(')'):
+      raise ValueError(
+          'Unable to find closing parenthesis on "{}"'.format(expression)
+        )
+    testTrue = False
+    expression = expression[5:-1]
+
   # Find all the events to match against
   matches = DSL_TOKENS.findall(expression)
   if not matches:
@@ -83,7 +96,7 @@ def tokenizeExpression(expression):
               eval('lambda event: event.{} {} {}'.format(left, op, right)))
 
     # Collect flags
-    events.append((event, attrib, flags, flagParameters, eid))
+    events.append((event, attrib, flags, flagParameters, eid, testTrue))
 
   # Return events
   return events
@@ -105,7 +118,7 @@ class EventFilterSession:
 
     # Immediately call-back to matched filters
     for (eventSpec, attribChecks, flags, flagParameters,
-         eid) in self.filter.events:
+         eid, testTrue) in self.filter.events:
       if 'single' in flags:
         if eid in global_single_events:
           callback(global_single_events[eid])
@@ -122,10 +135,13 @@ class EventFilterSession:
     Handle the incoming event
     """
     for (eventSpec, attribChecks, flags, flagParameters,
-         eid) in self.filter.events:
+         eid, TRUE) in self.filter.events:
+
+      # (NOTE: `TRUE` is True when the filter is positive, or False if it's
+      # negated using a :not(..) expression)
 
       # Handle all events or matching events
-      if eventSpec != "*" and not isEventMatching(event, eventSpec):
+      if TRUE == (eventSpec != "*" and not isEventMatching(event, eventSpec)):
         continue
 
       # Handle attributes
@@ -138,12 +154,12 @@ class EventFilterSession:
         except KeyError:
           attribCheckFailed = True
           break
-      if attribCheckFailed:
+      if TRUE == attribCheckFailed:
         continue
 
       # Handle trace ID
-      if not self.traceids is None and not 'notrace' in flags and not event.hasTraces(
-          self.traceids):
+      if TRUE == (not self.traceids is None and not 'notrace' in flags and not
+          event.hasTraces(self.traceids)):
         continue
 
       # Handle order
@@ -322,7 +338,7 @@ class EventFilter:
     """
 
     # Make sure trace IDs is always a list
-    if type(traceids) is str:
+    if (traceids != None) and (type(traceids) not in (list, set, tuple)):
       traceids = set([traceids])
 
     return EventFilterSession(self, traceids, callback)

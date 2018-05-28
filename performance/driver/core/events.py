@@ -8,6 +8,9 @@ ANSI_SEQUENCE = re.compile(r'\x1b[^m]*m')
 # Event matching cache for speed-up
 MATCHER_CACHE = {}
 
+# Monotonically increasing trace ID
+LAST_TRACE_ID = 0
+
 
 def isEventClassMatchingName(eventClass, className):
   """
@@ -47,6 +50,18 @@ def isEventMatching(eventInstance, eventCheck):
   return ans
 
 
+def allocateEventId():
+  """
+  Allocate a new monotonically increasing ID in order to avoid using string IDs
+  that are less performant on resolving.
+  """
+  global LAST_TRACE_ID
+
+  # Increment trace ID and return it
+  LAST_TRACE_ID += 1
+  return LAST_TRACE_ID
+
+
 class Event:
   """
   Base event
@@ -61,7 +76,7 @@ class Event:
     self.ts = time.time()
 
     # Allocate a unique trace ID for this event
-    self.traceids = set([uuid.uuid4().hex])
+    self.traceids = set([allocateEventId()])
 
     # Enrich with the given trace IDs
     if type(traceid) in (tuple, list, set):
@@ -84,11 +99,26 @@ class Event:
         return True
     return False
 
+  def toDict(self):
+    """
+    Return dict representation of the event
+    """
+    inst = dict(self.__dict__)
+
+    # Remove private keys
+    del inst['_cachedMatchers']
+
+    # Map sets to lists
+    inst['traceids'] = list(inst['traceids'])
+
+    # Return dict
+    return inst
+
   def __str__(self):
     """
     Return a string representation of the event
     """
-    return '{}[trace={}]'.format(self.event, ','.join(self.traceids))
+    return '{}[trace={}]'.format(self.event, ','.join(map(str, self.traceids)))
 
 
 class StartEvent(Event):

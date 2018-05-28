@@ -3,7 +3,7 @@ import json
 import uuid
 import queue
 
-from .events import ParameterUpdateEvent, FlagUpdateEvent
+from .events import allocateEventId, ParameterUpdateEvent, FlagUpdateEvent
 from performance.driver.core.eventbus import EventBusSubscriber
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from threading import Lock
@@ -26,7 +26,7 @@ class ParameterBatch(EventBusSubscriber):
     self.parameters = {}
     self.paramUpdates = queue.Queue()
     self.flagUpdates = queue.Queue()
-    self.updateTraceid = uuid.uuid4().hex
+    self.updateTraceid = allocateEventId()
     self.previousTraceId = None
 
     # Populate default parameter values
@@ -64,7 +64,7 @@ class ParameterBatch(EventBusSubscriber):
 
       self.parameters = parameters
       self.previousTraceId = self.updateTraceid
-      self.updateTraceid = uuid.uuid4().hex
+      self.updateTraceid = allocateEventId()
 
   def setParameter(self, name, value):
     """
