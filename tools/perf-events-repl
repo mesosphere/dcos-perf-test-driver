@@ -1,35 +1,96 @@
 #!/usr/bin/env python
 
-import numpy as np
 from matplotlib import pyplot
-import json
-import code
-import sys
-import datetime
 import atexit
+import code
+import datetime
+import numpy as np
 import os
+import sys
+import threading
+import queue
 
 from performance.driver.core.eventfilters import tokenizeExpression
+
+try:
+  import ujson as json
+except ImportError:
+  printf("INFO: Falling back to `json` because `ujson` was not installed")
+  import json
+
+# Convert all trace IDs from strings to integers
+# in order to have faster lookups. This global variable
+# is going to keep track of the mapping
+traceIdToStr = []
 
 # Require an argument
 if len(sys.argv) < 2:
   print("ERROR: Please specify the raw event dump to load")
   sys.exit(1)
 
+def sprint(message, maxLen=40):
+  sys.stdout.write("\r{}\r{}".format(" " * maxLen, message))
+  sys.stdout.flush()
+
+class ReplHelper:
+  def __init__(self, args, kwargs, vars):
+    self.args = args
+    self.kwargs = kwargs
+
+    def get(name, defaultValue):
+      return vars.get(name, defaultValue)
+
+    def set(name, value):
+      vars[name] = value
+
+    def export(fn):
+      vars[fn.__name__] = fn
+      return fn
+
+    self.get = get
+    self.set = set
+    self.export = export
+
 class ExecHelper:
-  def __call__(self, file, *args, **kw):
+  def __init__(self):
+    self.globals = {}
+
+  def setGlobal(self, name, value):
+    self.globals[name] = value
+
+  def getGlobal(self, name, defaultValue):
+    return self.globals.get(name, defaultValue)
+
+  def __call__(self, file, *args, **kwargs):
+    repl = ReplHelper(args, kwargs, self.globals)
+    exec_vars = {"repl": repl}
+    exec_vars.update(self.globals)
+
     with open(file, 'r') as f:
-      exec(f.read())
+      exec(f.read(), exec_vars)
 
   def __repr__(self):
     return "x('filename.py') - Loads and executes the given python script"
+
+def lazy_property(fn):
+  """
+  Decorator for making a property lazy
+  """
+  attr_name = '_lazy_' + fn.__name__
+
+  @property
+  def _lazy_property(self):
+    if not hasattr(self, attr_name):
+        setattr(self, attr_name, fn(self))
+    return getattr(self, attr_name)
+  return _lazy_property
 
 class Event:
   """
   User-friendly abstraction to the event information
   """
 
-  def __init__(self, num, ts, name, fields):
+  def __init__(self, num, ts, name, fields, traceids):
     """
     Constructor
     """
@@ -37,8 +98,13 @@ class Event:
     self._date = datetime.datetime.fromtimestamp(float(ts))
     self.ts = ts
     self.event = name
+    self.traceids = traceids
     for key, value in fields.items():
-      setattr(self, key, value)
+      if not hasattr(self, key):
+        if key == "ts":
+          setattr(self, key, float(value))
+        else:
+          setattr(self, key, value)
 
   def __repr__(self):
     return "{}{{{}}}".format(self.event, self._num)
@@ -51,18 +117,122 @@ class BulletList(list):
 
 class EventList(BulletList):
 
-  def __init__(self, events, traces=True):
+  def __init__(self, events):
     super().__init__(events)
-    self.traces = EventTracesList(events) if traces else None
-    self.byname = EventNamesDict(events)
-    self.names = BulletList(sorted(list(self.byname.keys())))
+
+  def lazy__traces(self):
+    """
+    Groups all the events by trace ID and returns a list of trace groups
+    """
+    sprint(" - Building traces index...")
+    res = EventTracesList(self)
+    sprint("")
+    return res
+
+  def lazy__byname(self):
+    """
+    Groups all the events by event name and return a dict of lists
+    """
+    sprint(" - Building names index...")
+    res = EventNamesDict(self)
+    sprint("")
+    return res
+
+  def lazy__names(self):
+    """
+    Returns a list with all the names of the events
+    """
+    names = set()
+    for e in self:
+      if not e.event in names:
+        names.add(e.event)
+    return BulletList(sorted(list(names)))
+
+  def lazy__byaxis(self):
+    """
+    Groups all the events by the ParameterUpdateEvent traceID, and further
+    groups them in runs
+    """
+    axis = AxisDict()
+    traceid_lookup = {}
+
+    sprint(" - Finding root events...")
+    for e in self:
+      if e.event == "ParameterUpdateEvent":
+        param_traceid = next(iter(e.traceids))
+        if param_traceid in traceid_lookup:
+          raise ValueError("Not expecting more than one `ParameterUpdateEvent` to share a trace ID")
+
+        # Lookup axis
+        axis_key = ",".join(map(lambda k: "{}={}".format(k, e.parameters[k]), sorted(e.parameters.keys())))
+        if not axis_key in axis:
+          axis[axis_key] = EventGroupsList(prefix="Run ")
+
+        # Lookup run ID
+        run_id = len(axis[axis_key])
+        axis[axis_key].append(EventList([e]))
+
+        # Update lookup table for the event
+        traceid_lookup[param_traceid] = (axis_key, run_id)
+
+    # Group events
+    sprint(" - Grouping events...")
+    for e in self:
+      for eid in e.traceids:
+        if eid in traceid_lookup:
+          (axis_key, run_id) = traceid_lookup[eid]
+          axis[axis_key][run_id].append(e)
+          break
+
+    # Return events grouped by axis
+    sprint("")
+    return axis
+
+  def bin(self, fn, extensive=False):
+    """
+    Group events using the given hashing function
+    """
+    bins = EventGroupsList(prefix="Bin ")
+    i = 0
+
+    sprint(" - Binning events...")
+    for e in self:
+      if len(bins) == 0:
+        bins.append(EventList([e]))
+      else:
+        binned = False
+        for j in range(len(bins) - 1, -1, -1):
+          if extensive:
+            for bin_e in bins[j]:
+              if fn(bin_e, e):
+                bins[j].append(e)
+                binned = True
+                break
+            if binned:
+              break
+          else:
+            if fn(bins[j][len(bins[j])-1], e):
+              bins[j].append(e)
+              binned = True
+              break
+        if not binned:
+          bins.append(EventList([e]))
+
+      if i % 10000 == 0:
+        prog = 100.0 / len(events) * i
+        sprint(" - Binning events (%.2f %%) ..." % prog)
+      i += 1
+
+    # Return bins
+    sprint("")
+    return bins
 
   def filter(self, expression):
     tokens = tokenizeExpression(expression)
     collected = []
     for ev in self:
       foundEvent = None
-      for name, attrib, flags, flagParameters, eid in tokens:
+      for name, attrib, flags, flagParameters, eid, testTrue in tokens:
         if ev.event == name:
           foundEvent = (attrib, flags, flagParameters, eid)
           break
@@ -79,62 +249,112 @@ class EventList(BulletList):
 
     return EventList(collected)
 
+  def merge(self, *lists):
+    merged = []
+    merged.extend(self)
+    for l in lists:
+      merged.extend(l)
+
+    return EventList(merged)
+
   def __getattribute__(self, name):
     """
     Return a list of attributes on attribute access
     """
     try:
-      return super().__getattribute__(name)
+      try:
+        return super().__getattribute__(name)
+      except AttributeError:
+        return super().__getattribute__("lazy__{}_value".format(name))
     except AttributeError:
-      ans = []
-      for e in self:
-        if hasattr(e, name):
-          ans.append(getattr(e, name))
-        else:
-          ans.append(None)
 
-      if len(ans):
-        if type(ans[0]) in (int, float):
-          ans = np.array(ans)
-      return ans
+      # Check for lazy generators
+      try:
+        lazy_generator = super().__getattribute__("lazy__{}".format(name))
+        lazy_value = lazy_generator()
+        setattr(self, "lazy__{}_value".format(name), lazy_value)
+        return lazy_value
 
+      # Otherwise generate the looked-up value from the events
+      except AttributeError:
+        ans = []
+        for e in self:
+          if hasattr(e, name):
+            ans.append(getattr(e, name))
+          else:
+            raise AttributeError("Property `{}` was not found in the events".format(name))
+
+        if len(ans):
+          if type(ans[0]) in (int, float):
+            ans = np.array(ans)
+          else:
+            try:
+              ans = np.array(list(map(lambda x: float(x), ans)))
+            except:
+              ans = np.array(ans)
+        return ans
+
+class AxisDict(dict):
+  def __repr__(self):
+    if not len(self):
+      return "(Empty)"
+    ans = ""
+    for axis in self.keys():
+      ans += "\n\n---[ {} ]---\n".format(axis)
+      ans += repr(self[axis])
+    return ans
+
+class EventGroupsList(BulletList):
+  def __init__(self, *args, prefix="", **kwargs):
+    super().__init__(*args, **kwargs)
+    self.prefix = prefix
+
+  def __repr__(self):
+    if not len(self):
+      return "(Empty)"
+    ans = ""
+    for i in range(0, len(self)):
+      ans += "\n\n ** [{}{}] **\n".format(self.prefix, i + 1)
+      ans += repr(self[i])
+    return ans
+
+class TraceIDList(BulletList):
+  def __repr__(self):
+    if not len(self):
+      return "(Empty)"
+    return " - " + "\n - ".join(map(lambda x: "{} ({})".format(traceIdToStr[x], x), self))
 
 class EventsSharingTrace(EventList):
-  def __init__(self, events):
-    self.traceids = []
-    for event in events:
-      for traceid in event.traceids:
-        if not traceid in self.traceids:
-          self.traceids.append(traceid)
-    super().__init__(sorted(events, key=lambda x: x.ts), traces=False)
-
+  def __init__(self, events, traceid):
+    self.traceid = traceid
+    super().__init__(sorted(events, key=lambda x: x.ts))
 
 class EventTracesList(list):
   def __init__(self, events):
     # Group together events that share the same trace codes
-    lookup = {}
-
+    group = list(map(lambda i: (i, []), range(0, len(traceIdToStr))))
+    i = 0
     for event in events:
-      batch = None
       for traceid in event.traceids:
-        if traceid in lookup:
-          batch = lookup[traceid]
-          break
-      if batch is None:
-        batch = [event]
-        for traceid in event.traceids:
-          lookup[traceid] = batch
-      else:
-        batch.append(event)
+        group[traceid][1].append(event)
+      if i % 10000 == 0:
+        prog = 100.0 / len(events) * i
+        sprint(" - Building traces index (%.2f %%) ..." % prog)
+      i += 1
+    sprint("")
 
-    super().__init__(list(map(lambda x: EventsSharingTrace(x), lookup.values())))
+    # Filter-out empty sets
+    group = list(filter(lambda v: len(v[1]) > 0, group))
+    group = sorted(group, key=lambda x: -len(x[1]))
+    self.traceids = TraceIDList(list(map(lambda x: x[0], group)))
+    super().__init__(list(map(lambda x: EventsSharingTrace(x[1], x[0]), group)))
 
   def __repr__(self):
     if not len(self):
       return "(Empty)"
     ans = ""
     for batch in self:
-      ans += "\n\n---[ {} ]---\n".format(', '.join(batch.traceids))
+      ans += "\n\n---[ {} ({}) ]---\n".format(traceIdToStr[batch.traceid], batch.traceid)
       ans += repr(batch)
     return ans
 
@@ -160,28 +380,6 @@ class EventTracesList(list):
         ans = np.array(ans)
       return ans
 
-class EventTracesDict(dict):
-  def __init__(self, events):
-    super().__init__()
-
-    # Group together events that share the same trace codes
-
-
-    # Find out root traces
-    for event in events:
-      if event.event == 'ParameterUpdateEvent':
-        for traceid in event.traceids:
-          if not traceid in self:
-            self[traceid] = []
-          self[traceid].append(event)
-
-    # Put events in root traces
-    for event in events:
-      for traceid in event.traceids:
-        if traceid in self:
-          self[traceid].append(event)
-
-
 class EventNamesDict(dict):
   def __init__(self, events):
     for event in events:
@@ -193,18 +391,52 @@ class EventNamesDict(dict):
 print("Loading raw events from {}".format(sys.argv[1]))
 rawevents = []
 i = 0
+size = os.path.getsize(sys.argv[1])
 with open(sys.argv[1], 'r') as f:
-  for line in f:
+  traceid_lookup = {}
+  line = f.readline()
+  while line:
     (ts, name, fields) = line.strip().split(';', 2)
-    fields = json.loads(fields)
+    try:
+      fields = json.loads(fields)
+    except ValueError:
+      line = f.readline()
+      continue
     i += 1
-    event = Event(i, ts, name, fields)
+
+    # Convert traceIDs from strings to numbers for faster loopup
+    traceids = set()
+    if 'traceids' in fields:
+      tids = fields['traceids']
+      if type(tids) is str:
+        tids = json.loads(tids)
+      for tid in tids:
+        if tid in traceid_lookup:
+          traceids.add(traceid_lookup[tid])
+        else:
+          idx = len(traceIdToStr)
+          traceIdToStr.append(tid)
+          traceid_lookup[tid] = idx
+          traceids.add(idx)
+
+    event = Event(i, ts, name, fields, traceids)
 
     # Collect event
     rawevents.append(event)
 
+    # Periodically show progress
+    if i % 10000 == 0:
+      prog = 100.0 / size * f.tell()
+      sprint(" - %.2f %% ..." % prog)
+
+    # Read next line
+    line = f.readline()
+
 # Create high-level interface
+sprint(" - Building index (will take some time)")
 events = EventList(rawevents)
+sprint("")
+print("{:,} events loaded and indexed".format(len(events)))
 
 # Fancy readline support.
 try:
@@ -216,12 +448,27 @@ try:
   if os.path.exists(history_file):
     readline.read_history_file(history_file)
   import rlcompleter
-  if(sys.platform == 'darwin'):
+  if (sys.platform == 'darwin'):
     readline.parse_and_bind ("bind ^I rl_complete")
   else:
     readline.parse_and_bind("tab: complete")
 except ImportError as e:
   pass
+
+# Prepare globals
+repl_vars = {
+  # Entry points
+  "events": events,
+  "x": ExecHelper(),
+
+  # Frequently used modules
+  "np": np,
+  "plt": pyplot,
+  "json": json
+}
+
+# Set the same object on the exec helper
+repl_vars['x'].globals = repl_vars
 
 # Start interactive console
 code.interact(
@@ -231,20 +478,12 @@ code.interact(
   '-.   __   __    .-'
    /   /__\\ /__\\   \\      1. I have loaded {}
   |    \\ 0/ \\ 0/    |     2. Check `events`
-  \\     `/   \\`     /
-   `-.  /-""\"-\\  .-`
-     /  '.___.'  \\
-     \\     I     /
+  \\     `/   \\`     /     3. Filter with `events.filter("expression")`
+   `-.  /-""\"-\\  .-`      4. Merge with `events1.merge(events2)`
+     /  '.___.'  \\        5. Access fields with `events.field`
+     \\     I     /        6. Numpy (`np`) and Pyplot.plt (`plt`) available
       `;--'`'--;`
         '.___.'
 """.format(sys.argv[1]),
-  local={
-    "events": events,
-    "x": ExecHelper(),
-
-    # Frequently used modules
-    "np": np,
-    "plt": pyplot,
-    "json": json
-  }
+  local=repl_vars
 )
