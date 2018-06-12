@@ -22,7 +22,7 @@ class Dataset:
     self.config = contents.get('config', None)
     self.raw = contents['raw']
     self.axes = list(self.raw[0]['parameters'].keys())
-    self.metrics = list(self.raw[0]['values'].keys())
+    self.metrics = sorted(list(self.raw[0]['values'].keys()))
     self.meta = contents.get('meta', {})
 
   def dataPairs(self, axis, metric):
@@ -71,6 +71,16 @@ class Dataset:
       if conf['name'] == metric:
         return conf
     return default
+
+  def stripMetric(self, name):
+    """
+    Remove this metric from the dataset
+    """
+    if name in self.metrics:
+      i = self.metrics.index(name)
+      del self.metrics[i]
+      for r in self.raw:
+        r['values'][name]
 
 def pf_plotDiff(axis, summ1, summ2, points1, points2, maxis, mmetric):
   """
@@ -354,7 +364,7 @@ def summarizeDatapoints(pairs):
     list(zip(bins, bin_mean, bin_sd, bin_count))
   )
 
-def loadDataset(uri):
+def loadDataset(uri, ignore_metric=[]):
   """
   Load dataset either from file or from the web
   """
@@ -371,8 +381,10 @@ def loadDataset(uri):
   if scheme in ('http', 'https', 'ftp'):
     res = requests.get(uri)
     if res.status_code < 200 or res.status_code >= 300:
-      raise IOError('Received an unexpected HTTP {} response while fetching {}'.format(res.status_code, uri))
-    return Dataset(json.loads(res.text))
+      raise IOError(
+        'Received an unexpected HTTP {} response while fetching {}'.format(
+          res.status_code, uri))
+    dataset = Dataset(json.loads(res.text))
 
   # File scheme
   elif scheme in ('file',):
@@ -380,11 +392,18 @@ def loadDataset(uri):
       raise IOError('Could not find file {}'.format(path))
     with open(path, 'r') as f:
       contents = f.read()
-      return Dataset(json.loads(contents))
+      dataset = Dataset(json.loads(contents))
 
   # Unknown scheme
   else:
     raise IOError('Unknown scheme "{}" in URI {}'.format(scheme, uri))
+
+  # Remove ignored metrics
+  if ignore_metric:
+    for metric in ignore_metric:
+      dataset.stripMetric(metric)
+
+  return dataset
 
 
 if __name__ == '__main__':
@@ -399,6 +418,9 @@ if __name__ == '__main__':
                       help='one or more paths (or URLs) to the input raw dump')
   parser.add_argument('-r', dest='ref', action='append',
                       help='one or more paths (or URLs) to the reference raw dump')
+
+  parser.add_argument('--ignore-metric', dest='ignore_metric', action='append',
+                      help='one or more metrics to ignore when processing')
 
   parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                       help='Enable verbose logging')
@@ -449,13 +471,13 @@ if __name__ == '__main__':
   dataset_reference = []
   for fname in args.input:
     try:
-      dataset_input.append(loadDataset(fname))
+      dataset_input.append(loadDataset(fname, args.ignore_metric))
     except Exception as e:
       logger.error('{} while loading {}: {}'.format(type(e).__name__, fname, e))
       sys.exit(1)
   for fname in args.ref:
     try:
-      dataset_reference.append(loadDataset(fname))
+      dataset_reference.append(loadDataset(fname, args.ignore_metric))
     except Exception as e:
       logger.error('{} while loading {}: {}'.format(type(e).__name__, fname, e))
       sys.exit(1)
@@ -526,6 +548,6 @@ if __name__ == '__main__':
 
   # Check if score is within threshold
   if value >= args.threshold:
-    sys.exit(1)
+    sys.exit(2)
   else:
     sys.exit(0)
