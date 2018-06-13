@@ -1,4 +1,5 @@
 from .chaineddeployment import ChainedDeploymentPolicy
-from .multivariableexplorer import MultivariableExplorerPolicy
-from .timeevolution import TimeEvolutionPolicy
 from .multistep import MultiStepPolicy
+from .multivariableexplorer import MultivariableExplorerPolicy
+from .simple import SimplePolicy
+from .timeevolution import TimeEvolutionPolicy
