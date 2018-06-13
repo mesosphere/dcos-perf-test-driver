@@ -84,7 +84,7 @@ class SimplePolicy(PolicyFSM):
       if self.startSession:
         self.startSession.handle(event)
 
-    def onRestartEventFilter(self, event):
+    def onRestartEvent(self, event):
       """
       When the tests are re-started, marathon is already running, so only wait
       for the restart signal before switching to `Run` state.
