@@ -201,6 +201,18 @@ class ParameterUpdateEvent(Event):
     self.changes = changes
 
 
+class MetricUpdateEvent(Event):
+  """
+  A metric has changed value
+  """
+
+  def __init__(self, name, value, axis, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.name = name
+    self.value = value
+    self.axis = axis
+
+
 class FlagUpdateEvent(Event):
   """
   A flag has changed for this run

@@ -2,8 +2,8 @@ import logging
 import time
 
 from .axis import SummarizerAxis
-from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, FlagUpdateEvent
-from performance.driver.core.reflection import subscribesToHint
+from performance.driver.core.events import ParameterUpdateEvent, RestartEvent, FlagUpdateEvent, MetricUpdateEvent
+from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.core.eventbus import EventBusSubscriber
 from threading import Lock
 
@@ -124,6 +124,7 @@ class Summarizer(EventBusSubscriber):
       for traceid in event.traceids:
         self.axisLookup[traceid] = axis
 
+  @publishesHint(MetricUpdateEvent)
   def trackMetric(self, name, value, traceids):
     """
     Track a change in the metric
@@ -146,3 +147,7 @@ class Summarizer(EventBusSubscriber):
 
     # Push the parameter in the timeseries of the correct axis
     axis.push(name, value)
+
+    # Publish the metric update event in order for the real-time
+    # subsystems to be notified for this action
+    self.eventbus.publish(MetricUpdateEvent(name, value, axis))
