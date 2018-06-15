@@ -28,7 +28,8 @@ class DurationTrackerSession:
     # Update traceid-specific lookup table
     for traceid in event.traceids:
       if not traceid in self.startLookup:
-        self.startLookup[traceid] = event
+        self.startLookup[traceid] = queue.Queue()
+      self.startLookup[traceid].put(event)
 
     # And also track the events in the order they appear,
     # in case the events used do not provide
@@ -55,7 +56,9 @@ class DurationTrackerSession:
       # appended when specialized.
       for traceid in endEvent.traceids:
         if traceid in self.startLookup:
-          startEvent = self.startLookup[traceid]
+          startEvent = self.startLookup[traceid].get()
+          if self.startLookup[traceid].empty():
+            del self.startLookup[traceid]
           self.consumedEvents.add(startEvent)
           break
 
@@ -63,11 +66,6 @@ class DurationTrackerSession:
       if startEvent is None:
         retryEvents.append(endEvent)
         continue
-
-      # Remove start traces
-      for traceid in startEvent.traceids:
-        if traceid in self.startLookup:
-          del self.startLookup[traceid]
 
       # Track metric
       self.tracker.trackMetric(self.tracker.metric, endEvent.ts - startEvent.ts,
