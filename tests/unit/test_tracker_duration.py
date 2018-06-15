@@ -391,6 +391,13 @@ class TestTrackerDuration(unittest.TestCase):
     # Start the tests with a parameter update event
     rootEvent = ParameterUpdateEvent({"bar": 1}, {}, {"bar": 1})
     self.eventbus.publish(rootEvent)
+    self.eventbus.flush()
+
+    # Override logger with a mock
+    logWarn = Mock()
+    for t in self.tracker.traces:
+        t.logger.warn = logWarn
+        t.logger.warning = logWarn
 
     # Send three starting events
     self.eventbus.publish(StartEvent(traceid=rootEvent.traceids, ts=1))
@@ -401,4 +408,35 @@ class TestTrackerDuration(unittest.TestCase):
     self.eventbus.flush()
 
     # An error should be thrown
-    self.assertEqual(len(self.summarizer.trackMetric.mock_calls), 0)
+    self.assertEqual(len(logWarn.mock_calls), 1)
+    self.assertIn("Incomplete duration traces", logWarn.call_args_list[0][0][0])
+    self.assertIn("without end", logWarn.call_args_list[0][0][0])
+
+  def test_incomplete_end(self):
+    """
+    Test incomplete tests, that include an end but no start event
+    """
+
+    # Start the tests with a parameter update event
+    rootEvent = ParameterUpdateEvent({"bar": 1}, {}, {"bar": 1})
+    self.eventbus.publish(rootEvent)
+    self.eventbus.flush()
+
+    # Override logger with a mock
+    logWarn = Mock()
+    for t in self.tracker.traces:
+        t.logger.warn = logWarn
+        t.logger.warning = logWarn
+
+    # Send three starting events
+    self.eventbus.publish(EndEvent(traceid=rootEvent.traceids, ts=1))
+    self.eventbus.flush()
+
+    # Reach teardown
+    self.eventbus.publish(TeardownEvent())
+    self.eventbus.flush()
+
+    # An error should be thrown
+    self.assertEqual(len(logWarn.mock_calls), 1)
+    self.assertIn("Incomplete duration traces", logWarn.call_args_list[0][0][0])
+    self.assertIn("without start", logWarn.call_args_list[0][0][0])
