@@ -2,8 +2,9 @@ import time
 import socket
 
 from performance.driver.core.classes import Reporter
-from performance.driver.core.events import MetricUpdateEvent
+from performance.driver.core.events import MetricUpdateEvent, TeardownEvent
 from performance.driver.core.reflection import subscribesToHint
+from performance.driver.core.utils import parseTimeExpr
 
 # NOTE: The following block is needed only when sphinx is parsing this file
 #       in order to generate the documentation. It's not really useful for
@@ -44,6 +45,9 @@ class DataDogMetricReporter(Reporter):
         # [Optional] Prefix of the metrics (Defaults to `dcos.perf.`)
         prefix: "dcos.perf."
 
+        # [Optional] How frequently to flush the metrics to DataDog
+        flushInterval: 5s
+
   The DataDog reporter is using the DataDog API to submit the values of the
   test metrics to DataDog in real-time.
   """
@@ -64,10 +68,18 @@ class DataDogMetricReporter(Reporter):
     # Get some configuration options
     self.metrics = config.get('metrics', None)
     self.prefix = config.get('prefix', 'dcos.perf.')
+    self.flushInterval = parseTimeExpr(config.get('flushInterval', '5s'))
 
     # Push metrics as they are produced
+    self.series = []
     self.eventbus.subscribe(self.handleMetricUpdate, order=10,
       events=(MetricUpdateEvent, ))
+
+    # Flush final metrics when the tests are completed
+    self.lastFlush = time.time()
+    self.flushing = False
+    self.eventbus.subscribe(self.handleTeardown, order=10,
+      events=(TeardownEvent, ))
 
   def handleMetricUpdate(self, event):
     """
@@ -82,14 +94,56 @@ class DataDogMetricReporter(Reporter):
       self.prefix, event.name, event.value
     ))
 
-    # Send metric change to DataDog the moment it happened
-    api.Metric.send(
-      metric='{}{}'.format(self.prefix, event.name),
-      points=(event.ts, event.value),
-      tags=list(map(
-        lambda v: "{}:{}".format(v[0], str(v[1])), self.getMeta().items()
-      ))
-    )
+    # Instead of summiting frequent changes, we are batching them and
+    # sending them at a fixed interval
+    self.series.append({
+      "metric":
+        '{}{}'.format(self.prefix, event.name),
+      "points":
+        (event.ts, event.value),
+      "tags":
+        list(map(
+          lambda v: "{}:{}".format(v[0], str(v[1])), self.getMeta().items()
+        ))
+    })
+
+    # Check if we have reached the flush interval
+    if (time.time() - self.lastFlush) >= self.flushInterval:
+      self.flushMetrics()
+
+  def handleTeardown(self, event):
+    """
+    Flush metrics when we are tearing down
+    """
+    self.flushMetrics()
+
+  def flushMetrics(self):
+    """
+    Flush the metrics
+    """
+
+    # A flush operation can take long time to complete. Do not trigger
+    # a new flush until the previous one is completed
+    if self.flushing:
+      self.logger.warn("Very slow flushing to DataDog ({} sec)".format(
+        time.time() - self.lastFlush))
+      return
+
+    self.lastFlush = time.time()
+    self.flushing = True
+
+    # Pop and reset the timeseries
+    series = self.series
+    self.series = []
+
+    # Ignore if there were no metrics to flush
+    if len(series) == 0:
+      return
+
+    # Send the metrics
+    self.logger.info("Flushing {} points to DataDog".format(len(series)))
+    api.Metric.send(series)
+    self.flushing = False
 
 
 class DataDogReporter(Reporter):
