@@ -1,4 +1,4 @@
-# 💪 dcos-perf-test-driver
+# 💪 dcos-perf-test-driver [![Travis](https://travis-ci.org/mesosphere/dcos-perf-test-driver.svg?branch=master)](https://travis-ci.org/mesosphere/dcos-perf-test-driver)
 
 > The DC/OS Performance and Scale Test Driver
 
