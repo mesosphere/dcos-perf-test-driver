@@ -232,6 +232,13 @@ class Session(EventBusSubscriber):
         self.eventbus.flush()
 
     # Teardown
+    self.teardown()
+
+  @publishesHint(TeardownEvent, RunTaskEvent)
+  def teardown(self):
+    """
+    Immediately stops the tests
+    """
     self.eventbus.publish(TeardownEvent())
     self.eventbus.flush()
     self.eventbus.publish(RunTaskEvent('teardown'))

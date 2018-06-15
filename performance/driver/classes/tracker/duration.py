@@ -27,7 +27,7 @@ class DurationTrackerSession:
 
     # Update traceid-specific lookup table
     for traceid in event.traceids:
-      if not traceid in self.traceids:
+      if not traceid in self.startLookup:
         self.startLookup[traceid] = event
 
     # And also track the events in the order they appear,

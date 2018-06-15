@@ -70,10 +70,13 @@ class Event:
   related events and is used to group them together to the same operation.
   """
 
-  def __init__(self, traceid=None):
+  def __init__(self, traceid=None, ts=None):
     self._cachedMatchers = {}
     self.event = type(self).__name__
-    self.ts = time.time()
+    if ts is None:
+      self.ts = time.time()
+    else:
+      self.ts = ts
 
     # Allocate a unique trace ID for this event
     self.traceids = set([allocateEventId()])
