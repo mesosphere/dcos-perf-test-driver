@@ -86,16 +86,17 @@ class WebdriverObserver(Observer):
     self.running = False
 
     # Get the project URL
-    self.url = self.getConfig('url')
+    config = self.getRenderedConfig()
+    self.url = config['url']
 
     # Load the common, API library script
     self.apiLibrary = ""
-    with open("{}/js/perfdriver-api.js".format(
+    with open("{}/js/driver-api.js".format(
         os.path.abspath(os.path.dirname(__file__))), 'r') as f:
       self.apiLibrary = f.read()
 
     # Load the user script
-    testUrl = self.getConfig('test')
+    testUrl = config['test']
     if testUrl.startswith('file:'):
       self.logger.info('Loading test from {}'.format(testUrl[5:]))
       with open(testUrl[5:], 'r') as f:
@@ -115,13 +116,16 @@ class WebdriverObserver(Observer):
     self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
 
     # Register start/stop event filters
-    eventsConfig = self.getConfig('events', {})
+    eventsConfig = config.get('events', {})
     startFilter = EventFilter(eventsConfig.get('start', 'StartEvent'))
     stopFilter = EventFilter(eventsConfig.get('stop', 'TeardownEvent'))
 
     # Start the start/stop event sessions
     self.startSession = startFilter.start(None, self.handleStartEvent)
     self.stopSession = stopFilter.start(None, self.handleStopEvent)
+
+    # Subscribe to all events
+    self.eventbus.subscribe(self.handleEvent)
 
     # For each 'forward' event in the proxy session
     self.proxySessions = []
@@ -185,6 +189,7 @@ class WebdriverObserver(Observer):
     # Create a driver instance
     Factory = getattr(webdriver, driverClass)
     self.driver = Factory(**driverArguments)
+    self.driver.get(self.url)
 
     # Extract DC/OS auth token from the definitions
     if 'dcos_auth_token' in definitions:
@@ -199,7 +204,6 @@ class WebdriverObserver(Observer):
       dcosUser = definitions.get('dcos_user', 'bootstrapuser')
 
       # Set domain-related cookies
-      self.driver.get(self.url)
       self.driver.add_cookie({
         "name": "dcos-acs-info-cookie",
         "value":b64encode(json.dumps({
@@ -211,10 +215,6 @@ class WebdriverObserver(Observer):
 
       # Re-load the page and inject the event proxy
       self.driver.refresh()
-    else:
-
-      # Otherwise just visit the test URL
-      self.driver.get(self.url)
 
     # Create a unique namespace where the driver is going to expose it's API
     self.uuid = random.choice(string.ascii_lowercase) + \
@@ -240,6 +240,7 @@ class WebdriverObserver(Observer):
     ))
 
     # Then start the event monitoring thread
+    self.running = True
     self.thread = Thread(target=self.queueThread)
     self.thread.start()
 
@@ -248,7 +249,10 @@ class WebdriverObserver(Observer):
     Stop the selenium web driver
     """
     self.logger.info('Stopping the WebDriver interface')
-    self.driver.close()
+    try:
+      self.driver.close()
+    except Exception:
+      pass
     self.running = False
     self.thread.join()
 
