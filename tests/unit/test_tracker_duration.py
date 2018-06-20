@@ -5,12 +5,10 @@ import threading
 import unittest
 import yaml
 
-from .mocks.summarizer import MockSummarizer
 from unittest.mock import Mock
 from performance.driver.core.eventbus import EventBus
 from performance.driver.core.events import Event, TeardownEvent, ParameterUpdateEvent
 from performance.driver.core.config import RootConfig
-
 from performance.driver.classes.tracker.duration import DurationTracker
 
 class StartEvent(Event):
@@ -18,6 +16,14 @@ class StartEvent(Event):
 
 class EndEvent(Event):
   pass
+
+class MockSummarizer:
+  """
+  Expose only the interesting parts of the summarizer
+  """
+
+  def __init__(self):
+    self.trackMetric = Mock()
 
 class TestTrackerDuration(unittest.TestCase):
 
