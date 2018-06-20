@@ -4,7 +4,16 @@ import json
 import string
 import requests
 
-from selenium import webdriver, common
+# NOTE: The following block is needed only when sphinx is parsing this file
+#       in order to generate the documentation. It's not really useful for
+#       the logic of the file itself.
+try:
+  from selenium import webdriver, common
+except ImportError:
+  import logging
+  logging.error('One or more libraries required by WebdriverObserver were not'
+                'installed. The observer will not work.')
+
 from threading import Thread, Event
 from base64 import b64encode
 
