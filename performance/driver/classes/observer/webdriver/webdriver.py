@@ -18,8 +18,22 @@ from threading import Thread, Event
 from base64 import b64encode
 
 from performance.driver.core.classes import Observer
-from performance.driver.core.events import TickEvent, TeardownEvent, StartEvent
+from performance.driver.core.events import Event, TickEvent, TeardownEvent, StartEvent, ParameterUpdateEvent
+from performance.driver.core.eventfilters import EventFilter
 from performance.driver.core.reflection import subscribesToHint, publishesHint
+
+class WebdriverEvent(Event):
+  """
+  The events broadcasted by the Webdriver session  
+  """
+
+  def __init__(self, name, fields, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.name = name
+
+    # Define arbitrary fields from the event
+    for key, value in fields.items():
+      setattr(self, key, value)
 
 class WebdriverObserver(Observer):
   """
@@ -56,6 +70,12 @@ class WebdriverObserver(Observer):
 
           # [Optional] Which event to wait to stop the driver
           stop: TeardownEvent
+  
+          # [Optional] Which events to forward to the test job
+          forward:
+            - SomeEvent
+            - AnotherEvent
+
   """
 
   def __init__(self, *args, **kwargs):
@@ -90,7 +110,65 @@ class WebdriverObserver(Observer):
           'Unable to download test code from {} (got HTTP/{})'.format(
             testUrl, req.status_code))
 
-  def startDriver(self):
+    # Receive ParameterUpdateEvent 
+    self.currentTraceId = None
+    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
+
+    # Register start/stop event filters
+    eventsConfig = self.getConfig('events', {})
+    startFilter = EventFilter(eventsConfig.get('start', 'StartEvent'))
+    stopFilter = EventFilter(eventsConfig.get('stop', 'TeardownEvent'))
+
+    # Start the start/stop event sessions
+    self.startSession = startFilter.start(None, self.handleStartEvent)
+    self.stopSession = stopFilter.start(None, self.handleStopEvent)
+
+    # For each 'forward' event in the proxy session
+    self.proxySessions = []
+    if 'forward' in eventsConfig:
+      forwardEvents = eventsConfig['forward']
+      if type(forwardEvents) is str:
+        forwardEvents = [forwardEvents]
+
+      # For each event filter expression defined in the `forward` section, 
+      # create a proxy object that will forward the event to the javascript
+      # test session
+      for filterExpression in forwardEvents:
+        self.proxySessions.append(
+            EventFilter(filterExpression).start(None, self.handleProxyEvent)
+          )
+
+  def handleParameterUpdate(self, event):
+    """
+    Every time we have a 'ParameterUpdate' event, we are starting a new test
+    session. We therefore keep track of the trace ID.
+    """
+    self.currentTraceId = event.traceids
+
+    # Forward a 'ParameterUpdateEvent' event to the session
+    self.sendWebdriverEvent('ParameterUpdateEvent', event.toDict())
+
+  def handleEvent(self, event):
+    """
+    Catholic event received that delegates the received events to the start/stop
+    sessions and the proxy to the test job.
+    """
+    self.startSession.handle(event)
+    self.stopSession.handle(event)
+
+    for proxy in self.proxySessions:
+      proxy.handle(event)
+
+  def handleProxyEvent(self, event):
+    """
+    Proxy the received event to the test session
+    """
+    self.sendWebdriverEvent(
+      event.event, 
+      event.toDict()
+    )
+
+  def handleStartEvent(self, event):
     """
     Start the selenium web driver
     """
@@ -101,6 +179,8 @@ class WebdriverObserver(Observer):
     driverConfig = config.get('driver', {})
     driverClass = driverConfig.get('class', 'Chrome')
     driverArguments = driverConfig.get('arguments', {})
+    self.logger.info('Starting a {} WebDriver interface to {}'.format(
+      driverClass, self.url))
 
     # Create a driver instance
     Factory = getattr(webdriver, driverClass)
@@ -129,8 +209,12 @@ class WebdriverObserver(Observer):
         }).encode('utf-8')).decode('utf-8')
       });
 
-    # Re-load the page and inject the event proxy
-    self.driver.refresh()
+      # Re-load the page and inject the event proxy
+      self.driver.refresh()
+    else:
+
+      # Otherwise just visit the test URL
+      self.driver.get(self.url)
 
     # Create a unique namespace where the driver is going to expose it's API
     self.uuid = random.choice(string.ascii_lowercase) + \
@@ -159,10 +243,11 @@ class WebdriverObserver(Observer):
     self.thread = Thread(target=self.queueThread)
     self.thread.start()
 
-  def stopDriver(self):
+  def handleStopEvent(self, event):
     """
     Stop the selenium web driver
     """
+    self.logger.info('Stopping the WebDriver interface')
     self.driver.close()
     self.running = False
     self.thread.join()
@@ -190,13 +275,21 @@ class WebdriverObserver(Observer):
     """
     Handle an incoming event from the WebDriver test
     """
-    pass
+    if not self.running:
+      return
 
+    self.logger.debug('Received a {} event (data={})'.format(name, data))
+    self.eventbus.publish(
+      WebdriverEvent(name, data, traceid=self.currentTraceId))
 
   def sendWebdriverEvent(self, name, data={}):
     """
     Send an event to the WebDriver test
     """
+    if not self.running:
+      return
+
+    self.logger.debug('Sending a {} event (data={})'.format(name, data))
     self.driver.execute_script('{}.send({}, {})'.format(
         self.uuid, json.dumps(name), json.dumps(data)
       ))
