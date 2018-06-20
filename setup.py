@@ -51,7 +51,8 @@ setup(
   include_package_data = True,
   package_data={
     'performance': [
-      'driver/classes/observer/jmx/runtime/*.jar'
+      'driver/classes/observer/jmx/runtime/*.jar',
+      'driver/classes/observer/webdriver/js/*.js',
     ]
   },
 
