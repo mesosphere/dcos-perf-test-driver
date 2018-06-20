@@ -5,8 +5,8 @@ try:
   import numpy as np
 except ImportError:
   import logging
-  logging.error('One or more libraries required by MultiStepPolicy were not'
-                'installed. The policy will not work.')
+  logging.error('One or more libraries required by PercentileSummarizer were'
+                'not installed. The summarizer will not work.')
 
 from performance.driver.core.summarizer import Summarizer, util
 
