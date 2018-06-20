@@ -38,6 +38,10 @@ class DataDogMetricReporter(Reporter):
           - metricA
           - metricB
 
+        # [Optional] Set to `yes` to submit the raw values the moment they
+        # are collected.
+        live: yes
+
         # [Optional] The hostname to use as the agent name in datadog
         # If missing the network name of the machine will be used
         hostname: test.host
@@ -58,6 +62,7 @@ class DataDogMetricReporter(Reporter):
     Initialize when the tests are starting
     """
     config = self.getRenderedConfig()
+    self.series = []
 
     # Initialize DataDog API
     initialize(
@@ -70,10 +75,11 @@ class DataDogMetricReporter(Reporter):
     self.prefix = config.get('prefix', 'dcos.perf.')
     self.flushInterval = parseTimeExpr(config.get('flushInterval', '5s'))
 
-    # Push metrics as they are produced
-    self.series = []
-    self.eventbus.subscribe(self.handleMetricUpdate, order=10,
-      events=(MetricUpdateEvent, ))
+    # Push metrics as they are produced, if we have requested a live
+    # metric trace
+    if config.get('live', False):
+      self.eventbus.subscribe(self.handleMetricUpdate, order=10,
+        events=(MetricUpdateEvent, ))
 
     # Flush final metrics when the tests are completed
     self.lastFlush = time.time()
@@ -110,6 +116,43 @@ class DataDogMetricReporter(Reporter):
     # Check if we have reached the flush interval
     if (time.time() - self.lastFlush) >= self.flushInterval:
       self.flushMetrics()
+
+  def dump(self, results):
+    """
+    Dump summarized metrics to DataDog
+    """
+    commonTags = list(map(
+        lambda v: "{}:{}".format(v[0], str(v[1])), self.getMeta().items()
+      ))
+
+    # Report the chosen metrics to DataDog
+    for case in results.sum():
+      for metric, _summ in case['values'].items():
+        if self.metrics is not None and metric not in self.metrics:
+          continue
+
+        # Each metric can have one or more summarizers. Submit the values
+        # from all of them to DataDog
+        for summarizer, value in _summ.items():
+
+          # If we have an array, pick only the first item in the value set
+          if type(value) in (list, set):
+            value = value[0]
+
+          # Collect the data point
+          self.series.append({
+            "metric":
+              '{}{}.{}'.format(self.prefix, metric, summarizer),
+            "points":
+              (time.time(), value),
+            "tags": commonTags + list(map(
+                lambda v: "{}:{}".format(v[0], str(v[1])), 
+                case['parameters'].items()
+              ))
+          })
+
+    # Flush the metrics we collected so far
+    self.flushMetrics()
 
   def handleTeardown(self, event):
     """
@@ -188,7 +231,7 @@ class DataDogReporter(Reporter):
 
   def dump(self, summarizer):
     """
-    Dump summarizer values to the csv file
+    Dump summarizer values to DataDog
     """
     config = self.getRenderedConfig()
 
