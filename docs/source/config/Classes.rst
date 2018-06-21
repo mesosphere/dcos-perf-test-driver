@@ -67,6 +67,9 @@ For example, the following channel will be triggered when the parameter ``param1
       param2: value2
       ...
 
+Custom Triggers
+^^^^^^^^^^^^^^^
+
 There are two properties you can use in order to modify this behaviour:
 
 The **parameters** property override the parameter heuristics and provide an
@@ -78,8 +81,6 @@ example the channel will be triggered only if ``param2`` changes:
   channels:
     - class: channel.SomeClass
       parameters: [param2]
-      param1: "{{param1}}"
-      param2: value2
       ...
 
 The **trigger** property defines the triggering behavior and it can take
@@ -95,6 +96,16 @@ the following values:
   *parameters* list or in the macros changes **and** the new value is different
   than the previous one. This is particularly useful if you are working with
   multiple axes.
+
+
+For example, to trigger the channel on *every* update, use:
+
+::
+
+  channels:
+    - class: channel.SomeClass
+      trigger: always
+      ...
 
 .. _statements-observers:
 
