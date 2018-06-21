@@ -64,3 +64,10 @@ MarathonPollerObserver
 ----------------------
 
 .. autoclass:: performance.driver.classes.observer.MarathonPollerObserver
+
+.. _classref-observers-WebdriverObserver:
+
+WebdriverObserver
+----------------------
+
+.. autoclass:: performance.driver.classes.observer.WebdriverObserver
