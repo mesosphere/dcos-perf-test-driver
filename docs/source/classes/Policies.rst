@@ -29,3 +29,10 @@ MultiStepPolicy
 ---------------------------
 
 .. autoclass:: performance.driver.classes.policy.MultiStepPolicy
+
+.. _classref-policy-SimplePolicy:
+
+SimplePolicy
+---------------------------
+
+.. autoclass:: performance.driver.classes.policy.SimplePolicy

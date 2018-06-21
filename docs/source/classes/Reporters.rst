@@ -23,6 +23,13 @@ DataDogReporter
 
 .. autoclass:: performance.driver.classes.reporter.DataDogReporter
 
+.. _classref-reporter-DataDogMetricReporter:
+
+DataDogMetricReporter
+---------------
+
+.. autoclass:: performance.driver.classes.reporter.DataDogMetricReporter
+
 .. _classref-reporter-PlotReporter:
 
 PlotReporter
