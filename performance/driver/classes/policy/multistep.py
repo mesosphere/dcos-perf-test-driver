@@ -457,7 +457,7 @@ class MultiStepPolicy(PolicyFSM):
       if self.timeRemains > 0:
         self.timeRemains -= event.delta
         if self.timeRemains <= 0:
-          self.timeRemains = 0
+          self.timeRemains = None
           self.logger.warn('Step timed out after {} seconds'.format(self.step.advanceTimeout))
           self.setStatus(self.step.advanceTimeoutStatus)
           self.handleCompletion()
