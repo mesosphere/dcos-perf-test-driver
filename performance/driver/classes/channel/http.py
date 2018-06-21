@@ -503,6 +503,7 @@ class HTTPChannel(Channel):
                               traceid=req.traceids))
 
       except requests.exceptions.ConnectionError as e:
+        self.logger.error('Cannot connect to {}'.format(reqUrl))
 
         # Dispatch error
         self.eventbus.publish(
