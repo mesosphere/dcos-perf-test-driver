@@ -114,7 +114,7 @@ class HTTPResponseEndEvent(Event):
   """
 
   def __init__(self, url, body, headers, *args, **kwargs):
-    super().__init__(*args, **kwargs)
+    Event.__init__(self, *args, **kwargs)
 
     #: The URL requested
     self.url = url
@@ -146,7 +146,7 @@ class HTTPErrorEvent(Event):
   """
 
   def __init__(self, exception, *args, **kwargs):
-    super().__init__(*args, **kwargs)
+    Event.__init__(self, *args, **kwargs)
 
     #: The exception that was raised
     self.exception = exception
@@ -155,14 +155,12 @@ class HTTPErrorEvent(Event):
 class HTTPResponseErrorEvent(HTTPResponseEndEvent, HTTPErrorEvent):
   """
   Published when an exception was raised while processing an HTTP response.
-  This is valid when a ``repeat`` parameter has a value > 1.
+  This is valid when a ``repeat`` parameter has a value = 1.
   """
 
   def __init__(self, url, body, headers, exception, *args, **kwargs):
-    super().__init__(url, body, headers, *args, **kwargs)
-
-    #: The exception that was raised
-    self.exception = exception
+    HTTPResponseEndEvent.__init__(self, url, body, headers, *args, **kwargs)
+    HTTPErrorEvent.__init__(self, exception)
 
 
 class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorEvent):
@@ -172,10 +170,8 @@ class HTTPFirstResponseErrorEvent(HTTPFirstResponseEndEvent, HTTPErrorEvent):
   """
 
   def __init__(self, url, body, headers, exception, *args, **kwargs):
-    super().__init__(url, body, headers, *args, **kwargs)
-
-    #: The exception that was raised
-    self.exception = exception
+    HTTPFirstResponseEndEvent.__init__(self, url, body, headers, *args, **kwargs)
+    HTTPErrorEvent.__init__(self, exception)
 
 
 class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorEvent):
@@ -185,10 +181,8 @@ class HTTPLastResponseErrorEvent(HTTPLastResponseEndEvent, HTTPErrorEvent):
   """
 
   def __init__(self, url, body, headers, exception, *args, **kwargs):
-    super().__init__(url, body, headers, *args, **kwargs)
-
-    #: The exception that was raised
-    self.exception = exception
+    HTTPLastResponseEndEvent.__init__(self, url, body, headers, *args, **kwargs)
+    HTTPErrorEvent.__init__(self, exception)
 
 
 ###############################
