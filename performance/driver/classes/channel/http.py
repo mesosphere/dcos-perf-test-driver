@@ -561,16 +561,6 @@ class HTTPChannel(Channel):
     Handle a property update
     """
 
-    # Check if any of the updated parameters exists in my templates
-    configMacros = self.getConfigMacros()
-    hasChanges = False
-    for key, value in event.changes.items():
-      if key in configMacros:
-        hasChanges = True
-        break
-    if not hasChanges:
-      return
-
     # Prepare request state and send initial request
     state = HTTPRequestState(self, event.parameters, event.traceids)
 
