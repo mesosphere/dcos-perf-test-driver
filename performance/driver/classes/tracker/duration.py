@@ -52,9 +52,8 @@ class DurationTrackerSession:
       startEvent = None
 
       # Try to find a most-specific start event, starting from the latest
-      # trace ID and advancing to the first trace ID, since trace IDs are
-      # appended when specialized.
-      for traceid in endEvent.traceids:
+      # trace ID and advancing to the earliest trace ID
+      for traceid in reversed(sorted(endEvent.traceids)):
         if traceid in self.startLookup:
           startEvent = self.startLookup[traceid].get()
           if self.startLookup[traceid].empty():
