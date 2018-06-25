@@ -30,18 +30,6 @@ class DataDogMetricReporter(Reporter):
         # The API Key to use
         api_key: 1234567890abcdef
 
-        # The App Key to use
-        app_key: 1234567890abcdef
-
-        # [Optional] Which metrics to submit. If missing all metrics are included.
-        metrics:
-          - metricA
-          - metricB
-
-        # [Optional] Set to `yes` to submit the raw values the moment they
-        # are collected.
-        live: yes
-
         # [Optional] The hostname to use as the agent name in datadog
         # If missing the network name of the machine will be used
         hostname: test.host
@@ -51,6 +39,46 @@ class DataDogMetricReporter(Reporter):
 
         # [Optional] How frequently to flush the metrics to DataDog
         flushInterval: 5s
+
+        # [Optional] Report configuration. If missing, the default behavior
+        # is to report the summarized metrics at the end of the test.
+        report:
+
+          # [Optional] The string `all` indicates that all the metrics should
+          # be submitted to DataDog
+          metrics: all
+
+          # [Optional] OR a list of metric names can be provided
+          metrics:
+            - metricA
+            - metricB
+
+          # [Optional] OR you can use a dictionary to provide an alias
+          metrics:
+            metricA: aliasedMetricA
+            metricB: aliasedMetricB
+
+          # [Optional] Set to `yes` to submit the raw values the moment they
+          # are collected.
+          raw: yes
+
+          # [Optional] Set to `yes` to submit summarized values of the metrics
+          # at the end of the test run.
+          summarized: yes
+
+          # [Optional] The string `all` indicates that all the indicators should
+          # be submitted to DataDog
+          indicators: all
+
+          # [Optional] OR a list of indicator names can be provided
+          indicators:
+            - indicatorA
+            - indicatorB
+
+          # [Optional] OR you can use a dictionary to provide an alias
+          indicators:
+            indicatorA: aliasedIndicatorA
+            indicatorB: aliasedIndicatorB
 
   The DataDog reporter is using the DataDog API to submit the values of the
   test metrics to DataDog in real-time.
@@ -67,17 +95,32 @@ class DataDogMetricReporter(Reporter):
     # Initialize DataDog API
     initialize(
         api_key=config.get('api_key', None),
-        app_key=config.get('app_key', None),
         hostname=config.get('hostname', socket.gethostname()))
 
     # Get some configuration options
-    self.metrics = config.get('metrics', None)
+    reportConfig = config.get('report', {})
     self.prefix = config.get('prefix', 'dcos.perf.')
     self.flushInterval = parseTimeExpr(config.get('flushInterval', '5s'))
+    self.metrics = reportConfig.get('metrics', None)
+    self.submitSummarized = reportConfig.get('summarized', True)
+    self.indicators = reportConfig.get('indicators', None)
+    self.submitIndicators = self.indicators != None
+
+    # Handle cases of literal 'all'
+    if self.metrics == 'all':
+      self.metrics = None
+    if self.indicators == 'all':
+      self.indicators = None
+
+    # Handle invalid cases
+    if type(self.metrics) is str:
+      raise ValueError('Unexpected string `{}` for the config `report.metrics`')
+    if type(self.indicators) is str:
+      raise ValueError('Unexpected string `{}` for the config `report.indicators`')
 
     # Push metrics as they are produced, if we have requested a live
     # metric trace
-    if config.get('live', False):
+    if reportConfig.get('live', False):
       self.eventbus.subscribe(self.handleMetricUpdate, order=10,
         events=(MetricUpdateEvent, ))
 
@@ -93,18 +136,23 @@ class DataDogMetricReporter(Reporter):
     """
 
     # Check if this metrics is ignored
-    if self.metrics is not None and event.name not in self.metrics:
+    metricName = event.name
+    if self.metrics is not None and metricName not in self.metrics:
       return
 
+    # Check if the user has provided an alias map for the metric
+    if type(self.metrics) is dict:
+      metricName = self.metrics[metricName]
+
     self.logger.debug("Submitting to datadog {}{}={}".format(
-      self.prefix, event.name, event.value
+      self.prefix, metricName, event.value
     ))
 
     # Instead of summiting frequent changes, we are batching them and
     # sending them at a fixed interval
     self.series.append({
       "metric":
-        '{}{}'.format(self.prefix, event.name),
+        '{}{}'.format(self.prefix, metricName),
       "points":
         (event.ts, event.value),
       "tags":
@@ -125,31 +173,63 @@ class DataDogMetricReporter(Reporter):
         lambda v: "{}:{}".format(v[0], str(v[1])), self.getMeta().items()
       ))
 
-    # Report the chosen metrics to DataDog
-    for case in results.sum():
-      for metric, _summ in case['values'].items():
-        if self.metrics is not None and metric not in self.metrics:
+    # Report the metrics to DataDog (if enabled)
+    if self.submitSummarized:
+      for case in results.sum():
+        for metric, _summ in case['values'].items():
+          if self.metrics is not None and metric not in self.metrics:
+            continue
+
+          # Each metric can have one or more summarizers. Submit the values
+          # from all of them to DataDog
+          for summarizer, value in _summ.items():
+
+            # If we have an array, pick only the first item in the value set
+            if type(value) in (list, set):
+              value = value[0]
+
+            # Check if the user has provided an alias map for the metric
+            if type(self.metrics) is dict:
+              metric = self.metrics[metric]
+
+            self.logger.debug("Submitting to datadog {}{}.{}={}".format(
+              self.prefix, metric, summarizer, value
+            ))
+
+            # Collect the data point
+            self.series.append({
+              "metric":
+                '{}{}.{}'.format(self.prefix, metric, summarizer),
+              "points":
+                (time.time(), value),
+              "tags": commonTags + list(map(
+                  lambda v: "{}:{}".format(v[0], str(v[1])),
+                  case['parameters'].items()
+                ))
+            })
+
+    # Report the indicators to DataDog (if enabled)
+    if self.submitIndicators:
+      for indicator, value in summarizer.indicators().items():
+        if self.indicators is not None and indicator not in self.indicators:
           continue
 
-        # Each metric can have one or more summarizers. Submit the values
-        # from all of them to DataDog
-        for summarizer, value in _summ.items():
+        # Check if the user has provided an alias map for the indicator
+        if type(self.indicators) is dict:
+          indicator = self.indicators[indicator]
 
-          # If we have an array, pick only the first item in the value set
-          if type(value) in (list, set):
-            value = value[0]
+        self.logger.debug("Submitting to datadog {}{}={}".format(
+          self.prefix, indicator, value
+        ))
 
-          # Collect the data point
-          self.series.append({
-            "metric":
-              '{}{}.{}'.format(self.prefix, metric, summarizer),
-            "points":
-              (time.time(), value),
-            "tags": commonTags + list(map(
-                lambda v: "{}:{}".format(v[0], str(v[1])), 
-                case['parameters'].items()
-              ))
-          })
+        # Submit the data point
+        self.series.append({
+          "metric":
+            '{}{}'.format(self.prefix, indicator),
+          "points":
+            (time.time(), value),
+          "tags": commonTags
+        })
 
     # Flush the metrics we collected so far
     self.flushMetrics()
