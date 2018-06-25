@@ -8,7 +8,8 @@ except ImportError:
   logging.error('One or more libraries required by PercentileSummarizer were'
                 'not installed. The summarizer will not work.')
 
-from performance.driver.core.summarizer import Summarizer, util
+from performance.driver.core.classes import Summarizer
+from performance.driver.core.summarizer import util
 from performance.driver.core.summarizer import SummarizerAxisTimeseries, SummarizerAxisParameters
 
 class PercentileSummarizer(Summarizer):

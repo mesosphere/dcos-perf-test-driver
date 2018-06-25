@@ -222,6 +222,8 @@ class MetricConfig:
       # The "@" shorthand is referring to the built-in summarizer
       if summConfig['class'][0] == "@":
         classPath = 'performance.driver.core.classes.summarizer.BuiltInSummarizer'
+        if not 'name' in summConfig:
+          summConfig['name'] = summConfig['class'][1:]
       else:
         classPath = 'performance.driver.classes.{}'.format(summConfig['class'])
       self.logger.debug('Instantiating {}'.format(classPath))
