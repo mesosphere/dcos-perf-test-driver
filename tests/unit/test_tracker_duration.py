@@ -446,3 +446,31 @@ class TestTrackerDuration(unittest.TestCase):
     self.assertEqual(len(logWarn.mock_calls), 1)
     self.assertIn("Incomplete duration traces", logWarn.call_args_list[0][0][0])
     self.assertIn("without start", logWarn.call_args_list[0][0][0])
+
+  def test_most_relevant_trace(self):
+    """
+    In case there are multiple events with multiple trace IDs, the shortest
+    trace path should be used
+    """
+
+    # Start the tests with a parameter update event
+    rootEvent = ParameterUpdateEvent({"bar": 1}, {}, {"bar": 1})
+    self.eventbus.publish(rootEvent)
+
+    # Intermediate event
+    subset1 = rootEvent.traceids.union({1000})
+    subset2 = rootEvent.traceids.union({2000})
+
+    # Send three event pairs
+    self.eventbus.publish(StartEvent(traceid=subset1, ts=1))
+    self.eventbus.publish(StartEvent(traceid=subset2, ts=2))
+    self.eventbus.publish(EndEvent(traceid=subset2, ts=3))
+    self.eventbus.publish(EndEvent(traceid=subset1, ts=4))
+    self.eventbus.flush()
+
+    # There should be 3 distinct calls to track the duration metric
+    self.assertEqual(len(self.summarizer.trackMetric.mock_calls), 2)
+    self.assertEqual(self.summarizer.trackMetric.call_args_list[0][0][0], "foo")
+    self.assertEqual(self.summarizer.trackMetric.call_args_list[0][0][1], 1)
+    self.assertEqual(self.summarizer.trackMetric.call_args_list[1][0][0], "foo")
+    self.assertEqual(self.summarizer.trackMetric.call_args_list[1][0][1], 3)

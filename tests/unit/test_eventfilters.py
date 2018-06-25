@@ -537,7 +537,7 @@ class TestEventBus(unittest.TestCase):
         call(fooEvent2),
       ])
 
-    # The third BarEvent should be handled
+    # The third BarEvent should not be handled
     barEvent3 = BarEvent(traceid=traceids)
     session.handle(barEvent3)
     self.assertEqual(eventCallback.mock_calls, [
