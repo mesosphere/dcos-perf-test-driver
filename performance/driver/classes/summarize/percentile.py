@@ -9,6 +9,7 @@ except ImportError:
                 'not installed. The summarizer will not work.')
 
 from performance.driver.core.summarizer import Summarizer, util
+from performance.driver.core.summarizer import SummarizerAxisTimeseries, SummarizerAxisParameters
 
 class PercentileSummarizer(Summarizer):
   """
@@ -33,7 +34,7 @@ class PercentileSummarizer(Summarizer):
               # [Optional] Set to `yes` to include outliers
               outliers: no
 
-  This summarizer calculates the percentile for the values collected for the 
+  This summarizer calculates the percentile for the values collected for the
   given metric.
   """
 
