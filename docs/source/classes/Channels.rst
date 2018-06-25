@@ -42,3 +42,10 @@ MarathonDeployChannel
 ---------------------
 
 .. autoclass:: performance.driver.classes.channel.MarathonDeployChannel
+
+.. _classref-observers-WebdriverChannel:
+
+WebdriverChannel
+----------------------
+
+.. autoclass:: performance.driver.classes.channel.WebdriverChannel

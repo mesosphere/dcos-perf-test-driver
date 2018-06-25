@@ -11,20 +11,20 @@ try:
   from selenium import webdriver, common
 except ImportError:
   import logging
-  logging.error('One or more libraries required by WebdriverObserver were not'
-                'installed. The observer will not work.')
+  logging.error('One or more libraries required by WebdriverChannel were not'
+                'installed. The channel will not work.')
 
 from threading import Thread, Event
 from base64 import b64encode
 
-from performance.driver.core.classes import Observer
-from performance.driver.core.events import Event, TickEvent, TeardownEvent, StartEvent, ParameterUpdateEvent
+from performance.driver.core.classes import Channel
+from performance.driver.core.events import Event, TickEvent, TeardownEvent, StartEvent
 from performance.driver.core.eventfilters import EventFilter
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 
 class WebdriverEvent(Event):
   """
-  The events broadcasted by the Webdriver session  
+  The events broadcasted by the Webdriver session
   """
 
   def __init__(self, name, fields, *args, **kwargs):
@@ -35,15 +35,15 @@ class WebdriverEvent(Event):
     for key, value in fields.items():
       setattr(self, key, value)
 
-class WebdriverObserver(Observer):
+class WebdriverChannel(Channel):
   """
-  The *WebDriver Observer* provides an event proxy between the perf driver event
+  The *WebDriver Channel* provides an event proxy between the perf driver event
   bus and a browser window, enabling UI-related performance measurements.
 
   ::
 
-    observers:
-      - class: observer.WebdriverObserver
+    channels:
+      - class: channel.WebdriverChannel
 
         # The URL where to point the browser at
         url: http://127.0.0.1:8080/
@@ -70,7 +70,7 @@ class WebdriverObserver(Observer):
 
           # [Optional] Which event to wait to stop the driver
           stop: TeardownEvent
-  
+
           # [Optional] Which events to forward to the test job
           forward:
             - SomeEvent
@@ -84,6 +84,7 @@ class WebdriverObserver(Observer):
     self.driver = None
     self.thread = None
     self.running = False
+    self.currentTraceId = None
 
     # Get the project URL
     config = self.getRenderedConfig()
@@ -111,10 +112,6 @@ class WebdriverObserver(Observer):
           'Unable to download test code from {} (got HTTP/{})'.format(
             testUrl, req.status_code))
 
-    # Receive ParameterUpdateEvent 
-    self.currentTraceId = None
-    self.eventbus.subscribe(self.handleParameterUpdate, events=(ParameterUpdateEvent,))
-
     # Register start/stop event filters
     eventsConfig = config.get('events', {})
     startFilter = EventFilter(eventsConfig.get('start', 'StartEvent'))
@@ -134,7 +131,7 @@ class WebdriverObserver(Observer):
       if type(forwardEvents) is str:
         forwardEvents = [forwardEvents]
 
-      # For each event filter expression defined in the `forward` section, 
+      # For each event filter expression defined in the `forward` section,
       # create a proxy object that will forward the event to the javascript
       # test session
       for filterExpression in forwardEvents:
@@ -168,7 +165,7 @@ class WebdriverObserver(Observer):
     Proxy the received event to the test session
     """
     self.sendWebdriverEvent(
-      event.event, 
+      event.event,
       event.toDict()
     )
 
@@ -268,7 +265,7 @@ class WebdriverObserver(Observer):
         # Parse and handle the event
         eventData = json.loads(event)
         self.handleWebdriverEvent(
-            eventData.get('name', None), 
+            eventData.get('name', None),
             eventData.get('data', None)
           )
 
