@@ -185,7 +185,7 @@ class DataDogMetricReporter(Reporter):
           for summarizer, value in _summ.items():
 
             # If we have an array, pick only the first item in the value set
-            if type(value) in (list, set):
+            if type(value) in (list, tuple):
               value = value[0]
 
             # Check if the user has provided an alias map for the metric
