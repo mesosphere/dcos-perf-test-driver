@@ -120,7 +120,7 @@ class DataDogMetricReporter(Reporter):
 
     # Push metrics as they are produced, if we have requested a live
     # metric trace
-    if reportConfig.get('live', False):
+    if reportConfig.get('raw', False):
       self.eventbus.subscribe(self.handleMetricUpdate, order=10,
         events=(MetricUpdateEvent, ))
 
