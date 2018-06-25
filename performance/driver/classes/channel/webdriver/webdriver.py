@@ -3,6 +3,7 @@ import random
 import json
 import string
 import requests
+import http
 
 # NOTE: The following block is needed only when sphinx is parsing this file
 #       in order to generate the documentation. It's not really useful for
@@ -271,6 +272,10 @@ class WebdriverChannel(Channel):
 
       except common.exceptions.TimeoutException:
         pass
+      except http.client.RemoteDisconnected:
+        pass
+      except ConnectionRefusedError:
+        pass
 
   def handleWebdriverEvent(self, name, data):
     """
@@ -291,6 +296,11 @@ class WebdriverChannel(Channel):
       return
 
     self.logger.debug('Sending a {} event (data={})'.format(name, data))
-    self.driver.execute_script('{}.send({}, {})'.format(
-        self.uuid, json.dumps(name), json.dumps(data)
-      ))
+    try:
+      self.driver.execute_script('{}.send({}, {})'.format(
+          self.uuid, json.dumps(name), json.dumps(data)
+        ))
+    except http.client.RemoteDisconnected:
+      pass
+    except ConnectionRefusedError:
+      pass

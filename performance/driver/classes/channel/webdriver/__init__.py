@@ -1,1 +1,1 @@
-from .webdriver import WebdriverObserver
+from .webdriver import WebdriverChannel
