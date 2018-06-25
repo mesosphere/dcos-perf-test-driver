@@ -52,4 +52,8 @@ class PercentileSummarizer(Summarizer):
 
     # Compute the percentile
     q = self.getConfig('percentile')
-    return np.percentile(np.array(timeseries.values), q)
+    v = np.array(timeseries.values)
+
+    # Compute the percentile of the data values
+    # (Note: `timeseries.values` is a list of (timestamp, value) tuples)
+    return np.percentile(np.array(v[:,1]), q)
