@@ -48,6 +48,8 @@ Default values
 It is possible to provide a default value to your macros using the
 ``{{macro|default}}`` expression. For example:
 
+::
+
   reporters:
     - class: reporter.PostgRESTReporter
       url: "{{reporter_url|http://127.0.0.1:4000}}"
