@@ -2,6 +2,7 @@ import time
 
 from performance.driver.core.classes import PolicyFSM, State
 from performance.driver.core.eventfilters import EventFilter
+from performance.driver.core.utils.strutil import parseTimeExpr
 
 
 class SimplePolicy(PolicyFSM):
@@ -27,6 +28,9 @@ class SimplePolicy(PolicyFSM):
 
           # [Optional] Start the tests with this event is received
           start: EventToWaitUntilReady
+
+        # [Optional] Maximum running time for this policy
+        timeout: 10s
 
 
   This policy can be used if you are not interested about parameter exploration
@@ -54,6 +58,12 @@ class SimplePolicy(PolicyFSM):
       """
       renderedConfig = self.getRenderedConfig()
       self.parametersConfig = renderedConfig.get('parameters', {})
+
+      # Calculate timeout
+      self.timeout = None
+      self.timeoutExpr = renderedConfig.get('timeout', None)
+      if self.timeoutExpr:
+        self.timeout = time.time() + parseTimeExpr(self.timeoutExpr)
 
       # Process the events configuration
       eventsConfig = renderedConfig.get('events', {})
@@ -122,6 +132,18 @@ class SimplePolicy(PolicyFSM):
       """
       if self.endSession:
         self.endSession.handle(event)
+
+    def onTickEvent(self, event):
+      """
+      If we have a timeout defined, check if we have reached it
+      """
+      if self.timeout is None:
+        return
+
+      # Check for timeout
+      if time.time() > self.timeout:
+        self.logger.warn('Policy timed out after {}'.format(self.timeoutExpr))
+        self.goto(SimplePolicy.End)
 
     def handleEndEvent(self, event):
       """
