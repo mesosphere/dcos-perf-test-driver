@@ -4,6 +4,7 @@ import select
 import shlex
 import signal
 import threading
+import time
 
 from subprocess import Popen, PIPE
 
@@ -11,6 +12,7 @@ from performance.driver.core.events import Event, LogLineEvent, ParameterUpdateE
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.classes import Channel
 from performance.driver.core.reflection import subscribesToHint, publishesHint
+from performance.driver.core.utils import parseTimeExpr
 
 
 class CmdlineExitEvent(Event):
@@ -89,6 +91,9 @@ class CmdlineChannel(Channel):
         # in a shell.
         shell: no
 
+        # [Optional] The time between the SIGINT and the SIGKILL signal
+        gracePeriod: 10s
+
         # [Optional] Change the `kind` of log messages emitted by this channel
         # instead of using the default 'stdout' / 'stderr'
         kind:
@@ -138,6 +143,7 @@ class CmdlineChannel(Channel):
     self.stdinTpl = TemplateString(self.getConfig('stdin', ''))
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
+    self.graceTpl = TemplateString(self.getConfig('gracePeriod', '10s'))
 
     # Get some options
     config = self.getRenderedConfig()
@@ -249,14 +255,34 @@ class CmdlineChannel(Channel):
     if not self.activeTask:
       return
 
-    # Stop process and join
+    # Get grace period
+    macroValues = self.getDefinitions()
+    gracePeriod = parseTimeExpr(self.graceTpl.apply(macroValues))
+
+    # First, try interrupting the process
     self.killing = True
     proc, thread = self.activeTask
     try:
       if proc.poll() is None:
+        self.logger.debug('Sending SIGINT')
+        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+    except ProcessLookupError:
+      pass
+
+    # Wait for a grace period
+    timeout = time.time() + gracePeriod
+    self.logger.debug('Waiting for app to be terminated')
+    while proc.poll() is None and time.time() < timeout:
+      time.sleep(1)
+
+    # And try killing it
+    try:
+      if proc.poll() is None:
+        self.logger.debug('Sending SIGKILL')
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
     except ProcessLookupError:
       pass
+
     thread.join()
 
     # Unset active task
