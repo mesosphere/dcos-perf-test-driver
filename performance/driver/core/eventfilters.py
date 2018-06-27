@@ -1,4 +1,5 @@
 import re
+import logging
 from threading import Timer
 
 from performance.driver.core.events import isEventMatching
@@ -115,6 +116,7 @@ class EventFilterSession:
     self.callback = callback
     self.timer = None
     self.counterGroups = {}
+    self.logger = logging.getLogger('EventFilter<{}>'.format(filter.expression))
 
     # Immediately call-back to matched filters
     for (eventSpec, attribChecks, flags, flagParameters,
@@ -189,6 +191,7 @@ class EventFilterSession:
         # Restart timer to call the callback after the given delay
         if self.timer:
           self.timer.cancel()
+        self.logger.debug('(Re)Starting timer after {} sec'.format(time))
         self.foundEvent = event
         self.timer = Timer(time, self.afterTimerCallback)
         self.timer.start()
@@ -202,7 +205,10 @@ class EventFilterSession:
         if not grp in self.counterGroups:
           self.counterGroups[grp] = 0
         self.counterGroups[grp] += 1
+        self.logger.debug('Found {} hits on group {} ({} requested)'.format(
+          self.counterGroups[grp], grp, nth))
         if nth == self.counterGroups[grp]:
+          self.logger.debug('Found all {} hits found'.format(nth))
           self.foundEvent = event
           self.callback(event)
         break
