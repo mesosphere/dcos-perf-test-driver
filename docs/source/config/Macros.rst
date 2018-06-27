@@ -84,7 +84,31 @@ Compose a date expression from the current time and date. For example:
     - class: reporter.S3Reporter
       path: "metrics/{{date(%Y%m%d)}}-results.json"
 
-The ``format`` argument is exactly what python's ``strftime`` accets.
+The ``format`` argument is exactly what python's ``strftime`` accepts.
+
+safepath(expression)
+^^^^^^^^^^^^^^^^^^^^
+
+Replaces all the 'unsafe' characters for a path expression with '_'
+
+::
+
+  reporters:
+    - class: reporter.S3Reporter
+      path: "metrics/{{safepath(test_name)}}-results.json"
+
+The ``expression`` argument can be any legit macro expression.
+
+eval(expression)
+^^^^^^^^^^^^^^^^
+
+Evaluates the given expression as a python expression.
+
+::
+
+  policies:
+    - class: policy.SimplePolicy
+      value: "{{eval(apps * tasks)}}"
 
 .. _macros-metadata:
 
