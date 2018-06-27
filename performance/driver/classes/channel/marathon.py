@@ -1,7 +1,6 @@
 import re
 import json
 import random
-import requests
 import time
 
 from performance.driver.core.events import ParameterUpdateEvent, Event
@@ -9,7 +8,9 @@ from performance.driver.core.classes import Channel
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.reflection import subscribesToHint, publishesHint
 from performance.driver.core.utils import parseTimeExpr
+
 from threading import Thread
+from .utils.bulk import Request, BulkRequestManager
 
 # NOTE: We are not using the deployment ID as the means of tracking the
 #       deployment since it's not possible to relate earlier events without
@@ -74,11 +75,23 @@ class MarathonDeployChannel(Channel):
               }
 
             # [Optional] Repeat this deployment for the given number of times
-            # (This can be a python expression)
-            repeat: "instances * 2"
+            repeat: 10
+            repeat: "{{instances}}"
+            repeat: "{{eval(instances * 3)}}"
 
             # [Optional] How many deployments to perform in parallel
-            burst: 1
+            # When a deployment is completed, another one will be scheduled
+            # a soon as possible, but at most `parallel` deployment requests
+            # will be active. This is mutually exclusive to `burst`.
+            parallel: 1
+
+            # [Optional] [OR] How many deployments to do in a single burst
+            # When all the deployments in the burst are completed, a new burst
+            # will be posted. This is mutually exclusive to `parallel.
+            burst: 100
+
+            # [Optional] Throttle the rate of deployments at a given RPS
+            rate: 100
 
   """
 
@@ -124,121 +137,97 @@ class MarathonDeployChannel(Channel):
       retry_interval = parseTimeExpr(retry.get('interval', '1'))
       retry = True
 
-    # Evaluate repeat
+    # Evaluate parameters
     evalDict = dict(self.getDefinitions())
     evalDict.update(parameters)
-    evalExpr = str(deployment.get('repeat', '1'))
-    try:
-      repeat = eval(evalExpr, evalDict)
-    except Exception as e:
-      self.logger.error('Error evaluating "{}": {}'.format(evalExpr, e))
-      return
+    evalDeployment = TemplateDict(deployment).apply(evalDict)
+
+    repeat = int(evalDeployment.get('repeat', 1))
+    burst = evalDeployment.get('burst', '')
+    parallel = evalDeployment.get('parallel', '')
+    rate = evalDeployment.get('rate', '')
 
     # Create template with the body
     bodyTpl = TemplateString(deployment['spec'])
 
-    # Repeat as many times as needed
-    for i in range(0, repeat):
-      try:
+    # Prepare the callback functions for the manager
+    def cbRequest(request):
+      """
+      Dispatch a request event
+      """
+      inst_id = request.kwargs['json']['id']
 
-        # Render the body
-        evalDict['_i'] = i
-        body = json.loads(bodyTpl.apply(evalDict))
+      # Assign the request-event trace ID on the request, so we can use
+      # it on the success and error callbacks
+      event = MarathonDeploymentRequestedEvent(inst_id, traceid=traceids)
+      request.traceids = event.traceids
 
-        # Start deployment
-        if not 'id' in body:
-          self.logger.error(
-              'Deployment body is expected to have an "id" field')
-          break
+      self.logger.info('Deploying {} "{}"'.format(deploymentType, inst_id))
+      self.eventbus.publish(event)
 
-        # Notify deployment
-        inst_id = body['id']
-        self.logger.info('Deploying {} "{}"'.format(deploymentType, inst_id))
+    def cbSuccess(request):
+      """
+      Dispatch a deployment success event
+      """
+      inst_id = request.kwargs['json']['id']
+      self.eventbus.publish(
+          MarathonDeploymentStartedEvent(inst_id, traceid=request.traceids))
+
+    def cbError(request, exception):
+      """
+      Dispatch a deployment error event
+      """
+      inst_id = request.kwargs['json']['id']
+      if exception:
         self.eventbus.publish(
-            MarathonDeploymentRequestedEvent(inst_id, traceid=traceids))
+          MarathonDeploymentRequestFailedEvent(
+            inst_id, -1, str(exception), traceid=request.traceids))
+      else:
+        response = request.future.result()
+        self.eventbus.publish(
+            MarathonDeploymentRequestFailedEvent(
+                inst_id,
+                response.status_code,
+                response.text,
+                traceid=request.traceids))
 
-        # Guard this with a retry loop
-        try_counter = retry_tries
-        while True:
+    # Start a bulk request manager
+    manager = BulkRequestManager(
+        rate=rate,
+        burst=burst,
+        parallel=parallel,
+        retry=retry_tries if retry else None,
+        retryInterval=retry_interval if retry else None,
+        requestFn=cbRequest,
+        successFn=cbSuccess,
+        errorFn=cbError
+      )
 
-          # Create a request
-          try:
-            response = requests.post(
-                url,
-                json=body,
-                verify=False,
-                headers=self.getHeaders())
-            if response.status_code < 200 or response.status_code >= 300:
-              self.logger.error(
-                  'Unable to deploy {} "{}" (HTTP response {})'.format(
-                      deploymentType, inst_id, response.status_code))
+    # Prepare the request queue
+    requests = []
+    for i in range(0, repeat):
 
-              # If we are within the retry loop, try again
-              if retry:
-                try_counter -= 1
-                if try_counter <= 0:
-                  self.logger.error("No more retries left. Failing deployment")
-                  self.eventbus.publish(
-                      MarathonDeploymentRequestFailedEvent(
-                          inst_id,
-                          response.status_code,
-                          response.text,
-                          traceid=traceids))
-                  break
+      # Render the body
+      evalDict['_i'] = i
+      body = json.loads(bodyTpl.apply(evalDict))
 
-                else:
-                  self.logger.error(
-                    "Retrying in {} sec ({} retries left)".format(
-                      retry_interval, try_counter))
-                  time.sleep(retry_interval)
-
-              else:
-                self.eventbus.publish(
-                    MarathonDeploymentRequestFailedEvent(
-                        inst_id,
-                        response.status_code,
-                        response.text,
-                        traceid=traceids))
-            else:
-              self.eventbus.publish(
-                  MarathonDeploymentStartedEvent(inst_id, traceid=traceids))
-              break
-
-          except Exception as e:
-            self.logger.error('Unable to deploy {} "{}" ({})'.format(
-                deploymentType, inst_id, e))
-
-            # If we are within the retry loop, try again
-            if retry:
-              try_counter -= 1
-              if try_counter <= 0:
-                self.logger.error("No more retries left. Failing deployment")
-                self.eventbus.publish(
-                    MarathonDeploymentRequestFailedEvent(
-                        inst_id, -1, str(e), traceid=traceids))
-                break
-
-              else:
-                self.logger.error(
-                  "Retrying in {} sec ({} retries left)".format(
-                    retry_interval, try_counter))
-                time.sleep(retry_interval)
-
-            else:
-              self.eventbus.publish(
-                  MarathonDeploymentRequestFailedEvent(
-                      inst_id, -1, str(e), traceid=traceids))
-
-          # If we are not using retry, exit now
-          if not retry:
-            break
-
-      except json.decoder.JSONDecodeError as e:
+      # Start deployment
+      if not 'id' in body:
         self.logger.error(
-            'Invalid JSON syntax in deployment body ({})'.format(e))
+            'Deployment body is expected to have an "id" field')
+        break
 
-      except requests.exceptions.ConnectionError as e:
-        self.logger.error('Unable to start a deployment ({})'.format(e))
+      # Place the arguments to the queue
+      manager.enqueue(Request(
+        url,
+        verb='post',
+        json=body,
+        headers=self.getHeaders(),
+        verify=False
+      ))
+
+    # Start the deployments and wait for completion
+    future = manager.execute().result()
 
   def handleParameterUpdate(self, event):
     """
@@ -460,3 +449,4 @@ class MarathonUpdateChannel(Channel):
       # Unknown action
       else:
         raise ValueError('Unknown update action "{}"'.format(action_type))
+
