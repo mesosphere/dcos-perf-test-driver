@@ -39,6 +39,7 @@ setup(
     'pytz>=2017.2',
     'PyYAML>=3.12',
     'requests>=2.17.3',
+    'requests-futures>=0.9.7',
     's3transfer>=0.1.10',
     'scipy>=0.14.0',
     'simplejson>=3.10.0',
