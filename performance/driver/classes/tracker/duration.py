@@ -180,7 +180,7 @@ class DurationTracker(Tracker):
     self.endFilter = EventFilter(config['events']['end'])
     self.metric = config['metric']
 
-    self.eventbus.subscribe(self.handleEvent)
+    self.eventbus.subscribe(self.handleEvent, order=100)
 
   def handleEvent(self, event):
     """
