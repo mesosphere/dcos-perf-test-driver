@@ -260,7 +260,10 @@ class MarathonDeployChannel(Channel):
     self.activeManagers.append(manager)
 
     # Start the deployments and wait for completion
-    future = manager.execute().result()
+    try:
+      future = manager.execute().result()
+    except InterruptedError:
+      pass
 
     # Pop manager from the active managers
     i = self.activeManagers.index(manager)
