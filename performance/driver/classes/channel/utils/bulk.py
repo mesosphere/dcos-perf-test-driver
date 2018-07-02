@@ -46,6 +46,14 @@ class RequestPool(list):
   """
   def __init__(self):
     super().__init__()
+    self.interruptFuture = Future()
+
+  def interrupt(self):
+    """
+    Complete the interrupt future, that is going to interrupt
+    all possible wait operations.
+    """
+    self.interruptFuture.set_exception(InterruptedError())
 
   def waitAll(self):
     """
@@ -56,6 +64,7 @@ class RequestPool(list):
 
     # Extract futures
     futures = list(map(lambda r: r.future, self))
+    futures.append(self.interruptFuture)
     (done, undone) = wait(futures, return_when=ALL_COMPLETED)
 
     # Reset list, but keep track of the requests
@@ -73,6 +82,7 @@ class RequestPool(list):
 
     # Extract futures
     futures = list(map(lambda r: r.future, self))
+    futures.append(self.interruptFuture)
     (done, undone) = wait(futures, return_when=FIRST_COMPLETED)
 
     # Find the completed future
@@ -83,10 +93,11 @@ class RequestPool(list):
         del self[i]
         return req
 
-    # Should never reach this point
-    raise RuntimeError('Reached unreachable statement')
+    # If we reached this point, the completed future was the
+    # interrupted future. So return `None`.
+    return None
 
-  def allCompleted(self):
+  def onlyCompleted(self):
     """
     Return all the completed futures without waiting
     """
@@ -102,10 +113,10 @@ class RequestPool(list):
     # Remove found futures from the pool
     for request in result:
       i = self.index(request)
-      del self[i]
+      if i >= 0:
+        del self[i]
 
     return result
-
 
 
 class BulkRequestManager:
@@ -121,14 +132,15 @@ class BulkRequestManager:
     Create and configure the bulk request manager
     """
     self.logger = logging.getLogger('BulkRequestManager')
+    self.running = False
 
     # Compute value of max_workers to equal the number
     # of parallel requests.
     max_workers = 2
     if parallel:
-      max_workers = int(parallel)
+      max_workers = int(float(parallel))
     elif burst:
-      max_workers = int(burst)
+      max_workers = int(float(burst))
 
     # Prepare local variables
     self.activePool = RequestPool()
@@ -153,10 +165,10 @@ class BulkRequestManager:
 
     # Configure burst/parallel
     if burst:
-      self.burst = int(burst)
+      self.burst = int(float(burst))
       self.parallel = None
     elif parallel:
-      self.parallel = int(parallel)
+      self.parallel = int(float(parallel))
       self.burst = None
     else:
       self.parallel = None
@@ -179,6 +191,7 @@ class BulkRequestManager:
     """
     Start the parallel request operation and return a future
     """
+    self.running = True
     future = Future()
 
     # If we are not using retry timeouts there is no need to start the
@@ -204,6 +217,17 @@ class BulkRequestManager:
     # Return the future
     return future
 
+  def abort(self):
+    """
+    Abort the tests
+    """
+    self.running = False
+
+    # Insert poison pill and unblock all possible blocking points
+    self.retryQueue.put(None)
+    self.timerEvent.set()
+    self.activePool.interrupt()
+
   def _timerThread(self):
     """
     A thread handler that manages the re-try requests
@@ -217,6 +241,15 @@ class BulkRequestManager:
       # Check if we received a poison pill
       if request is None:
         self.logger.debug('Timer thread received poison pill')
+        return
+
+      # If we are interrupted, drain the queue
+      if not self.running:
+        self.logger.debug('Timer thread interrupted')
+
+        # Drain the queue and exit
+        while not self.retryQueue.empty():
+          self.retryQueue.get()
         return
 
       # Check the timeout has reached, and if yes, move this item on egress
@@ -273,13 +306,21 @@ class BulkRequestManager:
         # If we haven't reached any particular checkpoint, just collect all
         # the responses that are done by now, without waiting
         else:
-          check = self.activePool.allCompleted()
+          check = self.activePool.onlyCompleted()
 
       # If there is nothing to submit, but there are pending responses,
       # wait for them to be completed
       elif self.activePool:
         self.logger.debug('Nothing to submit, waiting for one response')
         check = [self.activePool.waitOne()]
+
+      # If we are interrupted, fail future and exit, before checking the
+      # result of the `check` future(s), since they might contain invalid
+      # values (if the were interrupted).
+      if not self.running:
+        self.logger.debug('Request thread interrupted')
+        completeFuture.set_exception(InterruptedError('Requests were interrupted'))
+        return
 
       # If we should check the status of some response, do it now
       for completedRequest in check:
@@ -377,10 +418,11 @@ class BulkRequestManager:
     self.logger.debug('Request thread completed')
 
     # We reached this point when all the queues are empty, meaning that there
-    # is nothing else to do. So put a poison pill on the timer
+    # is nothing else to do. So put a poison pill on the timer.
     self.retryQueue.put(None)
 
     # Complete the operation future
     completeFuture.set_result((responses, failures))
 
     self.logger.debug('Request thread exited')
+    self.running = False

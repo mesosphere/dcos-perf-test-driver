@@ -3,7 +3,7 @@ import json
 import random
 import time
 
-from performance.driver.core.events import ParameterUpdateEvent, Event
+from performance.driver.core.events import ParameterUpdateEvent, TeardownEvent, Event
 from performance.driver.core.classes import Channel
 from performance.driver.core.template import TemplateString, TemplateDict
 from performance.driver.core.reflection import subscribesToHint, publishesHint
@@ -93,7 +93,29 @@ class MarathonDeployChannel(Channel):
             # [Optional] Throttle the rate of deployments at a given RPS
             rate: 100
 
+            # [Optional] Stall the deployment for the given time before placing
+            # the first HTTP request
+            delay: 10s
+
   """
+
+  def __init__(self, *args, **kwargs):
+    """
+    Subscribe to the teardown event
+    """
+    super().__init__(*args, **kwargs)
+
+    # Abort active requests at tear-down
+    self.activeManagers = []
+    self.eventbus.subscribe(self.handleTeardownEvent, events=(TeardownEvent,))
+
+  def handleTeardownEvent(self, event):
+    """
+    Abort all active managers at tear-down
+    """
+    for mgr in self.activeManagers:
+      mgr.abort()
+    self.activeManagers = []
 
   def getHeaders(self):
     """
@@ -146,6 +168,7 @@ class MarathonDeployChannel(Channel):
     burst = evalDeployment.get('burst', '')
     parallel = evalDeployment.get('parallel', '')
     rate = evalDeployment.get('rate', '')
+    delay = evalDeployment.get('delay', '')
 
     # Create template with the body
     bodyTpl = TemplateString(deployment['spec'])
@@ -226,8 +249,22 @@ class MarathonDeployChannel(Channel):
         verify=False
       ))
 
+    # Delay the designated time, if specified
+    if delay:
+      delay = parseTimeExpr(delay)
+      self.logger.info('Waiting {} sec before placing the first request'.format(
+        delay))
+      time.sleep(delay)
+
+    # Keep track of the manager, so it can be aborted at teardown
+    self.activeManagers.append(manager)
+
     # Start the deployments and wait for completion
     future = manager.execute().result()
+
+    # Pop manager from the active managers
+    i = self.activeManagers.index(manager)
+    del self.activeManagers[i]
 
   def handleParameterUpdate(self, event):
     """
