@@ -79,6 +79,9 @@ class CmdlineChannel(Channel):
         # [Optional] The directory to launch this app in
         cwd: "{{marathon_repo_dir}}"
 
+        # [Optional] The script to use for teardown
+        teardown: stop_daemon
+
         # [Optional] If set to `yes` the app will be launched as soon
         # as the driver is up and running.
         atstart: yes
@@ -144,6 +147,7 @@ class CmdlineChannel(Channel):
     self.envTpl = TemplateDict(self.getConfig('env', {}))
     self.cwdTpl = TemplateString(self.getConfig('cwd', ''))
     self.graceTpl = TemplateString(self.getConfig('gracePeriod', '10s'))
+    self.teardownTpl = TemplateString(self.getConfig('teardown', ''))
 
     # Get some options
     config = self.getRenderedConfig()
@@ -258,8 +262,32 @@ class CmdlineChannel(Channel):
     # Get grace period
     macroValues = self.getDefinitions()
     gracePeriod = parseTimeExpr(self.graceTpl.apply(macroValues))
+    shell = self.getConfig('shell', False)
 
-    # First, try interrupting the process
+    # If we have a tear-down command, launch it now
+    teardownCmd = self.teardownTpl.apply(macroValues)
+    if teardownCmd:
+      env = self.envTpl.apply(macroValues)
+      if not env:
+        env = None
+      cwd = self.cwdTpl.apply(macroValues)
+      if not cwd:
+        cwd = None
+
+      # Launch teardown process
+      self.logger.info('Launching tear-down command: {}'.format(teardownCmd))
+      proc = Popen(
+          teardownCmd,
+          env=env,
+          cwd=cwd,
+          shell=True,
+          preexec_fn=os.setsid)
+
+      # Wait for the command to exit
+      exitcode = proc.wait()
+      self.logger.info('Tear-down process completed with {}'.format(exitcode))
+
+    # Then, try interrupting the process
     self.killing = True
     proc, thread = self.activeTask
     try:
@@ -282,7 +310,6 @@ class CmdlineChannel(Channel):
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
     except ProcessLookupError:
       pass
-
     thread.join()
 
     # Unset active task
