@@ -194,7 +194,10 @@ class MarathonDeployChannel(Channel):
       """
       inst_id = request.kwargs['json']['id']
       self.eventbus.publish(
-          MarathonDeploymentStartedEvent(inst_id, traceid=request.traceids))
+          MarathonDeploymentStartedEvent(
+            inst_id,
+            traceid=request.traceids,
+            ts=request.future.resultTime))
 
     def cbError(request, exception):
       """
@@ -204,7 +207,11 @@ class MarathonDeployChannel(Channel):
       if exception:
         self.eventbus.publish(
           MarathonDeploymentRequestFailedEvent(
-            inst_id, -1, str(exception), traceid=request.traceids))
+            inst_id,
+            -1,
+            str(exception),
+            traceid=request.traceids,
+            ts=request.future.resultTime))
       else:
         response = request.future.result()
         self.eventbus.publish(
@@ -212,7 +219,8 @@ class MarathonDeployChannel(Channel):
                 inst_id,
                 response.status_code,
                 response.text,
-                traceid=request.traceids))
+                traceid=request.traceids,
+                ts=request.future.resultTime))
 
     # Start a bulk request manager
     manager = BulkRequestManager(

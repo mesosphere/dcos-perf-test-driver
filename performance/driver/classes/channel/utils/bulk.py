@@ -7,6 +7,28 @@ from queue import Queue
 from requests_futures.sessions import FuturesSession
 from concurrent.futures import Future, wait, FIRST_COMPLETED, ALL_COMPLETED
 
+def injectResultTimestampFn(future):
+  """
+  This function replaces the `set_result` and `set_exception` functions of
+  the given future with a version that also tracks the timestamp of the
+  result and exception time
+  """
+  original_set_result = future.set_result
+  original_set_exception = future.set_exception
+  future.resultTime = None
+
+  def set_result_ts(result):
+    future.resultTime = time.time()
+    original_set_result(result)
+
+  def set_exception_ts(exception):
+    future.resultTime = time.time()
+    original_set_exception(exception)
+
+  future.set_result = set_result_ts
+  future.set_exception = set_exception_ts
+  return future
+
 class Request:
   """
   The state of a single HTTP request that keeps track of the
@@ -33,10 +55,10 @@ class Request:
 
     # Place request
     fn = getattr(session, self.verb)
-    self.future = fn(
+    self.future = injectResultTimestampFn(fn(
       self.url,
       **self.kwargs
-    )
+    ))
     return self
 
 
@@ -192,7 +214,7 @@ class BulkRequestManager:
     Start the parallel request operation and return a future
     """
     self.running = True
-    future = Future()
+    future = injectResultTimestampFn(Future())
 
     # If we are not using retry timeouts there is no need to start the
     # timer thread
@@ -321,6 +343,9 @@ class BulkRequestManager:
         self.logger.debug('Request thread interrupted')
         completeFuture.set_exception(InterruptedError('Requests were interrupted'))
         return
+
+      # Also collect everything that is completed by now
+      check += self.activePool.onlyCompleted()
 
       # If we should check the status of some response, do it now
       for completedRequest in check:
