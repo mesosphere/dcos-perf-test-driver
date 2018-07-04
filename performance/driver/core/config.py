@@ -6,6 +6,8 @@ import os
 from .eventbus import EventBus
 from .template import TemplateDict
 
+from performance.driver.core.utils import parseTimeExpr
+
 # TODO: Make @ expand to `performance.driver.core.classes`
 # TODO: Make MetricConfig use ComponentConfig
 
@@ -290,7 +292,7 @@ class GeneralConfig:
     self.title = generalConfig.get('title', 'Scale Tests')
 
     # Populate timeouts
-    self.staleTimeout = generalConfig.get('staleTimeout', 600)
+    self.staleTimeout = parseTimeExpr(generalConfig.get('staleTimeout', 600))
 
 
 class RootConfig:
