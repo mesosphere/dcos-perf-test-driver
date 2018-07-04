@@ -4,6 +4,8 @@ def parseTimeExpr(timeExpr):
   """
   if not timeExpr:
     return None
+  if type(timeExpr) in (int, float):
+    return timeExpr
 
   scale = 1
   if timeExpr.endswith('us'):
