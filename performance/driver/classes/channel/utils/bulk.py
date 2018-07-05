@@ -87,25 +87,30 @@ class RequestPool(list):
     """
     self.interruptFuture.set_exception(InterruptedError())
 
-  def waitAll(self):
+  def waitAll(self, timeout=None):
     """
     Wait until all futures are completed
     """
     if not self:
       return []
 
-    # Extract futures
-    futures = list(map(lambda r: r.future, self))
-    futures.append(self.interruptFuture)
-    (done, undone) = wait(futures, return_when=ALL_COMPLETED)
+    # Since it's not possible to wait for all, while at the same time
+    # waiting just for the `interruptFuture` to complete, we are going to
+    # wait for every single future in a loop, until all of them are resolved
+    requests = []
+    while self:
+      future = self.waitOne(timeout=timeout)
 
-    # Reset list, but keep track of the requests
-    requests = list(self)
-    self.clear()
+      # "None" is only when interrupted, or if a timeout occurs
+      if future is None:
+        return requests
+
+      # Collect completed
+      requests.append(future)
 
     return requests
 
-  def waitOne(self):
+  def waitOne(self, timeout=None):
     """
     Wait until one future is completed
     """
@@ -115,7 +120,7 @@ class RequestPool(list):
     # Extract futures
     futures = list(map(lambda r: r.future, self))
     futures.append(self.interruptFuture)
-    (done, undone) = wait(futures, return_when=FIRST_COMPLETED)
+    (done, undone) = wait(futures, return_when=FIRST_COMPLETED, timeout=timeout)
 
     # Find the completed future
     result = done.pop()
@@ -328,12 +333,12 @@ class BulkRequestManager:
         # If we have reached a burst checkpoint, wait for all
         if self.burst is not None and len(self.activePool) >= self.burst:
           self.logger.debug(('Reached burst rate of {} requests. Waiting ' +
-            'for all').format(self.burst))
+            'for all responses').format(self.burst))
           check = self.activePool.waitAll()
         # If we have reached a parallel checkpoint, wait for one
         elif self.parallel is not None and len(self.activePool) >= self.parallel:
           self.logger.debug(('Reached parallel rate of {} requests. Waiting ' +
-            'for one').format(self.parallel))
+            'for one response').format(self.parallel))
           check = [self.activePool.waitOne()]
         # If we haven't reached any particular checkpoint, just collect all
         # the responses that are done by now, without waiting

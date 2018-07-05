@@ -1,3 +1,4 @@
+from .autoexplorer import AutoExplorerPolicy
 from .chaineddeployment import ChainedDeploymentPolicy
 from .multistep import MultiStepPolicy
 from .multivariableexplorer import MultivariableExplorerPolicy
