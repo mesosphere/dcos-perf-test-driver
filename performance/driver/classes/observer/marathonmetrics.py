@@ -145,7 +145,9 @@ class MarathonMetricsObserver(Observer):
       # Emit one event for every parameter value
       value = res.json()
       for path, vprev, vnext in dictDiff(prevValue, value):
-        self.eventbus.publish(MarathonMetricUpdateEvent('.'.join(path), vnext))
+        pathstr = '.'.join(path)
+        self.logger.debug('Metric {} changed to {}'.format(pathstr, vnext))
+        self.eventbus.publish(MarathonMetricUpdateEvent(pathstr, vnext))
       self.previous = value
 
     except requests.exceptions.ConnectionError as e:
