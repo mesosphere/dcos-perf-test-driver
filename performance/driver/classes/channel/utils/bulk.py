@@ -4,8 +4,18 @@ import time
 
 from threading import Event, Thread
 from queue import Queue
-from requests_futures.sessions import FuturesSession
 from concurrent.futures import Future, wait, FIRST_COMPLETED, ALL_COMPLETED
+
+# NOTE: The following block is needed only when sphinx is parsing this file
+#       in order to generate the documentation. It's not really useful for
+#       the logic of the file itself.
+try:
+  from requests_futures.sessions import FuturesSession
+except ImportError:
+  import logging
+  logging.error('One or more libraries required by BulkRequest Library were not'
+                'installed. You will most certainly have functionality issues!')
+
 
 def injectResultTimestampFn(future):
   """
