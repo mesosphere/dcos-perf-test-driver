@@ -3,6 +3,8 @@ import json
 import time
 import threading
 
+from .events.marathon import MarathonMetricUpdateEvent
+
 from performance.driver.core.classes import Observer
 from performance.driver.core.events import Event, MetricUpdateEvent, \
                               TeardownEvent, ParameterUpdateEvent, StartEvent
@@ -143,7 +145,7 @@ class MarathonMetricsObserver(Observer):
       # Emit one event for every parameter value
       value = res.json()
       for path, vprev, vnext in dictDiff(prevValue, value):
-        self.eventbus.publish(MetricUpdateEvent('.'.join(path), vnext))
+        self.eventbus.publish(MarathonMetricUpdateEvent('.'.join(path), vnext))
       self.previous = value
 
     except requests.exceptions.ConnectionError as e:

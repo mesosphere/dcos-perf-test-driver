@@ -87,3 +87,9 @@ class MarathonDeploymentStepSuccessEvent(MarathonUpdateEvent):
 class MarathonDeploymentStepFailureEvent(MarathonUpdateEvent):
   def __init__(self, deployment, affectedInstances, *args, **kwargs):
     super().__init__(deployment, affectedInstances, *args, **kwargs)
+
+class MarathonMetricUpdateEvent(Event):
+  def __init__(self, name, value, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.name = name
+    self.value = value

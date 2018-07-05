@@ -1,7 +1,8 @@
 import time
 
+from performance.driver.classes.observer.events.marathon import MarathonMetricUpdateEvent
 from performance.driver.core.classes import Tracker
-from performance.driver.core.events import ParameterUpdateEvent, MetricUpdateEvent
+from performance.driver.core.events import ParameterUpdateEvent
 
 
 class DumpMetricTracker(Tracker):
@@ -35,7 +36,7 @@ class DumpMetricTracker(Tracker):
     self.eventbus.subscribe(
         self.handleParameterUpdateEvent, events=(ParameterUpdateEvent, ))
     self.eventbus.subscribe(
-        self.handleMetricUpdateEvent, events=(MetricUpdateEvent, ))
+        self.handleMetricUpdateEvent, events=(MarathonMetricUpdateEvent, ))
 
   def handleParameterUpdateEvent(self, event):
     """
@@ -45,7 +46,7 @@ class DumpMetricTracker(Tracker):
 
   def handleMetricUpdateEvent(self, event):
     """
-    When a MetricUpdateEvent is dispatched, this tracker will re-route it
+    When a MarathonMetricUpdateEvent is dispatched, this tracker will re-route it
     as a trackable metric, making sure it's part of the currently active
     test group.
     """
