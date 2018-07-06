@@ -253,7 +253,6 @@ class DataDogMetricReporter(Reporter):
       return
 
     self.lastFlush = time.time()
-    self.flushing = True
 
     # Pop and reset the timeseries
     series = self.series
@@ -264,6 +263,7 @@ class DataDogMetricReporter(Reporter):
       return
 
     # Send the metrics
+    self.flushing = True
     self.logger.info("Flushing {} points to DataDog".format(len(series)))
     api.Metric.send(series)
     self.flushing = False
