@@ -18,14 +18,11 @@ setup(
 
   include_package_data = True,
   package_data={
-    'performance': [
-      'driver/classes/observer/jmx/runtime/*.jar'
-    ]
   },
 
   entry_points={
     'console_scripts': [
-      'dcos-perf-test-driver = performance.driver.core.cli.entrypoints:dcos_perf_test_driver'
+      'dcos-perf-test-driver = mesosphere.perf_driver.entrypoint:dcos_perf_test_driver'
     ]
   },
 
