@@ -274,8 +274,11 @@ class MarathonDeployChannel(Channel):
       pass
 
     # Pop manager from the active managers
-    i = self.activeManagers.index(manager)
-    del self.activeManagers[i]
+    try:
+      i = self.activeManagers.index(manager)
+      del self.activeManagers[i]
+    except ValueError:
+      pass
 
   def handleParameterUpdate(self, event):
     """
