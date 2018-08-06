@@ -89,7 +89,7 @@ class BuiltInSummarizer(Summarizer):
     """
 
     # Remove outliers
-    if self.getConfig('outliers', False):
+    if not self.getConfig('outliers', True):
       timeseries = util.reject_outliers(timeseries)
 
     # Apply the summarizer function

@@ -47,7 +47,7 @@ class PercentileSummarizer(Summarizer):
     """
 
     # Remove outliers
-    if not self.getConfig('outliers', False):
+    if not self.getConfig('outliers', True):
       timeseries = util.reject_outliers(timeseries)
 
     # Compute the percentile
